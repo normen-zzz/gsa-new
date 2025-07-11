@@ -86,6 +86,7 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        
 
         DB::table('customers')->insert([
             'name_customer' => 'CEVA',

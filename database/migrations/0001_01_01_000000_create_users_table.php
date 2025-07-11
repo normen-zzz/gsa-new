@@ -58,7 +58,7 @@ return new class extends Migration
             $table->timestamps();   
         });
 
-        Schema::table('roles', function (Blueprint $table) {
+        Schema::create('roles', function (Blueprint $table) {
             $table->integer('id_role')->autoIncrement();
             $table->string('name')->unique();
             $table->string('description')->nullable();
