@@ -1,0 +1,176 @@
+<?php
+
+namespace App\Http\Controllers\master;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+
+
+class CountryController extends Controller
+{
+    public function createCountry(Request $request)
+    {
+        $data = $request->validate([
+            'name_country' => 'required|string|max:100|unique:countries,name_country',
+
+        ]);
+
+        $data['created_by'] = $request->user()->id_user;
+
+        DB::beginTransaction();
+        try {
+            $country = DB::table('countries')->insert($data);
+            DB::commit();
+            if ($country) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Country created successfully.',
+                    'data' => $data,
+                ], 201);
+            } else {
+                throw new Exception('Failed to create country.');
+            }
+        } catch (Exception $th) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to create country: ' . $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getCountry(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $search = $request->input('searchKey', '');
+        $query = DB::table('countries')
+            ->select('countries.id_country', 'countries.name_country', 'countries.status', 'countries.created_at', 'users.name as created_by')
+            ->join('users', 'countries.created_by', '=', 'users.id_user')
+            ->where('countries.name_country', 'like', '%' . $search . '%')
+            ->orderBy('countries.created_at', 'desc');
+
+
+        $countries = $query->paginate($limit);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Countries retrieved successfully.',
+            'data' => $countries,
+            'meta_data' => [
+                'code' => 200,
+                'message' => 'Countries retrieved successfully.',
+                'total' => $countries->total(),
+            ],
+        ]);
+    }
+
+    public function deactivateCountry(Request $request)
+    {
+        $id = $request->input('id_country');
+        $country = DB::table('countries')->where('id_country', $id)->first();
+
+        if (!$country) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Country not found.',
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $update = DB::table('countries')
+                ->where('id_country', $id)
+                ->update(['status' => false]);
+            if ($update) {
+                $insertLog = DB::table('log_country')->insert([
+                    'id_country' => $id,
+                    'action' => 'deactivate Id Country: ' . $id . ' Name Country: ' . $country->name_country,
+                    'id_user' => Auth::user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                if (!$insertLog) {
+                    throw new Exception('Failed to log deactivation action.');
+                } else {
+                    DB::commit();
+                    return response()->json([
+                        'code' => 200,
+                        'status' => 'success',
+                        'data' => $country,
+                        'meta_data' => [
+                            'code' => 200,
+                            'message' => 'Country deactivated successfully.',
+                        ]
+                    ], 200);
+                }
+            } else {
+                throw new Exception('Failed to deactivate country.');
+            }
+        } catch (Exception $th) {
+            DB::rollback();
+            return response()->json([
+                'code' => 500,
+                'status' => 'error',
+                'meta_data' => [
+                    'code' => 500,
+                    'message' => 'Failed to deactivate country: ' . $th->getMessage(),
+                ]
+            ], 500);
+        }
+    }
+
+    public function activateCountry(Request $request)
+    {
+        $id = $request->input('id_country');
+        $country = DB::table('countries')->where('id_country', $id)->first();
+
+        if (!$country) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Country not found.',
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $update = DB::table('countries')
+                ->where('id_country', $id)
+                ->update(['status' => true]);
+
+            if ($update) {
+                $insertLog = DB::table('log_country')->insert([
+                    'id_country' => $id,
+                    'action' => 'Activate Id Country: ' . $id . ' Name Country: ' . $country->name_country,
+                    'id_user' => request()->user()->id_user,
+                ]);
+                if (!$insertLog) {
+                    throw new Exception('Failed to log activation action.');
+                } else {
+                    DB::commit();
+                    return response()->json([
+                        'code' => 200,
+                        'status' => 'success',
+                        'data' => $country,
+                        'meta_data' => [
+                            'code' => 200,
+                            'message' => 'Country activated successfully.',
+                        ]
+                    ], 200);
+                }
+            }
+        } catch (Exception $th) {
+            DB::rollback();
+            return response()->json([
+                'code' => 500,
+                'status' => 'error',
+                'meta_data' => [
+                    'code' => 500,
+                    'message' => 'Failed to activate country: ' . $th->getMessage(),
+                ]
+            ], 500);
+        }
+    }
+}
