@@ -27,8 +27,12 @@ class CountryController extends Controller
             if ($country) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Country created successfully.',
+                    'code' => 201,
                     'data' => $data,
+                    'meta_data' => [
+                        'code' => 201,
+                        'message' => 'Country created successfully.',
+                    ]
                 ], 201);
             } else {
                 throw new Exception('Failed to create country.');
@@ -54,10 +58,10 @@ class CountryController extends Controller
 
 
         $countries = $query->paginate($limit);
+        
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Countries retrieved successfully.',
             'data' => $countries,
             'meta_data' => [
                 'code' => 200,
