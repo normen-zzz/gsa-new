@@ -96,13 +96,21 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
             'data_customer' => json_encode([
-                'email' => 'ceva@logistics.com',
-                'phone' => '12345678',
-                'address' => '123 CEVA St.',
-                'tax_id' => '1234567890',
-                'pic' => 'John Doe',
-            ]),
-
+                [
+                    'email' => 'ceva@logistics.com',
+                    'phone' => '12345678',
+                    'address' => '123 CEVA St.',
+                    'tax_id' => '1234567890',
+                    'pic' => 'John Doe',
+                ],
+                [
+                    'email' => 'ceva2@logistics.com',
+                    'phone' => '12345679',
+                    'address' => '124 CEVA St.',
+                    'tax_id' => '1234567891',
+                    'pic' => 'Jane Doe',
+                ]
+            ])
         ]);
 
         DB::table('customers')->insert([
@@ -113,16 +121,23 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
             'data_customer' => json_encode([
-                'email' => 'dhl@logistics.com',
-                'phone' => '87654321',
-                'address' => '456 DHL St.',
-                'tax_id' => '0987654321',
-                'pic' => 'Jane Smith',
-            ]),
+                [
+                    'email' => 'dhl@logistics.com',
+                    'phone' => '87654321',
+                    'address' => '456 DHL St.',
+                    'tax_id' => '0987654321',
+                    'pic' => 'Jane Smith',
+                ],
+                [
+                    'email' => 'dhl2@logistics.com',
+                    'phone' => '87654322',
+                    'address' => '457 DHL St.',
+                    'tax_id' => '0987654322',
+                    'pic' => 'John Smith',
+                ]
+            ])
         ]);
 
-
-       
         DB::table('countries')->insert([
             'name_country' => 'Indonesia',
             'status' => true,
@@ -166,8 +181,8 @@ class DatabaseSeeder extends Seeder
                     ['length' => 60, 'width' => 30, 'height' => 20, 'weight' => 100],
                     ['length' => 70, 'width' => 30, 'height' => 20, 'weight' => 100],
                 ]
-                ),
-                'special_instructions' => 'Handle with care',
+            ),
+            'special_instructions' => 'Handle with care',
             'created_by' => 1, // Assuming the admin user has ID 1
             'status' => 'created_by_sales',
             'created_at' => now(),
