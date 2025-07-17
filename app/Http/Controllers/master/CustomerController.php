@@ -245,11 +245,11 @@ class CustomerController extends Controller
             $data = $request->validate([
                 'id_customer' => 'required|integer|exists:customers,id_customer',
                 'data_customer' => 'required|array',
-                'data_customer.email' => 'nullable|email|max:255',
-                'data_customer.phone' => 'nullable|string|max:20',
-                'data_customer.address' => 'required|string',
-                'data_customer.tax_id' => 'nullable|string|max:50',
-                'data_customer.pic' => 'nullable|string|max:100',
+                'data_customer.*.email' => 'nullable|email|max:255',
+                'data_customer.*.phone' => 'nullable|string|max:20',
+                'data_customer.*.address' => 'required|string',
+                'data_customer.*.tax_id' => 'nullable|string|max:50',
+                'data_customer.*.pic' => 'nullable|string|max:100',
             ]);
 
             $changes = [];
