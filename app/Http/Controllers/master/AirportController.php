@@ -48,8 +48,17 @@ class AirportController extends Controller
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
+        $select = [
+            'airports.id_airport',
+            'airports.name_airport',
+            'airports.code_airport',
+            'airports.id_country',
+            'airports.status',
+            'users.name as created_by',
+            'airports.created_at'
+        ];
         $query = DB::table('airports')
-            ->select('airports.id_airport', 'airports.name_airport', 'airports.code_airport', 'airports.id_country', 'airports.status', 'users.name as created_by', 'airports.created_at')
+            ->select($select)
             ->where('airports.name_airport', 'like', '%' . $search . '%')
             ->join('users', 'airports.created_by', '=', 'users.id_user')
             ->orWhere('airports.code_airport', 'like', '%' . $search . '%')

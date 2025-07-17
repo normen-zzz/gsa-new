@@ -23,7 +23,7 @@ class CountryController extends Controller
         DB::beginTransaction();
         try {
             $country = DB::table('countries')->insert($data);
-            
+
             if ($country) {
                 return response()->json([
                     'status' => 'success',
@@ -51,15 +51,22 @@ class CountryController extends Controller
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
+        $select = [
+            'countries.id_country',
+            'countries.name_country',
+            'countries.status',
+            'countries.created_at',
+            'users.name as created_by'
+        ];
         $query = DB::table('countries')
-            ->select('countries.id_country', 'countries.name_country', 'countries.status', 'countries.created_at', 'users.name as created_by')
+            ->select($select)
             ->join('users', 'countries.created_by', '=', 'users.id_user')
             ->where('countries.name_country', 'like', '%' . $search . '%')
             ->orderBy('countries.created_at', 'desc');
 
 
         $countries = $query->paginate($limit);
-        
+
 
         return response()->json([
             'status' => 'success',

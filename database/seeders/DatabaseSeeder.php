@@ -95,6 +95,13 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
+            'data_customer' => json_encode([
+                'email' => 'ceva@logistics.com',
+                'phone' => '12345678',
+                'address' => '123 CEVA St.',
+                'tax_id' => '1234567890',
+                'pic' => 'John Doe',
+            ]),
 
         ]);
 
@@ -104,21 +111,18 @@ class DatabaseSeeder extends Seeder
             'status' => true,
             'created_at' => now(),
             'updated_at' => now(),
-            'created_by' => 1, // Assuming the admin user has ID 1  
+            'created_by' => 1, // Assuming the admin user has ID 1
+            'data_customer' => json_encode([
+                'email' => 'dhl@logistics.com',
+                'phone' => '87654321',
+                'address' => '456 DHL St.',
+                'tax_id' => '0987654321',
+                'pic' => 'Jane Smith',
+            ]),
         ]);
 
 
-        DB::table('customer_details')->insert([
-            'email' => 'ceva@logistics.com',
-            'phone' => '12345678',
-            'address' => '123 CEVA St.',
-            'id_customer' => 1,
-            'deleted_at' => null,
-            'tax_id' => '1234567890',
-            'pic' => 'John Doe',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+       
         DB::table('countries')->insert([
             'name_country' => 'Indonesia',
             'status' => true,

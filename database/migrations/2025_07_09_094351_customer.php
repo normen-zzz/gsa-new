@@ -15,30 +15,23 @@ return new class extends Migration
             $table->id('id_customer');
             $table->string('name_customer')->unique();
             $table->timestamps();
-            // type 
             $table->enum('type', ['agent', 'consignee'])->default('agent');
             $table->boolean('status')->default(true);
             $table->integer('created_by')->unsigned();
+            $table->json('data_customer')->nullable();
+            $table->softDeletes();
+            $table->integer('deleted_by')->unsigned()->nullable();
+          
             
             
         });
 
-        Schema::create('customer_details', function (Blueprint $table) {
-            $table->id('id_customerdetail');
-            $table->integer('id_customer')->unsigned();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->text('address');
-            $table->string('tax_id')->nullable();
-            $table->string('pic')->nullable();
-            $table->timestamps();
-            $table->datetime('deleted_at')->nullable();
-        });
+       
 
         Schema::create('log_customer', function (Blueprint $table) {
             $table->id('id_logcustomer');
             $table->integer('id_customer')->unsigned();
-            $table->integer('id_customerdetail')->unsigned()->nullable();
+           
             $table->text('action');
             $table->integer('id_user')->unsigned();
             $table->timestamps();

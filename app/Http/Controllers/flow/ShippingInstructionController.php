@@ -14,9 +14,33 @@ class ShippingInstructionController extends Controller
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
+        $select = [
+            'a.id_shippinginstruction',
+            'c.name_customer as agent',
+            'c.id_customer as id_agent',
+            'd.name_customer as consignee',
+            'd.id_customer as id_consignee',
+            'a.type',
+            'a.date',
+            'a.eta',
+            'a.etd',
+            'e.name_airport as pol',
+            'e.id_airport as id_pol',
+            'e.code_airport as code_pol',
+            'f.name_airport as pod',
+            'f.id_airport as id_pod',
+            'f.code_airport as code_pod',
+            'a.commodity',
+            'a.weight',
+            'a.pieces',
+            'a.dimensions',
+            'a.special_instructions',
+            'b.name as created_by',
+            'a.status'
+        ];
 
         $query = DB::table('shippinginstruction AS a')
-            ->select('a.id_shippinginstruction', 'c.name_customer as agent','c.id_customer as id_agent', 'd.name_customer as consignee','d.id_customer as id_consignee', 'a.type', 'a.date', 'a.eta', 'a.etd', 'e.name_airport as pol', 'e.id_airport as id_pol','e.code_airport as code_pol', 'f.name_airport as pod', 'f.id_airport as id_pod', 'f.code_airport as code_pod', 'a.commodity', 'a.weight', 'a.pieces','a.dimensions', 'a.special_instructions', 'b.name as created_by', 'a.status')
+            ->select($select)
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('customers AS c', 'a.agent', '=', 'c.id_customer')
             ->leftJoin('customers AS d', 'a.consignee', '=', 'd.id_customer')
@@ -55,8 +79,32 @@ class ShippingInstructionController extends Controller
     {
         $id = $request->input('id');
 
+        $select = [
+            'a.id_shippinginstruction',
+            'c.name_customer as agent',
+            'c.id_customer as id_agent',
+            'd.name_customer as consignee',
+            'd.id_customer as id_consignee',
+            'a.type',
+            'a.date',
+            'a.eta',
+            'a.etd',
+            'e.name_airport as pol',
+            'e.id_airport as id_pol',
+            'e.code_airport as code_pol',
+            'f.name_airport as pod',
+            'f.id_airport as id_pod',
+            'f.code_airport as code_pod',
+            'a.commodity',
+            'a.weight',
+            'a.pieces',
+            'a.dimensions',
+            'a.special_instructions',
+            'b.name as created_by',
+            'a.status'
+        ];
         $instruction = DB::table('shippinginstruction AS a')
-            ->select('a.id_shippinginstruction', 'c.name_customer as agent', 'c.id_customer as id_agent', 'd.name_customer as consignee', 'd.id_customer as id_consignee', 'a.type', 'a.date', 'a.eta', 'a.etd', 'e.name_airport as pol', 'e.id_airport as id_pol', 'e.code_airport as code_pol', 'f.name_airport as pod', 'f.id_airport as id_pod', 'f.code_airport as code_pod', 'a.commodity', 'a.weight', 'a.pieces', 'a.dimensions', 'a.special_instructions', 'b.name as created_by', 'a.status')
+            ->select($select)
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('customers AS c', 'a.agent', '=', 'c.id_customer')
             ->leftJoin('customers AS d', 'a.consignee', '=', 'd.id_customer')

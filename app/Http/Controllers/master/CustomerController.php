@@ -84,8 +84,13 @@ class CustomerController extends Controller
 
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
+        $select = [
+            'customers.*',
+            'users.name as created_by',
+
+        ];
         $customer = DB::table('customers')
-            ->select('customers.id_customer', 'customers.name_customer', 'customers.status', 'customers.created_at', 'users.name as created_by')
+            ->select($select)
             ->join('users', 'customers.created_by', '=', 'users.id_user')
             ->where('customers.name_customer', 'like', '%' . $search . '%')
             ->orWhere('customers.id_customer', 'like', '%' . $search . '%')
@@ -94,13 +99,8 @@ class CustomerController extends Controller
 
 
         if ($customer) {
-            $id_customer = $customer->pluck('id_customer')->toArray();
-            $detail = DB::table('customer_details')
-                ->whereIn('id_customer', $id_customer)
-                ->get();
-            // add $detail on $customer
-            $customer->getCollection()->transform(function ($item) use ($detail) {
-                $item->details = $detail->where('id_customer', $item->id_customer);
+            $customer->getCollection()->transform(function ($item) {
+                $item->data_customer = json_decode($item->data_customer);
                 return $item;
             });
             return response()->json([
@@ -140,6 +140,7 @@ class CustomerController extends Controller
 
         // Retrieve the customer by ID
         $customer = CustomerModel::find($id);
+        $customer->data_customer = json_decode($customer->data_customer);
 
         if ($customer) {
             return response()->json([
@@ -236,55 +237,73 @@ class CustomerController extends Controller
         }
     }
 
-    public function addDetailCustomer(Request $request)
+    public function updateDetailCustomer(Request $request)
     {
         DB::beginTransaction();
         try {
             // Validate the request data
             $data = $request->validate([
                 'id_customer' => 'required|integer|exists:customers,id_customer',
-                'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'required|string',
-                'tax_id' => 'nullable|string|max:50',
-                'pic' => 'nullable|string|max:100',
+                'data_customer' => 'required|array',
+                'data_customer.email' => 'nullable|email|max:255',
+                'data_customer.phone' => 'nullable|string|max:20',
+                'data_customer.address' => 'required|string',
+                'data_customer.tax_id' => 'nullable|string|max:50',
+                'data_customer.pic' => 'nullable|string|max:100',
             ]);
 
-            // Create a new customer detail
-            $customerDetail = DB::table('customer_details')->insert([
-                'id_customer' => $data['id_customer'],
-                'email' => $data['email'],
-                'phone' => $data['phone'],
-                'address' => $data['address'],
-                'tax_id' => $data['tax_id'],
-                'pic' => $data['pic'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $id_customerdetail = DB::getPdo()->lastInsertId();
-
-            if (!$customerDetail) {
-                throw new Exception('Failed to add customer detail.');
+            $changes = [];
+            $customer = CustomerModel::find($data['id_customer']);
+            $oldDetails = json_decode($customer->data_customer, true);
+            foreach ($data['data_customer'] as $key => $value) {
+                if (isset($oldDetails[$key]) && $oldDetails[$key] != $value) {
+                    $changes[$key] = [
+                        'old' => $oldDetails[$key],
+                        'new' => $value
+                    ];
+                }
             }
 
-            DB::commit();
-            return response()->json([
-                'status' => 'success',
-                'code' => 201,
-                'data' => [
-                    'id_customerdetail' => $id_customerdetail,
-                    'id_customer' => $data['id_customer'],
-                    'email' => $data['email'],
-                    'phone' => $data['phone'],
-                    'address' => $data['address'],
-                    'tax_id' => $data['tax_id'],
-                    'pic' => $data['pic'],
-                ],
-                'meta_data' => [
-                    'code' => 201,
-                    'message' => 'Customer detail added successfully.',
-                ],
-            ], 201);
+            $updateDataCustomer = DB::table('customers')
+                ->where('id_customer', $data['id_customer'])
+                ->update([
+                    'data_customer' => json_encode($data['data_customer']),
+                    'updated_at' => now(),
+                ]);
+            if ($updateDataCustomer) {
+                if (count($changes) > 0) {
+                    $insertLog = DB::table('log_customer')->insert([
+                        'id_customer' => $data['id_customer'],
+                        'action' => json_encode($changes),
+                        'id_user' => $request->user()->id_user,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    if ($insertLog) {
+                        DB::commit();
+                        return response()->json([
+                            'status' => 'success',
+                            'code' => 200,
+                            'meta_data' => [
+                                'code' => 200,
+                                'message' => 'Customer detail updated successfully.',
+                            ],
+                        ], 200);
+                    } else {
+                        throw new Exception('Failed to log customer detail update.');
+                    }
+                } else {
+                    DB::commit();
+                    return response()->json([
+                        'status' => 'success',
+                        'code' => 200,
+                        'meta_data' => [
+                            'code' => 200,
+                            'message' => 'Customer detail updated successfully with no changes.',
+                        ],
+                    ], 200);
+                }
+            }
         } catch (Exception $th) {
             DB::rollback();
             return response()->json([
@@ -298,91 +317,96 @@ class CustomerController extends Controller
         }
     }
 
-    public function updateDetailCustomer(Request $request)
+    public function updateCustomer(Request $request)
     {
         DB::beginTransaction();
         try {
             // Validate the request data
             $data = $request->validate([
-                'id_customerdetail' => 'required|integer|exists:customer_details,id_customerdetail',
-                'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'required|string',
-                'tax_id' => 'nullable|string|max:50',
-                'pic' => 'nullable|string|max:100',
+
+                'id_customer' => 'required|integer|exists:customers,id_customer',
+                'name_customer' => 'required|string|min:3|unique:customers,name_customer,' . $request->input('id_customer') . ',id_customer',
+                'type' => 'required|in:agent,consignee',
+                'data_customer' => 'required|array',
+                'data_customer.*.email' => 'nullable|email|max:255',
+                'data_customer.*.phone' => 'nullable|string|max:20',
+                'data_customer.*.address' => 'required|string',
+                'data_customer.*.tax_id' => 'nullable|string|max:50',
+                'data_customer.*.pic' => 'nullable|string|max:100',
             ]);
 
-            // Update the customer detail
-            $detailCustomer = DB::table('customer_details')
-                ->where('id_customerdetail', $data['id_customerdetail'])
-                ->first();
-            // cek apa saja perubahannya 
-            if (!$detailCustomer) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 404,
-                    'meta_data' => [
-                        'code' => 404,
-                        'message' => 'Customer detail not found.',
-                    ],
-                ], 404);
-            } else {
-                // cek apa saja perubahannya
-                $changes = [];
-                foreach ($data as $key => $value) {
-                    if ($detailCustomer->$key !== $value) {
-                        $changes[$key] = [
-                            'old' => $detailCustomer->$key,
-                            'new' => $value,
-                        ];
-                    }
+            $customer = CustomerModel::find($data['id_customer']);
+            // cek perbedaan antara $data['data_customer'] dan data lama
+            $oldDetails = json_decode($customer->data_customer, true);
+            $changes = [];
+            foreach ($data['data_customer'] as $key => $value) {
+                if (isset($oldDetails[$key]) && $oldDetails[$key] != $value) {
+                    $changes[$key] = [
+                        'old' => $oldDetails[$key],
+                        'new' => $value
+                    ];
                 }
-                $updated = DB::table('customer_details')
-                    ->where('id_customerdetail', $data['id_customerdetail'])
-                    ->update([
-                        'email' => $data['email'],
-                        'phone' => $data['phone'],
-                        'address' => $data['address'],
-                        'tax_id' => $data['tax_id'],
-                        'pic' => $data['pic'],
-                        'updated_at' => now(),
-                    ]);
             }
 
+            if ($customer->name_customer != $data['name_customer']) {
+                $changes['name_customer'] = [
+                    'old' => $customer->name_customer,
+                    'new' => $data['name_customer']
+                ];
+            }
+            if ($customer->type != $data['type']) {
+                $changes['type'] = [
+                    'old' => $customer->type,
+                    'new' => $data['type']
+                ];
+            }
 
-            if ($updated) {
-                // Log the update action
-                DB::table('log_customer')->insert([
-                    'id_customer' => DB::table('customer_details')
-                        ->where('id_customerdetail', $data['id_customerdetail'])
-                        ->value('id_customer'),
-                    'id_customerdetail' => $data['id_customerdetail'],
-                    'action' => 'update detail for customer ID ' . $data['id_customerdetail'] . ' with changes: ' . json_encode($changes),
-                    'id_user' => $request->user()->id_user,
-                    'created_at' => now(),
+            $updateCustomer = DB::table('customers')
+                ->where('id_customer', $data['id_customer'])
+                ->update([
+                    'name_customer' => $data['name_customer'],
+                    'type' => $data['type'],
+                    'data_customer' => json_encode($data['data_customer']),
                     'updated_at' => now(),
                 ]);
-            } else {
-                throw new Exception('Failed to update customer detail.');
-            }
 
-            DB::commit();
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'data' => [
-                    'id_customerdetail' => $data['id_customerdetail'],
-                    'email' => $data['email'],
-                    'phone' => $data['phone'],
-                    'address' => $data['address'],
-                    'tax_id' => $data['tax_id'],
-                    'pic' => $data['pic'],
-                ],
-                'meta_data' => [
-                    'code' => 200,
-                    'message' => 'Customer detail updated successfully.',
-                ],
-            ], 200);
+            if ($updateCustomer) {
+                // Log the action
+                if (count($changes) > 0) {
+                    $insertLog = DB::table('log_customer')->insert([
+                        'id_customer' => $data['id_customer'],
+                        'action' => json_encode($changes),
+                        'id_user' => $request->user()->id_user,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    if ($insertLog) {
+                        DB::commit();
+                        return response()->json([
+                            'status' => 'success',
+                            'code' => 200,
+                            'meta_data' => [
+                                'code' => 200,
+                                'message' => 'Customer detail updated successfully.',
+                            ],
+                        ], 200);
+                    } else {
+                        throw new Exception('Failed to log customer detail update.');
+                    }
+                } else {
+                    DB::commit();
+                    return response()->json([
+                        'status' => 'success',
+                        'code' => 200,
+                        'meta_data' => [
+                            'code' => 200,
+                            'message' => 'Customer detail updated successfully with no changes.',
+                        ],
+                    ], 200);
+                }
+            } else {
+                throw new Exception('Failed to update customer detail for ID ' . $data['id_customer']);
+            }
         } catch (Exception $th) {
             DB::rollback();
             return response()->json([
