@@ -18,22 +18,19 @@ return new class extends Migration
             $table->datetime('date');
             $table->dateTime('eta')->nullable();
             $table->dateTime('etd')->nullable();
-            // pol 
             $table->integer('pol')->unsigned();
-            // pod
             $table->integer('pod')->unsigned();
             $table->string('commodity')->nullable();
-            // weight 
             $table->decimal('weight', 8, 2)->nullable();
-            //pieces
             $table->integer('pieces')->unsigned()->nullable();
-            //special_instructions
+            $table->json('dimensions')->nullable();
             $table->text('special_instructions')->nullable();
-            //created_by
             $table->integer('created_by')->unsigned();
-            //status
-            $table->enum('status', ['created by sales', 'receive by cs', 'rejected by cs'])->default('created by sales');
-
+            $table->integer('updated_by')->unsigned()->nullable();
+            
+            $table->enum('status', ['created_by_sales', 'received_by_cs', 'rejected_by_cs','deleted'])->default('created_by_sales');
+            $table->softDeletes();
+            $table->integer('deleted_by')->unsigned()->nullable();
             $table->timestamps();
 
           

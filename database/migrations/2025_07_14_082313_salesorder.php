@@ -11,7 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-       
+        Schema::create('salesorder', function (Blueprint $table) {
+            $table->id('id_salesorder');
+            $table->unsignedBigInteger('id_job')->nullable();
+            $table->unsignedBigInteger('id_shippinginstruction')->nullable();
+            
+            $table->date('date')->nullable();
+            $table->text('remarks')->nullable();
+            $table->integer('created_by')->unsigned();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable();
+            $table->timestamps();           
+        });
     }
 
     /**
@@ -19,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('salesorder');
     }
 };

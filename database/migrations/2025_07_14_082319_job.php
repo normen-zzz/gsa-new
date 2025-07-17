@@ -13,18 +13,18 @@ return new class extends Migration
     {
         Schema::create('job', function (Blueprint $table) {
             $table->id('id_job');
-            $table->unsignedBigInteger('id_shippinginstruction')->nullable();
-            $table->unsignedBigInteger('id_awb')->nullable();
-            $table->unsignedBigInteger('id_hawb')->nullable();
-            $table->string('job_number')->unique();
-            $table->date('job_date')->nullable();
-            $table->text('description')->nullable();
-            $table->decimal('weight', 8, 2)->nullable();
-            $table->decimal('volume', 8, 2)->nullable();
+            $table->unsignedBigInteger('id_shippinginstruction');
+            $table->unsignedBigInteger('id_awb');
+            $table->unsignedBigInteger('agent')->nullable();
+            $table->unsignedBigInteger('consignee')->nullable();
+            $table->date('date');
+            $table->date('etd');
+            $table->date('eta');
+            $table->timestamps();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
-            $table->timestamps();
+            
         });
     }
 
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('job');
     }
 };

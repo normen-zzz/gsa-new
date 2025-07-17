@@ -23,7 +23,7 @@ class CountryController extends Controller
         DB::beginTransaction();
         try {
             $country = DB::table('countries')->insert($data);
-            DB::commit();
+            
             if ($country) {
                 return response()->json([
                     'status' => 'success',
@@ -37,6 +37,7 @@ class CountryController extends Controller
             } else {
                 throw new Exception('Failed to create country.');
             }
+            DB::commit();
         } catch (Exception $th) {
             DB::rollback();
             return response()->json([

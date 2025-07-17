@@ -11,7 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('hawb', function (Blueprint $table) {
+            $table->id('id_hawb');
+            $table->unsignedBigInteger('id_awb')->nullable();
+            $table->string('hawb_number')->unique();
+            $table->date('date')->nullable();
+            $table->text('remarks')->nullable();
+           
+            $table->integer('created_by')->unsigned();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable();
+            $table->timestamps();
+
+        });
     }
 
     /**
@@ -19,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('hawb');
     }
 };

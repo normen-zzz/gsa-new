@@ -4,9 +4,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\master\AirportController;
 use App\Http\Controllers\master\CountryController;
 use App\Http\Controllers\master\CustomerController;
-use App\Http\Controllers\master\AirportController;
+use App\Http\Controllers\flow\ShippingInstructionController;
 
 
 Route::get('/user', function (Request $request) {
@@ -45,5 +46,22 @@ Route::get('/getAirport', [AirportController::class, 'getAirport'])->middleware(
 Route::put('/deactivateAirportById', [AirportController::class, 'deactivateAirport'])->middleware('auth:api');
 Route::put('/activateAirportById', [AirportController::class, 'activateAirport'])->middleware('auth:api');
 Route::put('/updateAirportById', [AirportController::class, 'updateAirport'])->middleware('auth:api');
+
+
+// Flow routes
+//shipping instruction
+Route::get('/getShippingInstruction', [ShippingInstructionController::class, 'getShippingInstructions'])->middleware('auth:api');
+Route::post('/createShippingInstruction', [ShippingInstructionController::class, 'createShippingInstruction'])->middleware('auth:api');
+Route::put('/updateShippingInstruction', [ShippingInstructionController::class, 'updateShippingInstruction'])->middleware('auth:api');
+Route::put('/deleteShippingInstruction', [ShippingInstructionController::class, 'deleteShippingInstruction'])->middleware('auth:api');
+Route::put('/receiveShippingInstruction', [ShippingInstructionController::class, 'receiveShippingInstruction'])->middleware('auth:api');
+Route::put('/rejectShippingInstruction', [ShippingInstructionController::class, 'rejectShippingInstruction'])->middleware('auth:api');
+Route::get('/getShippingInstructionById', [ShippingInstructionController::class, 'getShippingInstructionById'])->middleware('auth:api');
+
+
+
+
+
+
 
 

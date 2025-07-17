@@ -20,6 +20,7 @@ class CustomerController extends Controller
             // Validate the request data
             $data = $request->validate([
                 'name_customer' => 'required|string|min:3|unique:customers,name_customer',
+                'type' => 'required|in:agent,consignee',
             ]);
 
             // Create a new customer
@@ -27,6 +28,7 @@ class CustomerController extends Controller
             $customer->name_customer = $data['name_customer'];
             $customer->status = true; // Default status, can be changed as needed
             $customer->created_by = $request->user()->id_user; // Assuming the user is authenticated and has an ID
+            $customer->type = $data['type'];
 
 
             if ($customer->save()) {

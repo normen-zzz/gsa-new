@@ -17,6 +17,13 @@ return new class extends Migration
             $table->string('awb')->unique();
             $table->date('etd')->nullable();
             $table->date('eta')->nullable();
+            $table->integer('pol')->unsigned();
+            $table->integer('pod')->unsigned();
+            $table->string('commodity');
+            $table->integer('weight')->unsigned();
+            $table->integer('pieces')->unsigned();
+            $table->json('dimensions')->nullable();
+            $table->json('data_flight')->nullable();
             $table->text('handling_instructions')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();

@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id('id_customer');
             $table->string('name_customer')->unique();
             $table->timestamps();
+            // type 
+            $table->enum('type', ['agent', 'consignee'])->default('agent');
             $table->boolean('status')->default(true);
             $table->integer('created_by')->unsigned();
             
