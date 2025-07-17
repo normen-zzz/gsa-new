@@ -16,7 +16,7 @@ class ShippingInstructionController extends Controller
         $search = $request->input('searchKey', '');
 
         $query = DB::table('shippinginstruction AS a')
-            ->select('a.id_shippinginstruction', 'c.name_customer as agent', 'd.name_customer as consignee', 'a.date', 'a.eta', 'a.etd', 'e.name_airport as pol', 'f.name_airport as pod', 'a.commodity', 'a.weight', 'a.pieces','a.dimensions', 'a.special_instructions', 'b.name as created_by', 'a.status')
+            ->select('a.id_shippinginstruction', 'c.name_customer as agent','c.id_customer as id_agent', 'd.name_customer as consignee','d.id_customer as id_consignee', 'a.date', 'a.eta', 'a.etd', 'e.name_airport as pol', 'f.name_airport as pod', 'a.commodity', 'a.weight', 'a.pieces','a.dimensions', 'a.special_instructions', 'b.name as created_by', 'a.status')
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('customers AS c', 'a.agent', '=', 'c.id_customer')
             ->leftJoin('customers AS d', 'a.consignee', '=', 'd.id_customer')
@@ -56,7 +56,7 @@ class ShippingInstructionController extends Controller
         $id = $request->input('id');
 
         $instruction = DB::table('shippinginstruction AS a')
-            ->select('a.id_shippinginstruction', 'c.name_customer as agent', 'd.name_customer as consignee', 'a.date', 'a.eta', 'a.etd', 'e.name_airport as pol', 'f.name_airport as pod', 'a.commodity', 'a.weight', 'a.pieces', 'a.dimensions', 'a.special_instructions', 'b.name as created_by', 'a.status')
+            ->select('a.id_shippinginstruction', 'c.name_customer as agent', 'c.id_customer as id_agent', 'd.name_customer as consignee', 'd.id_customer as id_consignee', 'a.date', 'a.eta', 'a.etd', 'e.name_airport as pol', 'f.name_airport as pod', 'a.commodity', 'a.weight', 'a.pieces', 'a.dimensions', 'a.special_instructions', 'b.name as created_by', 'a.status')
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('customers AS c', 'a.agent', '=', 'c.id_customer')
             ->leftJoin('customers AS d', 'a.consignee', '=', 'd.id_customer')
