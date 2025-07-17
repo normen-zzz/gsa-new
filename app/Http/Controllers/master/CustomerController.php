@@ -21,6 +21,12 @@ class CustomerController extends Controller
             $data = $request->validate([
                 'name_customer' => 'required|string|min:3|unique:customers,name_customer',
                 'type' => 'required|in:agent,consignee',
+                'data_customer' => 'nullable|array',
+                'data_customer.*.email' => 'nullable|email|max:255',
+                'data_customer.*.phone' => 'nullable|string|max:20',
+                'data_customer.*.address' => 'required|string',
+                'data_customer.*.tax_id' => 'nullable|string|max:50',
+                'data_customer.*.pic' => 'nullable|string|max:100',
             ]);
 
             // Create a new customer
@@ -29,12 +35,13 @@ class CustomerController extends Controller
             $customer->status = true; // Default status, can be changed as needed
             $customer->created_by = $request->user()->id_user; // Assuming the user is authenticated and has an ID
             $customer->type = $data['type'];
+            $customer->data_customer = json_encode($data['data_customer']); // Store data_customer as JSON
 
 
             if ($customer->save()) {
                 $insertLog = DB::table('log_customer')->insert([
                     'id_customer' => $customer->id_customer,
-                    'action' => 'create ' . $customer->name_customer,
+                    'action' => 'Customer created: ' . $customer->name_customer. ' with type ' . $customer->type. ' and data: ' . json_encode($data['data_customer']),
                     'id_user' => $request->user()->id_user,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -50,7 +57,6 @@ class CustomerController extends Controller
             return response()->json([
                 'status' => 'success',
                 'code' => 201,
-                'data' => $customer,
                 'meta_data' => [
                     'code' => 201,
                     'message' => 'Customer created successfully.',
