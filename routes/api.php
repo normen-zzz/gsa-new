@@ -30,8 +30,8 @@ Route::get('/getCustomerById/{id}', [CustomerController::class, 'getCustomerById
 Route::post('/createCustomer', [CustomerController::class, 'createCustomer'])->middleware('auth:api');
 Route::put('/deactivateCustomerById', [CustomerController::class, 'deactiveCustomer'])->middleware('auth:api');
 Route::put('/activateCustomerById', [CustomerController::class, 'activateCustomer'])->middleware('auth:api');
-Route::post('/updateDetailCustomer', [CustomerController::class, 'updateDetailCustomer'])->middleware('auth:api');
-route::put('/updateCustomer', [CustomerController::class, 'updateCustomer'])->middleware('auth:api');
+Route::put('/updateDetailCustomer', [CustomerController::class, 'updateDetailCustomer'])->middleware('auth:api');
+Route::put('/updateCustomer', [CustomerController::class, 'updateCustomer'])->middleware('auth:api');
 
 // Master Country
 Route::post('/createCountry', [CountryController::class, 'createCountry'])->middleware('auth:api');
