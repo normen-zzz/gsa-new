@@ -14,6 +14,29 @@ class JobModel extends Model
 
     {
         // Optimasi query untuk kinerja yang lebih baik
+        $select = [
+            'job.id_job',
+            'job.date',
+            'agent.name_customer as agent_name',
+            'consignee.name_customer as consignee_name',
+            'agent.id_customer as agent_id',
+            'consignee.id_customer as consignee_id',
+            'awb.id_awb',
+            'awb.awb',
+            'awb.etd',
+            'awb.eta',
+            'awb.pol',
+            'awb.pod',
+            'pol.name_airport as pol_name',
+            'pod.name_airport as pod_name',
+            'awb.commodity',
+            'awb.weight',
+            'awb.pieces',
+            'awb.dimensions',
+            'awb.data_flight',
+            'awb.special_instructions',
+            'job.status'
+        ];
         $job = DB::table('job')
             ->join('awb', 'job.id_awb', '=', 'awb.id_awb')
             ->join('customers as agent', 'job.agent', '=', 'agent.id_customer')
@@ -24,20 +47,15 @@ class JobModel extends Model
             ->when(!empty($search), function ($query) use ($search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('awb.awb', 'like', '%' . $search . '%')
-                      ->orWhere('agent.name_customer', 'like', '%' . $search . '%')
-                      ->orWhere('consignee.name_customer', 'like', '%' . $search . '%')
-                      ->orWhere('pol.name_airport', 'like', '%' . $search . '%')
-                      ->orWhere('pod.name_airport', 'like', '%' . $search . '%');
+                        ->orWhere('agent.name_customer', 'like', '%' . $search . '%')
+                        ->orWhere('consignee.name_customer', 'like', '%' . $search . '%')
+                        ->orWhere('pol.name_airport', 'like', '%' . $search . '%')
+                        ->orWhere('pod.name_airport', 'like', '%' . $search . '%');
                 });
             })
             ->orderBy('job.id_job', 'desc')
             ->select(
-                'job.*',
-                'awb.*',
-                'agent.name_customer as agent_name',
-                'consignee.name_customer as consignee_name',
-                'pol.name_airport as pol_name',
-                'pod.name_airport as pod_name'
+                $select
             )
             ->paginate($limit);
 
