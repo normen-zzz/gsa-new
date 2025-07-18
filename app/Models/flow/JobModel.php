@@ -34,7 +34,18 @@ class JobModel extends Model
                 'consignee.name_customer as consignee_name',
                 'pol.name_airport as pol_name',
                 'pod.name_airport as pod_name'
-            );
-            return $limit > 0 ? $job->paginate($limit) : $job->get();
+            )
+            ->paginate($limit);
+
+       foreach ($job as $j) {
+           if (isset($j->data_flight)) {
+               $j->data_flight = json_decode($j->data_flight, true);
+           }
+           if (isset($j->dimensions)) {
+               $j->dimensions = json_decode($j->dimensions, true);
+           }
+       }
+
+       return $job;
     }
 }
