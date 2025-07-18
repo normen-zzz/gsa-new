@@ -21,7 +21,7 @@ class JobController extends Controller
                 'awb' => 'required|string|max:50|exists:awb,awb',
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'consignee' => 'required|integer|exists:customers,id_customer',
-                'date' => 'required|date',
+                
                 'etd' => 'required|date',
                 'eta' => 'required|date',
                 'commodity' => 'required|string|max:255',
@@ -44,7 +44,7 @@ class JobController extends Controller
             $dataJob = [
                 'agent' => $data['agent'],
                 'consignee' => $data['consignee'],
-                'date' => $data['date'],
+                
                 'etd' => $data['etd'],
                 'eta' => $data['eta'],
                 'updated_by' => $request->user()->id_user,

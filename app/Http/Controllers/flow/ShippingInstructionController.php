@@ -21,7 +21,7 @@ class ShippingInstructionController extends Controller
             'd.name_customer as consignee',
             'd.id_customer as id_consignee',
             'a.type',
-            'a.date',
+           
             'a.eta',
             'a.etd',
             'e.name_airport as pol',
@@ -36,7 +36,8 @@ class ShippingInstructionController extends Controller
             'a.dimensions',
             'a.special_instructions',
             'b.name as created_by',
-            'a.status'
+            'a.status',
+            'a.created_at'
         ];
 
         $query = DB::table('shippinginstruction AS a')
@@ -86,7 +87,7 @@ class ShippingInstructionController extends Controller
             'd.name_customer as consignee',
             'd.id_customer as id_consignee',
             'a.type',
-            'a.date',
+           
             'a.eta',
             'a.etd',
             'e.name_airport as pol',
@@ -158,7 +159,7 @@ class ShippingInstructionController extends Controller
 
         $data['created_by'] = $request->user()->id_user;
         // date y-m-d H:i:s
-        $data['date'] = now();
+        
 
         $dimensions = $request->validate([
             'dimensions' => 'nullable|array',
@@ -373,7 +374,7 @@ class ShippingInstructionController extends Controller
                     'consignee' => $request->input('consignee'),
                     'etd' => $request->input('etd'),
                     'eta' => $request->input('eta'),
-                    'date' => now(),
+                    
                     'created_at' => now(),
                     'created_by' => $request->user()->id_user,
                 ];

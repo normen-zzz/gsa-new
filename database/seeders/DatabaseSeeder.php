@@ -169,7 +169,7 @@ class DatabaseSeeder extends Seeder
             'agent' => 1, // Assuming the CEVA customer has ID 1
             'consignee' => 2, // Assuming the DHL customer has ID 2
             'type' => 'direct',
-            'date' => now(),
+           
             'pol' => 1, // Assuming the Soekarno-Hatta International Airport has ID 1
             'pod' => 2, // Assuming the Miami International Airport has ID 2
             'commodity' => 'Electronics',

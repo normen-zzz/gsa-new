@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('id_awb');
             $table->unsignedBigInteger('agent')->nullable();
             $table->unsignedBigInteger('consignee')->nullable();
-            $table->date('date');
             $table->date('etd');
             $table->date('eta');
             $table->timestamps();
