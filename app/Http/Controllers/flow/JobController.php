@@ -36,6 +36,10 @@ class JobController extends Controller
                 'status' => 'required|in:created_by_cs, handled_by_ops, declined_by_ops,deleted',
                 'pol' => 'required|integer|exists:airports,id_airport',
                 'pod' => 'required|integer|exists:airports,id_airport',
+                 'data_flight' => 'nullable|array',
+            'data_flight.*.flight_number' => 'required|string|max:255',
+            'data_flight.*.departure' => 'required|date',
+            'data_flight.*.arrival' => 'required|date',
 
             ]);
 
@@ -60,6 +64,7 @@ class JobController extends Controller
                 'weight' => $data['weight'],
                 'pieces' => $data['pieces'],
                 'dimensions' => json_encode($data['dimensions']),
+                'data_flight' => json_encode($data['data_flight']),
                 'handling_instructions' => $data['special_instructions'],
                 'created_by' => $request->user()->id_user,
                 'updated_at' => now(),

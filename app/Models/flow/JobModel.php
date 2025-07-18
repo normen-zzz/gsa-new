@@ -16,7 +16,6 @@ class JobModel extends Model
         // Optimasi query untuk kinerja yang lebih baik
         $select = [
             'job.id_job',
-            'job.date',
             'agent.name_customer as agent_name',
             'consignee.name_customer as consignee_name',
             'agent.id_customer as agent_id',
@@ -35,7 +34,10 @@ class JobModel extends Model
             'awb.dimensions',
             'awb.data_flight',
             'awb.handling_instructions',
-            'job.status'
+            'job.status',
+            'job.created_at',
+
+
         ];
         $job = DB::table('job')
             ->join('awb', 'job.id_awb', '=', 'awb.id_awb')
