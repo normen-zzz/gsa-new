@@ -20,6 +20,8 @@ class JobModel extends Model
             'consignee.name_customer as consignee_name',
             'agent.id_customer as agent_id',
             'consignee.id_customer as consignee_id',
+            'agent.data_customer as agent_data',
+            'consignee.data_customer as consignee_data',
             'awb.id_awb',
             'awb.awb',
             'awb.etd',
@@ -68,6 +70,16 @@ class JobModel extends Model
             }
             if (!empty($j->dimensions)) {
                 $j->dimensions = json_decode($j->dimensions, true);
+            }
+            if (!empty($j->agent_data)) {
+                $j->agent_data = json_decode($j->agent_data, true);
+            } else {
+                $j->agent_data = [];
+            }
+            if (!empty($j->consignee_data)) {
+                $j->consignee_data = json_decode($j->consignee_data, true);
+            } else {
+                $j->consignee_data = [];
             }
             return $j;
         });

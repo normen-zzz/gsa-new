@@ -20,8 +20,9 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'd.name_customer as consignee',
             'd.id_customer as id_consignee',
+            'c.data_customer as agent_data',
+            'd.data_customer as consignee_data',
             'a.type',
-           
             'a.eta',
             'a.etd',
             'e.name_airport as pol',
@@ -63,7 +64,18 @@ class ShippingInstructionController extends Controller
             } else {
                 $instruction->dimensions = [];
             }
-            return $instruction;
+           
+            if (!empty($instruction->agent_data)) {
+                $instruction->agent_data = json_decode($instruction->agent_data, true);
+            } else {
+                $instruction->agent_data = [];
+            }
+            if (!empty($instruction->consignee_data)) {
+                $instruction->consignee_data = json_decode($instruction->consignee_data, true);
+            } else {
+                $instruction->consignee_data = [];
+            }
+             return $instruction;
         });
 
         return response()->json([
@@ -86,6 +98,8 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'd.name_customer as consignee',
             'd.id_customer as id_consignee',
+            'c.data_customer as agent_data',
+            'd.data_customer as consignee_data',
             'a.type',
            
             'a.eta',
@@ -119,6 +133,16 @@ class ShippingInstructionController extends Controller
             $instruction->dimensions = json_decode($instruction->dimensions, true);
         } else {
             $instruction->dimensions = [];
+        }
+        if ($instruction && !empty($instruction->agent_data)) {
+            $instruction->agent_data = json_decode($instruction->agent_data, true);
+        } else {
+            $instruction->agent_data = [];
+        }
+        if ($instruction && !empty($instruction->consignee_data)) {
+            $instruction->consignee_data = json_decode($instruction->consignee_data, true);
+        } else {
+            $instruction->consignee_data = [];
         }
 
         if (!$instruction) {
