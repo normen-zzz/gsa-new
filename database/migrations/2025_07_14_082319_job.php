@@ -24,7 +24,16 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
-            
+            $table->integer('updated_by')->unsigned()->nullable();
+            $table->enum('status', ['created_by_cs', 'handled_by_ops', 'declined_by_ops','deleted'])->default('created_by_cs');
+
+        });
+        Schema::create('log_job', function (Blueprint $table) {
+            $table->id('id_logjob');
+            $table->unsignedBigInteger('id_job');
+            $table->text('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
         });
     }
 

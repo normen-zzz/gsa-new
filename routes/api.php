@@ -8,6 +8,7 @@ use App\Http\Controllers\master\AirportController;
 use App\Http\Controllers\master\CountryController;
 use App\Http\Controllers\master\CustomerController;
 use App\Http\Controllers\flow\ShippingInstructionController;
+use App\Http\Controllers\flow\JobController;
 
 
 Route::get('/user', function (Request $request) {
@@ -49,6 +50,7 @@ Route::put('/updateAirportById', [AirportController::class, 'updateAirport'])->m
 
 
 // Flow routes
+
 //shipping instruction
 Route::get('/getShippingInstruction', [ShippingInstructionController::class, 'getShippingInstructions'])->middleware('auth:api');
 Route::post('/createShippingInstruction', [ShippingInstructionController::class, 'createShippingInstruction'])->middleware('auth:api');
@@ -59,7 +61,9 @@ Route::put('/rejectShippingInstruction', [ShippingInstructionController::class, 
 Route::get('/getShippingInstructionById', [ShippingInstructionController::class, 'getShippingInstructionById'])->middleware('auth:api');
 
 
-
+//Job
+Route::get('/getJob', [JobController::class, 'getJob'])->middleware('auth:api');
+Route::put('/updateJob', [JobController::class, 'updateJob'])->middleware('auth:api');
 
 
 
