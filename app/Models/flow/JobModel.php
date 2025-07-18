@@ -34,7 +34,7 @@ class JobModel extends Model
             'awb.pieces',
             'awb.dimensions',
             'awb.data_flight',
-            'awb.special_instructions',
+            'awb.handling_instructions',
             'job.status'
         ];
         $job = DB::table('job')
