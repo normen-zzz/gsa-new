@@ -53,6 +53,7 @@ class AirportController extends Controller
             'airports.name_airport',
             'airports.code_airport',
             'airports.id_country',
+            'countries.name_country',
             'airports.status',
             'users.name as created_by',
             'airports.created_at'
@@ -61,6 +62,7 @@ class AirportController extends Controller
             ->select($select)
             ->where('airports.name_airport', 'like', '%' . $search . '%')
             ->join('users', 'airports.created_by', '=', 'users.id_user')
+            ->join('countries', 'airports.id_country', '=', 'countries.id_country')
             ->orWhere('airports.code_airport', 'like', '%' . $search . '%')
             ->orderBy('airports.created_at', 'desc');
 
@@ -77,8 +79,9 @@ class AirportController extends Controller
         ], 200);
     }
 
-    public function deactivateAirport($id)
+    public function deactivateAirport(request $request)
     {
+        $id = $request->input('id_airport');
         $airport = DB::table('airports')->where('id_airport', $id)->first();
 
         if (!$airport) {
@@ -128,8 +131,9 @@ class AirportController extends Controller
         }
     }
 
-    public function activateAirport($id)
+    public function activateAirport(Request $request)
     {
+        $id = $request->input('id_airport');
         $airport = DB::table('airports')->where('id_airport', $id)->first();
 
         if (!$airport) {
@@ -155,7 +159,7 @@ class AirportController extends Controller
                     return response()->json([
                         'status' => 'success',
                         'code' => 200,
-                        'data' => $airport,
+                        
                         'meta_data' => [
                             'code' => 200,
                             'message' => 'Airport activated successfully.',
@@ -212,7 +216,7 @@ class AirportController extends Controller
                         return response()->json([
                             'status' => 'success',
                             'code' => 200,
-                            'data' => $data,
+                           
                             'meta_data' => [
                                 'code' => 200,
                                 'message' => 'Airport updated successfully.',
