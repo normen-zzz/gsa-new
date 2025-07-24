@@ -30,59 +30,165 @@ class DatabaseSeeder extends Seeder
         ]);
 
         DB::table('positions')->insert([
-            'name' => 'Super Admin',
-            'description' => 'Super Admin Position',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        DB::table('positions')->insert([
-            'name' => 'Manager',
-            'description' => 'Manager Position',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        DB::table('positions')->insert([
-            'name' => 'Staff',
-            'description' => 'Staff Position',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        DB::table('divisions')->insert([
-            'name' => 'IT',
-            'description' => 'Information Technology Division',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
+            [
+                'name' => 'Super Admin',
+                'description' => 'Super Admin Position',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Manager',
+                'description' => 'Manager Position',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Staff',
+                'description' => 'Staff Position',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
         ]);
         DB::table('divisions')->insert([
-            'name' => 'Finance',
-            'description' => 'Finance Division',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
+            [
+                'name' => 'IT',
+                'description' => 'Information Technology Division',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Finance',
+                'description' => 'Finance Division',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Customer Service',
+                'description' => 'Customer Service Division',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Account Management',
+                'description' => 'Account Management Division',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
         ]);
-        // cs 
-        DB::table('divisions')->insert([
-            'name' => 'Customer Service',
-            'description' => 'Customer Service Division',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        DB::table('divisions')->insert([
-            'name' => 'Account Management',
-            'description' => 'Account Management Division',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+
         DB::table('roles')->insert([
             'name' => 'Super Admin',
+            'id_division' => 1, // Assuming IT division has ID 1
             'description' => 'Super Admin Role',
             'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('permissions')->insert([
+            [
+                'id_position' => 1,
+                'id_division' => 1,
+                'path' => '/master-customer',
+                'can_read' => true,
+                'can_create' => true,
+                'can_update' => true,
+                'can_delete' => true,
+                'can_approve' => true,
+                'can_reject' => true,
+                'can_print' => true,
+                'can_export' => true,
+                'can_import' => true,
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_position' => 2,
+                'id_division' => 2,
+                'path' => '/master-customer',
+                'can_read' => true,
+                'can_create' => true,
+                'can_update' => true,
+                'can_delete' => true,
+                'can_approve' => true,
+                'can_reject' => true,
+                'can_print' => true,
+                'can_export' => true,
+                'can_import' => true,
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ]);
+
+        DB::table('list_menu')->insert([
+            [
+                'name' => 'Dashboard',
+                'icon' => 'dashboard',
+                'path' => '/dashboard',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Master Customer',
+                'icon' => 'people',
+                'path' => '/master-customer',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ]);
+
+        DB::table('list_childmenu')->insert([
+            [
+                'id_listmenu' => 2, // Assuming Master Customer has ID 2
+                'name' => 'Employee',
+                'icon' => 'person',
+                'path' => '/master-customer/employee',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id_listmenu' => 2, // Assuming Master Customer has ID 2
+                'name' => 'Customer',
+                'icon' => 'business',
+                'path' => '/master-customer/customer',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ]);
+
+        DB::table('menu_user')->insert([
+            'id_position' => 1, // Assuming Super Admin position has ID 1
+            'id_division' => 1, // Assuming IT division has ID 1
+            'id_role' => 1, // Assuming Super Admin role has ID 1
+            'menu' => json_encode([
+                [
+                    'menu_id' => 2, // Assuming Master Customer has ID 2
+                    'childmenus' => [
+                        ['id_childmenu' => 1], // Assuming employee has ID 1
+                    ]
+                ],
+                [
+                    'menu_id' => 1,
+                    'childmenus' => []
+                ]
+            ]),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -95,22 +201,7 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
-            'data_customer' => json_encode([
-                [
-                    'email' => 'ceva@logistics.com',
-                    'phone' => '12345678',
-                    'address' => '123 CEVA St.',
-                    'tax_id' => '1234567890',
-                    'pic' => 'John Doe',
-                ],
-                [
-                    'email' => 'ceva2@logistics.com',
-                    'phone' => '12345679',
-                    'address' => '124 CEVA St.',
-                    'tax_id' => '1234567891',
-                    'pic' => 'Jane Doe',
-                ]
-            ])
+
         ]);
 
         DB::table('customers')->insert([
@@ -120,22 +211,41 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
-            'data_customer' => json_encode([
+
+        ]);
+
+        DB::table('data_customer')->insert([
+            'id_customer' => 1, // Assuming the CEVA customer has ID 1
+            'data' => json_encode(
                 [
-                    'email' => 'dhl@logistics.com',
-                    'phone' => '87654321',
-                    'address' => '456 DHL St.',
-                    'tax_id' => '0987654321',
-                    'pic' => 'Jane Smith',
-                ],
-                [
-                    'email' => 'dhl2@logistics.com',
-                    'phone' => '87654322',
-                    'address' => '457 DHL St.',
-                    'tax_id' => '0987654322',
-                    'pic' => 'John Smith',
+                    'pic' => 'John Doe',
+                    'email' => 'john.doe@ceva.com',
+                    'address' => '123 CEVA Street',
+                    'phone' => '123456789',
+                    'tax_id' => '1234567890',
                 ]
-            ])
+            ),
+            'is_primary' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1, // Assuming the admin user has ID 1
+        ]);
+
+        DB::table('data_customer')->insert([
+            'id_customer' => 2, // Assuming the DHL customer has ID 2
+            'data' => json_encode(
+                [
+                    'pic' => 'Jane Smith',
+                    'email' => 'jane.smith@dhl.com',
+                    'address' => '456 DHL Avenue',
+                    'phone' => '987654321',
+                    'tax_id' => '0987654321',
+                ]
+            ),
+            'is_primary' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1, // Assuming the admin user has ID 1
         ]);
 
         DB::table('countries')->insert([
@@ -169,7 +279,7 @@ class DatabaseSeeder extends Seeder
             'agent' => 1, // Assuming the CEVA customer has ID 1
             'consignee' => 2, // Assuming the DHL customer has ID 2
             'type' => 'direct',
-           
+
             'pol' => 1, // Assuming the Soekarno-Hatta International Airport has ID 1
             'pod' => 2, // Assuming the Miami International Airport has ID 2
             'commodity' => 'Electronics',

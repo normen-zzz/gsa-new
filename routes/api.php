@@ -9,6 +9,11 @@ use App\Http\Controllers\master\CountryController;
 use App\Http\Controllers\master\CustomerController;
 use App\Http\Controllers\flow\ShippingInstructionController;
 use App\Http\Controllers\flow\JobController;
+use App\Http\Controllers\master\PositionController;
+use App\Http\Controllers\master\RoleController;
+use App\Http\Controllers\master\UsersController;
+use App\Http\Controllers\master\DivisionController;
+use App\Http\Controllers\master\MenuController;
 
 
 Route::get('/user', function (Request $request) {
@@ -47,6 +52,38 @@ Route::get('/getAirport', [AirportController::class, 'getAirport'])->middleware(
 Route::put('/deactivateAirportById', [AirportController::class, 'deactivateAirport'])->middleware('auth:api');
 Route::put('/activateAirportById', [AirportController::class, 'activateAirport'])->middleware('auth:api');
 Route::put('/updateAirportById', [AirportController::class, 'updateAirport'])->middleware('auth:api');
+
+//Master Position
+Route::get('/getPositions', [PositionController::class, 'getPositions'])->middleware('auth:api');
+Route::get('/getPositionById/{id}', [PositionController::class, 'getPositionById'])->middleware('auth:api');
+Route::post('/createPosition', [PositionController::class, 'createPosition'])->middleware('auth:api');
+Route::put('/updatePosition', [PositionController::class, 'updatePosition'])->middleware('auth:api');
+
+//Master Division
+Route::get('/getDivisions', [DivisionController::class, 'getDivisions'])->middleware('auth:api');
+Route::get('/getDivisionById/{id}', [DivisionController::class, 'getDivisionById'])->middleware('auth:api');
+Route::post('/createDivision', [DivisionController::class, 'createDivision'])->middleware('auth:api');
+Route::put('/updateDivision', [DivisionController::class, 'updateDivision'])->middleware('auth:api');
+
+//Master Role
+Route::get('/getRoles', [RoleController::class, 'getRoles'])->middleware('auth:api');
+Route::get('/getRoleById/{id}', [RoleController::class, 'getRoleById'])->middleware('auth:api');
+Route::post('/createRole', [RoleController::class, 'createRole'])->middleware('auth:api');
+Route::put('/updateRole', [RoleController::class, 'updateRole'])->middleware('auth:api');
+
+//Master Menu
+Route::get('/getListMenu', [MenuController::class, 'getListMenu'])->middleware('auth:api');
+Route::get('/getListMenuById/{id}', [MenuController::class, 'getListMenuById'])->middleware('auth:api');
+Route::post('/createListMenu', [MenuController::class, 'createListMenu'])->middleware('auth:api');
+Route::put('/updateListMenu', [MenuController::class, 'updateListMenu'])->middleware('auth:api');
+
+//Master child menu
+Route::get('/getListChildMenu', [MenuController::class, 'getListChildMenu'])->middleware('auth:api');
+Route::get('/getListChildMenuById/{id}', [MenuController::class, 'getListChildMenuById'])->middleware('auth:api');
+Route::post('/createListChildMenu', [MenuController::class, 'createListChildMenu'])->middleware('auth:api');
+Route::put('/updateListChildMenu', [MenuController::class, 'updateListChildMenu'])->middleware('auth:api');
+
+
 
 
 // Flow routes

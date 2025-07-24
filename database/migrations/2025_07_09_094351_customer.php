@@ -18,20 +18,28 @@ return new class extends Migration
             $table->enum('type', ['agent', 'consignee'])->default('agent');
             $table->boolean('status')->default(true);
             $table->integer('created_by')->unsigned();
-            $table->json('data_customer')->nullable();
+           
             $table->softDeletes();
             $table->integer('deleted_by')->unsigned()->nullable();
-          
-            
-            
         });
 
-       
+        Schema::create('data_customer', function (Blueprint $table) {
+            $table->id('id_datacustomer');
+            $table->integer('id_customer')->unsigned();
+            $table->json('data')->nullable();
+            $table->boolean('is_primary')->default(false);
+            $table->softDeletes();
+            $table->integer('created_by')->unsigned();
+            $table->integer('deleted_by')->unsigned()->nullable();
+            $table->timestamps();
+        });
+
+
 
         Schema::create('log_customer', function (Blueprint $table) {
             $table->id('id_logcustomer');
             $table->integer('id_customer')->unsigned();
-           
+
             $table->text('action');
             $table->integer('id_user')->unsigned();
             $table->timestamps();
