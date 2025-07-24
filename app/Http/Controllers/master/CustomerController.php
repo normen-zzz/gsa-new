@@ -27,7 +27,7 @@ class CustomerController extends Controller
                 'data_customer.*.phone' => 'nullable|string|max:20',
                 'data_customer.*.address' => 'required|string',
                 'data_customer.*.tax_id' => 'nullable|string|max:50',
-                'data_customer.*.pic' => 'nullable|string|max:100',
+                'data_customer.*.pic' => 'required|string|max:100',
                 'data_customer.*.is_primary' => 'nullable|boolean',
             ]);
 
@@ -96,24 +96,27 @@ class CustomerController extends Controller
         } catch (Exception $e) {
             // Rollback the transaction in case of error
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => 'Failed to create customer: ' . $e->getMessage(),
-                ],
-            ], 500);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'status' => 'error',
-                'code' => 422,
-                'meta_data' => [
+            if ($e instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
                     'code' => 422,
-                    'message' => $e->validator->errors()->first(),
-                ],
-            ], 422);
-        }
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $e->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            }else{
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 500,
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => 'Failed to create customer: ' . $e->getMessage(),
+                    ],
+                ], 500);
+            }
+        } 
     }
 
     public function getCustomer(Request $request)
