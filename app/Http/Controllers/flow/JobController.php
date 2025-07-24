@@ -21,7 +21,7 @@ class JobController extends Controller
                 'awb' => 'required|string|max:50|exists:awb,awb',
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'consignee' => 'required|integer|exists:customers,id_customer',
-                
+
                 'etd' => 'required|date',
                 'eta' => 'required|date',
                 'commodity' => 'required|string|max:255',
@@ -36,10 +36,10 @@ class JobController extends Controller
                 'status' => 'required|in:created_by_cs, handled_by_ops, declined_by_ops,deleted',
                 'pol' => 'required|integer|exists:airports,id_airport',
                 'pod' => 'required|integer|exists:airports,id_airport',
-                 'data_flight' => 'nullable|array',
-            'data_flight.*.flight_number' => 'required|string|max:255',
-            'data_flight.*.departure' => 'required|date',
-            'data_flight.*.arrival' => 'required|date',
+                'data_flight' => 'nullable|array',
+                'data_flight.*.flight_number' => 'required|string|max:255',
+                'data_flight.*.departure' => 'required|date',
+                'data_flight.*.arrival' => 'required|date',
 
             ]);
 
@@ -48,7 +48,7 @@ class JobController extends Controller
             $dataJob = [
                 'agent' => $data['agent'],
                 'consignee' => $data['consignee'],
-                
+
                 'etd' => $data['etd'],
                 'eta' => $data['eta'],
                 'updated_by' => $request->user()->id_user,
@@ -103,15 +103,28 @@ class JobController extends Controller
             }
         } catch (Exception $th) {
             DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
+            if ($th instanceof \Illuminate\Validation\ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 422,
+                    'message' => 'Validation failed',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else {
+                return response()->json([
+                    'status' => 'error',
                     'code' => 500,
-                    'message' => $th->getMessage(),
-                ],
-
-            ], 500);
+                    'message' => 'An error occurred while updating the job: ' . $th->getMessage(),
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => 'An error occurred while updating the job: ' . $th->getMessage(),
+                    ],
+                ], 500);
+            }
         }
     }
 

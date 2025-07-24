@@ -155,7 +155,7 @@ class CustomerController extends Controller
                             'is_primary' => $data->is_primary,
                         ];
                     })
-                    ->values() // ✅ reset key
+                    ->values() //  reset key
                     ->toArray();
                 return $item;
             });
@@ -394,14 +394,26 @@ class CustomerController extends Controller
             }
         } catch (Exception $th) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
+           if ($th instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 422,
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else {
+                return response()->json([
+                    'status' => 'error',
                     'code' => 500,
-                    'message' => 'Failed to add customer detail: ' . $th->getMessage(),
-                ],
-            ], 500);
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => $th->getMessage(),
+                    ],
+                ], 500);
+            }
         }
     }
 
@@ -497,14 +509,26 @@ class CustomerController extends Controller
             }
         } catch (Exception $th) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
+            if ($th instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 422,
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else {
+                return response()->json([
+                    'status' => 'error',
                     'code' => 500,
-                    'message' => $th->getMessage(),
-                ],
-            ], 500);
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => $th->getMessage(),
+                    ],
+                ], 500);
+            }
         }
     }
 }

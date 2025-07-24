@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 
 
 class PositionController extends Controller
@@ -69,19 +70,56 @@ class PositionController extends Controller
 
     public function createPosition(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:positions,name',
-            'description' => 'nullable|string|max:500',
-            'status' => 'boolean'
-        ]);
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255|unique:positions,name',
+                'description' => 'nullable|string|max:500',
+                'status' => 'boolean'
+            ]);
+            $position = DB::table('positions')->insertGetId([
+                'name' => $request->input('name'),
+                'description' => $request->input('description', null),
+                'status' => $request->input('status', true),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            DB::commit();
+            return response()->json([
+                'code' => 201,
+                'status' => 'success',
+                'meta_data' => [
+                    'code' => 201,
+                    'message' => 'Position created successfully.',
+                ]
+            ], 201);
+        } catch (Exception $th) {
+            DB::rollBack();
+            if ($th instanceof ValidationException) {
+                return response()->json([
+                    'code' => 422,
+                    'status' => 'error',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation failed.',
+                        'errors' => $th->validator->errors()
+                    ]
+                ], 422);
+            } else {
+                return response()->json([
+                    'code' => 500,
+                    'status' => 'error',
+                   
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => $th->getMessage(),
+                    ],
+                ], 500);
+            }
+            //throw $th;
+        }
 
-        $position = DB::table('positions')->insert([
-            'name' => $request->input('name'),
-            'description' => $request->input('description', null),
-            'status' => $request->input('status', true),
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+
 
         return response()->json([
             'code' => 201,
@@ -104,7 +142,7 @@ class PositionController extends Controller
                 'description' => 'nullable|string|max:500',
                 'status' => 'boolean'
             ]);
-            
+
             $position = DB::table('positions')
                 ->where('id_position', $request->input('id_position'))
                 ->update([
@@ -113,7 +151,7 @@ class PositionController extends Controller
                     'status' => $request->input('status', true),
                     'updated_at' => now()
                 ]);
-            
+
             if (!$position) {
                 DB::commit(); // Still commit as no error occurred, just no changes
                 return response()->json([

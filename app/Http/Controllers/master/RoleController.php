@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 
 class RoleController extends Controller
 {
@@ -110,11 +111,23 @@ class RoleController extends Controller
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            if ($e instanceof ValidationException) {
+                return response()->json([
+                    'code' => 422,
+                    'status' => 'error',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation failed.',
+                        'errors' => $e->validator->errors()->toArray(),
+                    ]
+                ], 422);
+            } else {
+                return response()->json([
+                    'code' => 500,
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
         }
     }
     public function updateRole(Request $request)
@@ -155,11 +168,28 @@ class RoleController extends Controller
             }
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'message' => 'Failed to update role: ' . $e->getMessage()
-            ], 500);
+            if ($e instanceof ValidationException) {
+                return response()->json([
+                    'code' => 422,
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $e->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else {
+                return response()->json([
+                    'code' => 500,
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => $e->getMessage(),
+                    ],
+                ], 500);
+            }
         }
     }
 
