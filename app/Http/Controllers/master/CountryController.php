@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 
 class CountryController extends Controller
@@ -40,10 +41,28 @@ class CountryController extends Controller
             DB::commit();
         } catch (Exception $th) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to create country: ' . $th->getMessage(),
-            ], 500);
+            if ($th instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else{
+                // Handle other exceptions
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to create country: ' . $th->getMessage(),
+                    'meta_data' => [
+                        'code' => 500,
+                        'message' => 'An error occurred while creating the country.',
+                    ],
+                ], 500);
+            }
+           
         }
     }
 

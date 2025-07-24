@@ -2,24 +2,26 @@
 
 namespace App\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 
 class AirportController extends Controller
 {
     public function createAirport(Request $request)
     {
-        $data = $request->validate([
-            'name_airport' => 'required|string|max:100|unique:airports,name_airport',
-            'code_airport' => 'required|string|max:10|unique:airports,code_airport',
-            'id_country' => 'required|integer|exists:countries,id_country',
-        ]);
-
-        $data['created_by'] = $request->user()->id_user;
         DB::beginTransaction();
         try {
+            $data = $request->validate([
+                'name_airport' => 'required|string|max:100|unique:airports,name_airport',
+                'code_airport' => 'required|string|max:10|unique:airports,code_airport',
+                'id_country' => 'required|integer|exists:countries,id_country',
+            ]);
+
+            $data['created_by'] = $request->user()->id_user;
+
             $airport = DB::table('airports')->insert($data);
             if ($airport) {
                 DB::commit();
@@ -31,12 +33,25 @@ class AirportController extends Controller
                         'code' => 201,
                         'message' => 'Airport created successfully.',
                     ],
-
                 ], 201);
             } else {
                 throw new Exception('Failed to create airport.');
             }
         } catch (Exception $th) {
+            DB::rollback();
+            // Check if it's a validation exception
+            if ($th instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            }
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to create airport: ' . $th->getMessage(),
@@ -124,10 +139,23 @@ class AirportController extends Controller
             ], 200);
         } catch (Exception $th) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to deactivate airport: ' . $th->getMessage(),
-            ], 500);
+            if ($th instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else {
+                // Handle other exceptions
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to deactivate airport: ' . $th->getMessage(),
+                ], 500);
+            }
         }
     }
 
@@ -159,7 +187,7 @@ class AirportController extends Controller
                     return response()->json([
                         'status' => 'success',
                         'code' => 200,
-                        
+
                         'meta_data' => [
                             'code' => 200,
                             'message' => 'Airport activated successfully.',
@@ -171,9 +199,15 @@ class AirportController extends Controller
             }
         } catch (Exception $th) {
             DB::rollback();
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to activate airport: ' . $th->getMessage(),
+                'code' => 500,
+                'meta_data' => [
+                    'code' => 500,
+                    'message' => $th->getMessage(),
+                ],
+
             ], 500);
         }
     }
@@ -216,7 +250,7 @@ class AirportController extends Controller
                         return response()->json([
                             'status' => 'success',
                             'code' => 200,
-                           
+
                             'meta_data' => [
                                 'code' => 200,
                                 'message' => 'Airport updated successfully.',
@@ -226,15 +260,30 @@ class AirportController extends Controller
                 } else {
                     throw new Exception('Failed to update airport.');
                 }
-            } else{
+            } else {
                 throw new Exception('Airport not found.');
             }
         } catch (Exception $th) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to update airport: ' . $th->getMessage(),
-            ], 500);
+            if ($th instanceof ValidationException) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'meta_data' => [
+                        'code' => 422,
+                        'message' => 'Validation errors occurred.',
+                        'errors' => $th->validator->errors()->toArray(),
+                    ],
+                ], 422);
+            } else {
+                // Handle other exceptions
+                if ($th instanceof Exception) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' =>  $th->getMessage(),
+                    ], 500);
+                }
+            }
         }
     }
 }
