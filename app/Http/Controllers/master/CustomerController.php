@@ -42,24 +42,27 @@ class CustomerController extends Controller
             if ($addCustomer) {
                 if (isset($data['data_customer']) && is_array($data['data_customer'])) {
                     foreach ($data['data_customer'] as $key => $value) {
-                        if($value['is_primary'] == true) {
+                        if ($value['is_primary'] == true) {
                             // Set all other data_customer entries to not primary
                             DB::table('data_customer')
                                 ->where('id_customer', $addCustomer)
                                 ->update(['is_primary' => false]);
                         }
                         // Validate each data_customer entry
-                        $request->validate([
+                        $datacustomer = $request->validate([
                             'data_customer.' . $key . '.email' => 'nullable|email|max:255',
                             'data_customer.' . $key . '.phone' => 'nullable|string|max:20',
                             'data_customer.' . $key . '.address' => 'required|string',
                             'data_customer.' . $key . '.tax_id' => 'nullable|string|max:50',
                             'data_customer.' . $key . '.pic' => 'nullable|string|max:100',
                         ]);
+
                         // Prepare data for insertion
+
+
                         $dataCustomer = [
                             'id_customer' => $addCustomer,
-                            'data' => json_encode($value),
+                            'data' => json_encode($datacustomer),
                             'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
                             'created_at' => now(),
                             'created_by' => $request->user()->id_user,
@@ -106,7 +109,7 @@ class CustomerController extends Controller
                         'errors' => $e->validator->errors()->toArray(),
                     ],
                 ], 422);
-            }else{
+            } else {
                 return response()->json([
                     'status' => 'error',
                     'code' => 500,
@@ -116,7 +119,7 @@ class CustomerController extends Controller
                     ],
                 ], 500);
             }
-        } 
+        }
     }
 
     public function getCustomer(Request $request)
@@ -128,8 +131,6 @@ class CustomerController extends Controller
         $select = [
             'customers.*',
             'users.name as created_by',
-
-
         ];
         $customer = DB::table('customers')
             ->select($select)
@@ -394,7 +395,7 @@ class CustomerController extends Controller
             }
         } catch (Exception $th) {
             DB::rollback();
-           if ($th instanceof ValidationException) {
+            if ($th instanceof ValidationException) {
                 return response()->json([
                     'status' => 'error',
                     'code' => 422,
@@ -428,6 +429,7 @@ class CustomerController extends Controller
                 'name_customer' => 'required|string|min:3|unique:customers,name_customer,' . $request->input('id_customer') . ',id_customer',
                 'type' => 'required|in:agent,consignee',
                 'data_customer' => 'required|array',
+                'data_customer.*.id_datacustomer' => 'nullable|integer|exists:data_customer,id_datacustomer',
                 'data_customer.*.email' => 'nullable|email|max:255',
                 'data_customer.*.phone' => 'nullable|string|max:20',
                 'data_customer.*.address' => 'required|string',
@@ -435,77 +437,102 @@ class CustomerController extends Controller
                 'data_customer.*.pic' => 'nullable|string|max:100',
             ]);
 
-            $customer = CustomerModel::find($data['id_customer']);
-            // cek perbedaan antara $data['data_customer'] dan data lama
-            $oldDetails = json_decode($customer->data_customer, true);
             $changes = [];
-            foreach ($data['data_customer'] as $key => $value) {
-                if (isset($oldDetails[$key]) && $oldDetails[$key] != $value) {
-                    $changes[$key] = [
-                        'old' => $oldDetails[$key],
-                        'new' => $value
-                    ];
-                }
-            }
-
-            if ($customer->name_customer != $data['name_customer']) {
-                $changes['name_customer'] = [
-                    'old' => $customer->name_customer,
-                    'new' => $data['name_customer']
-                ];
-            }
-            if ($customer->type != $data['type']) {
-                $changes['type'] = [
-                    'old' => $customer->type,
-                    'new' => $data['type']
-                ];
-            }
-
-            $updateCustomer = DB::table('customers')
+            $customer = DB::table('customers')
                 ->where('id_customer', $data['id_customer'])
-                ->update([
-                    'name_customer' => $data['name_customer'],
-                    'type' => $data['type'],
-                    'data_customer' => json_encode($data['data_customer']),
-                    'updated_at' => now(),
-                ]);
+                ->first();
+            if (!$customer) {
+                throw new Exception('Customer not found.');
+            } else {
+                $updateCustomer = DB::table('customers')
+                    ->where('id_customer', $data['id_customer'])
+                    ->update([
+                        'name_customer' => $data['name_customer'],
+                        'type' => $data['type'],
+                        'updated_at' => now(),
+                    ]);
+                if (!$updateCustomer) {
+                    throw new Exception('Failed to update customer.');
+                } else {
+                    // Update or insert data_customer
+                    foreach ($data['data_customer'] as $key => $value) {
+                        $dataCustomer = DB::table('data_customer')
+                            ->where('id_datacustomer', $value['id_datacustomer'] ?? null)
+                            ->where('id_customer', $data['id_customer'])
+                            ->first();
+                        
+                        if ($dataCustomer) {
+                            $dataUpdateInsert = [
+                                'data' => json_encode($value),
+                                'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
+                                'updated_at' => now(),
+                            ];
+                            
+                            // Get old data for comparison
+                            $oldData = json_decode($dataCustomer->data, true);
+                            
+                            // Track field changes for this data customer
+                            foreach ($value as $field => $newValue) {
+                                if (isset($oldData[$field]) && $oldData[$field] != $newValue) {
+                                    if (!isset($changes['updated_data_customer']['data'])) {
+                                        $changes['updated_data_customer']['data'] = [];
+                                    }
+                                    $changes['updated_data_customer']['data'][] = [
+                                        'id_datacustomer' => $dataCustomer->id_datacustomer,
+                                        'field' => $field,
+                                        'old' => $oldData[$field],
+                                        'new' => $newValue
+                                    ];
+                                }
+                            }
+                        } else {
+                            $dataUpdateInsert = [
+                                'id_customer' => $data['id_customer'],
+                                'data' => json_encode($value),
+                                'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
+                                'created_at' => now(),
+                                'created_by' => $request->user()->id_user,
+                                'updated_at' => now(),
+                            ];
+                            
+                            // Track new data customer entries
+                            if (!isset($changes['new_data_customer'])) {
+                                $changes['new_data_customer'] = [];
+                            }
+                            $changes['new_data_customer'][] = [
+                                'id_customer' => $data['id_customer'],
+                                'data' => $value
+                            ];
+                        }
 
-            if ($updateCustomer) {
-                // Log the action
-                if (count($changes) > 0) {
-                    $insertLog = DB::table('log_customer')->insert([
+                        DB::table('data_customer')
+                            ->updateOrInsert(
+                                ['id_datacustomer' => $value['id_datacustomer'] ?? null, 'id_customer' => $data['id_customer']],
+                                $dataUpdateInsert
+                            );
+                    }
+
+                    $log = DB::table('log_customer')->insert([
                         'id_customer' => $data['id_customer'],
                         'action' => json_encode($changes),
                         'id_user' => $request->user()->id_user,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
-                    if ($insertLog) {
+                    if ($log) {
                         DB::commit();
                         return response()->json([
                             'status' => 'success',
                             'code' => 200,
                             'meta_data' => [
                                 'code' => 200,
-                                'message' => 'Customer detail updated successfully.',
+                                'message' => 'Customer updated successfully.',
                             ],
                         ], 200);
                     } else {
-                        throw new Exception('Failed to log customer detail update.');
+                        throw new Exception('Failed to log customer update action.');
                     }
-                } else {
-                    DB::commit();
-                    return response()->json([
-                        'status' => 'success',
-                        'code' => 200,
-                        'meta_data' => [
-                            'code' => 200,
-                            'message' => 'Customer detail updated successfully with no changes.',
-                        ],
-                    ], 200);
                 }
-            } else {
-                throw new Exception('Failed to update customer detail for ID ' . $data['id_customer']);
             }
         } catch (Exception $th) {
             DB::rollback();

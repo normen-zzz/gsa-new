@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class AirportController extends Controller
 {
-    public function createAirport(Request $request)
+    public function createAirport(Request $request) 
     {
         DB::beginTransaction();
         try {
