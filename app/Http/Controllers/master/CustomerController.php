@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\master\CustomerModel;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
+use GuzzleHttp\Psr7\Response;
 
 class CustomerController extends Controller
 {
@@ -75,50 +77,17 @@ class CustomerController extends Controller
                         }
                     }
                     DB::commit();
-                    return response()->json([
-                        'status' => 'success',
-                        'code' => 201,
-                        'meta_data' => [
-                            'code' => 201,
-                            'message' => 'Customer created successfully.',
-                        ],
-                    ], 201);
+                    return ResponseHelper::success('Customer created successfully.', NULL, 201);
                 } else {
                     // Commit the transaction
                     DB::commit();
-                    return response()->json([
-                        'status' => 'success',
-                        'code' => 201,
-                        'meta_data' => [
-                            'code' => 201,
-                            'message' => 'Customer created successfully without details.',
-                        ],
-                    ], 201);
+                    return ResponseHelper::success('Customer created successfully.', NULL, 201);
                 }
             }
         } catch (Exception $e) {
             // Rollback the transaction in case of error
             DB::rollback();
-            if ($e instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 422,
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 500,
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => 'Failed to create customer: ' . $e->getMessage(),
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($e);
         }
     }
 
@@ -161,24 +130,9 @@ class CustomerController extends Controller
                 return $item;
             });
 
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'data' => $customer,
-                'meta_data' => [
-                    'code' => 200,
-                    'message' => 'Customer retrieved successfully.',
-                ],
-            ], 200);
+            return ResponseHelper::success('Customers retrieved successfully.', $customer, 200);
         } else {
-            return response()->json([
-                'status' => 'error',
-                'code' => 404,
-                'meta_data' => [
-                    'code' => 404,
-                    'message' => 'Customer not found.',
-                ],
-            ], 404);
+            return ResponseHelper::error(new Exception('No customers found.'));
         }
     }
 
@@ -214,24 +168,10 @@ class CustomerController extends Controller
                     'data' => json_decode($item->data, true),
                 ];
             })->toArray();
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'data' => $customer,
-                'meta_data' => [
-                    'code' => 200,
-                    'message' => 'Customer retrieved successfully.',
-                ],
-            ], 200);
+            return ResponseHelper::success('Customer retrieved successfully.', $customer, 200);
         } else {
-            return response()->json([
-                'status' => 'error',
-                'code' => 404,
-                'meta_data' => [
-                    'code' => 404,
-                    'message' => 'Customer not found.',
-                ],
-            ], 404);
+           return ResponseHelper::success('Customer not found.', NULL, 404);
+           
         }
     }
 
@@ -251,24 +191,11 @@ class CustomerController extends Controller
 
             $customer->save();
 
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'meta_data' => [
-                    'code' => 200,
-                    'data' => $customer,
-                    'message' => 'Customer deactivated successfully.',
-                ],
-            ], 200);
+           return ResponseHelper::success('Customer deactivated successfully.', NULL, 200);
+           
+          
         } else {
-            return response()->json([
-                'status' => 'error',
-                'code' => 404,
-                'meta_data' => [
-                    'code' => 404,
-                    'message' => 'Customer not found.',
-                ],
-            ], 404);
+           return ResponseHelper::success('Customer not found.', NULL, 404);
         }
     }
 
@@ -287,24 +214,9 @@ class CustomerController extends Controller
             $customer->status = true;
             $customer->save();
 
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'data' => $customer,
-                'meta_data' => [
-                    'code' => 200,
-                    'message' => 'Customer activated successfully.',
-                ],
-            ], 200);
+            return ResponseHelper::success('Customer activated successfully.', NULL, 200);
         } else {
-            return response()->json([
-                'status' => 'error',
-                'code' => 404,
-                'meta_data' => [
-                    'code' => 404,
-                    'message' => 'Customer not found.',
-                ],
-            ], 404);
+            return ResponseHelper::success('Customer not found.', NULL, 404);
         }
     }
 
@@ -375,14 +287,7 @@ class CustomerController extends Controller
                         ]);
                         if ($insertLog) {
                             DB::commit();
-                            return response()->json([
-                                'status' => 'success',
-                                'code' => 200,
-                                'meta_data' => [
-                                    'code' => 200,
-                                    'message' => 'Customer details updated successfully.',
-                                ],
-                            ], 200);
+                            return ResponseHelper::success('Customer detail updated successfully.', NULL, 200);
                         } else {
                             throw new Exception('Failed to log customer detail update.');
                         }
@@ -395,36 +300,17 @@ class CustomerController extends Controller
             }
         } catch (Exception $th) {
             DB::rollback();
-            if ($th instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 422,
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 500,
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => $th->getMessage(),
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($th);
         }
     }
 
     public function updateCustomer(Request $request)
     {
         DB::beginTransaction();
+        
         try {
             // Validate the request data
             $data = $request->validate([
-
                 'id_customer' => 'required|integer|exists:customers,id_customer',
                 'name_customer' => 'required|string|min:3|unique:customers,name_customer,' . $request->input('id_customer') . ',id_customer',
                 'type' => 'required|in:agent,consignee',
@@ -438,124 +324,113 @@ class CustomerController extends Controller
             ]);
 
             $changes = [];
+            
+            // Check if customer exists
             $customer = DB::table('customers')
                 ->where('id_customer', $data['id_customer'])
                 ->first();
+                
             if (!$customer) {
                 throw new Exception('Customer not found.');
-            } else {
-                $updateCustomer = DB::table('customers')
+            }
+            
+            // Update customer main data
+            $updateCustomer = DB::table('customers')
+                ->where('id_customer', $data['id_customer'])
+                ->update([
+                    'name_customer' => $data['name_customer'],
+                    'type' => $data['type'],
+                    'updated_at' => now(),
+                ]);
+                
+            if (!$updateCustomer) {
+                throw new Exception('Failed to update customer.');
+            }
+            
+            // Process customer details
+            foreach ($data['data_customer'] as $key => $value) {
+                $dataCustomer = DB::table('data_customer')
+                    ->where('id_datacustomer', $value['id_datacustomer'] ?? null)
                     ->where('id_customer', $data['id_customer'])
-                    ->update([
-                        'name_customer' => $data['name_customer'],
-                        'type' => $data['type'],
+                    ->first();
+                
+                if ($dataCustomer) {
+                    // Update existing data customer
+                    $dataUpdateInsert = [
+                        'data' => json_encode($value),
+                        'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
                         'updated_at' => now(),
-                    ]);
-                if (!$updateCustomer) {
-                    throw new Exception('Failed to update customer.');
-                } else {
-                    // Update or insert data_customer
-                    foreach ($data['data_customer'] as $key => $value) {
-                        $dataCustomer = DB::table('data_customer')
-                            ->where('id_datacustomer', $value['id_datacustomer'] ?? null)
-                            ->where('id_customer', $data['id_customer'])
-                            ->first();
-                        
-                        if ($dataCustomer) {
-                            $dataUpdateInsert = [
-                                'data' => json_encode($value),
-                                'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
-                                'updated_at' => now(),
-                            ];
-                            
-                            // Get old data for comparison
-                            $oldData = json_decode($dataCustomer->data, true);
-                            
-                            // Track field changes for this data customer
-                            foreach ($value as $field => $newValue) {
-                                if (isset($oldData[$field]) && $oldData[$field] != $newValue) {
-                                    if (!isset($changes['updated_data_customer']['data'])) {
-                                        $changes['updated_data_customer']['data'] = [];
-                                    }
-                                    $changes['updated_data_customer']['data'][] = [
-                                        'id_datacustomer' => $dataCustomer->id_datacustomer,
-                                        'field' => $field,
-                                        'old' => $oldData[$field],
-                                        'new' => $newValue
-                                    ];
-                                }
+                    ];
+                    
+                    // Track changes for logging
+                    $oldData = json_decode($dataCustomer->data, true);
+                    foreach ($value as $field => $newValue) {
+                        if (isset($oldData[$field]) && $oldData[$field] != $newValue) {
+                            if (!isset($changes['updated_data_customer']['data'])) {
+                                $changes['updated_data_customer']['data'] = [];
                             }
-                        } else {
-                            $dataUpdateInsert = [
-                                'id_customer' => $data['id_customer'],
-                                'data' => json_encode($value),
-                                'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
-                                'created_at' => now(),
-                                'created_by' => $request->user()->id_user,
-                                'updated_at' => now(),
-                            ];
-                            
-                            // Track new data customer entries
-                            if (!isset($changes['new_data_customer'])) {
-                                $changes['new_data_customer'] = [];
-                            }
-                            $changes['new_data_customer'][] = [
-                                'id_customer' => $data['id_customer'],
-                                'data' => $value
+                            $changes['updated_data_customer']['data'][] = [
+                                'id_datacustomer' => $dataCustomer->id_datacustomer,
+                                'field' => $field,
+                                'old' => $oldData[$field],
+                                'new' => $newValue
                             ];
                         }
-
-                        DB::table('data_customer')
-                            ->updateOrInsert(
-                                ['id_datacustomer' => $value['id_datacustomer'] ?? null, 'id_customer' => $data['id_customer']],
-                                $dataUpdateInsert
-                            );
                     }
-
-                    $log = DB::table('log_customer')->insert([
+                } else {
+                    // Create new data customer
+                    $dataUpdateInsert = [
                         'id_customer' => $data['id_customer'],
-                        'action' => json_encode($changes),
-                        'id_user' => $request->user()->id_user,
+                        'data' => json_encode($value),
+                        'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
                         'created_at' => now(),
+                        'created_by' => $request->user()->id_user,
                         'updated_at' => now(),
-                    ]);
-                    if ($log) {
-                        DB::commit();
-                        return response()->json([
-                            'status' => 'success',
-                            'code' => 200,
-                            'meta_data' => [
-                                'code' => 200,
-                                'message' => 'Customer updated successfully.',
-                            ],
-                        ], 200);
-                    } else {
-                        throw new Exception('Failed to log customer update action.');
+                    ];
+                    
+                    // Track new entries for logging
+                    if (!isset($changes['new_data_customer'])) {
+                        $changes['new_data_customer'] = [];
                     }
+                    $changes['new_data_customer'][] = [
+                        'id_customer' => $data['id_customer'],
+                        'data' => $value
+                    ];
                 }
+
+                // Update or insert data
+                DB::table('data_customer')->updateOrInsert(
+                    [
+                        'id_datacustomer' => $value['id_datacustomer'] ?? null, 
+                        'id_customer' => $data['id_customer']
+                    ],
+                    $dataUpdateInsert
+                );
             }
+
+            // Log the changes
+            $log = DB::table('log_customer')->insert([
+                'id_customer' => $data['id_customer'],
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            if (!$log) {
+                throw new Exception('Failed to log customer update action.');
+            }
+            
+            // Commit transaction
+            DB::commit();
+            
+            return ResponseHelper::success('Customer updated successfully.', NULL, 200);
+            
         } catch (Exception $th) {
+            // Rollback transaction on error
             DB::rollback();
-            if ($th instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 422,
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 500,
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => $th->getMessage(),
-                    ],
-                ], 500);
-            }
+            // Return error response
+            return ResponseHelper::error($th);
         }
     }
 }

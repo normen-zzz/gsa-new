@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
+use GuzzleHttp\Psr7\Response;
 
 class DivisionController extends Controller
 {
@@ -30,16 +32,7 @@ class DivisionController extends Controller
             })
             ->orderBy('divisions.id_division', 'asc')
             ->paginate($limit);
-
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $divisions,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Divisions retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Divisions retrieved successfully.', $divisions->items(), 200);
     }
     public function getDivisionById($id)
     {
@@ -55,15 +48,7 @@ class DivisionController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $division,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Division retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Division retrieved successfully.', $division, 200);
     }
     public function createDivision(Request $request)
     {
@@ -87,39 +72,10 @@ class DivisionController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 201,
-                'status' => 'success',
-                'data' => ['id_division' => $division],
-                'meta_data' => [
-                    'code' => 201,
-                    'message' => 'Division created successfully.',
-                ]
-            ], 201);
+            return ResponseHelper::success('Division created successfully.', NULL, 201);
         } catch (Exception $e) {
             DB::rollBack();
-           if ($e instanceof ValidationException) {
-                return response()->json([
-                    'code' => 422,
-                    'status' => 'error',
-                   
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'code' => 500,
-                    'status' => 'error',
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => 'An error occurred while creating the division: ' . $e->getMessage(),
-                        
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($e);
         }
     }
 
@@ -151,39 +107,10 @@ class DivisionController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 200,
-                'status' => 'success',
-                'data' => ['id_division' => $id],
-                'meta_data' => [
-                    'code' => 200,
-                    'message' => 'Division updated successfully.',
-                ]
-            ], 200);
+            return ResponseHelper::success('Division updated successfully.', NULL, 200);
         } catch (Exception $e) {
             DB::rollBack();
-            if ($e instanceof ValidationException) {
-                return response()->json([
-                    'code' => 422,
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'code' => 500,
-                    'status' => 'error',
-                    'message' => $e->getMessage(),
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => 'An error occurred while updating the division.',
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($e);
         }
     }
 }

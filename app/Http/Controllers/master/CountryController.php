@@ -59,6 +59,7 @@ class CountryController extends Controller
                     'meta_data' => [
                         'code' => 500,
                         'message' => 'An error occurred while creating the country.',
+                        'errors' => $th->getMessage(),
                     ],
                 ], 500);
             }
@@ -147,7 +148,8 @@ class CountryController extends Controller
                 'status' => 'error',
                 'meta_data' => [
                     'code' => 500,
-                    'message' => 'Failed to deactivate country: ' . $th->getMessage(),
+                    'message' => 'Failed to deactivate country: ',
+                    'errors' => $th->getMessage(),
                 ]
             ], 500);
         }
@@ -188,6 +190,7 @@ class CountryController extends Controller
                         'meta_data' => [
                             'code' => 200,
                             'message' => 'Country activated successfully.',
+
                         ]
                     ], 200);
                 }
@@ -199,7 +202,8 @@ class CountryController extends Controller
                 'status' => 'error',
                 'meta_data' => [
                     'code' => 500,
-                    'message' => 'Failed to activate country: ' . $th->getMessage(),
+                    'message' => 'Failed to activate country: ',
+                    'errors' => $th->getMessage(),
                 ]
             ], 500);
         }

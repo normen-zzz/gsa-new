@@ -7,10 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
+use GuzzleHttp\Psr7\Response;
 
 class AirportController extends Controller
 {
-    public function createAirport(Request $request) 
+    public function createAirport(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -25,37 +27,13 @@ class AirportController extends Controller
             $airport = DB::table('airports')->insert($data);
             if ($airport) {
                 DB::commit();
-                return response()->json([
-                    'status' => 'success',
-                    'code' => 201,
-                    'data' => $data,
-                    'meta_data' => [
-                        'code' => 201,
-                        'message' => 'Airport created successfully.',
-                    ],
-                ], 201);
+                return ResponseHelper::success('Airport created successfully.', NULL, 201);
             } else {
                 throw new Exception('Failed to create airport.');
             }
         } catch (Exception $th) {
             DB::rollback();
-            // Check if it's a validation exception
-            if ($th instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            }
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to create airport: ' . $th->getMessage(),
-            ], 500);
+            return ResponseHelper::error($th);
         }
     }
 
@@ -83,15 +61,7 @@ class AirportController extends Controller
 
         $airports = $query->paginate($limit);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Airports retrieved successfully.',
-            'data' => $airports,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Success',
-            ],
-        ], 200);
+        return ResponseHelper::success('Airports retrieved successfully.', $airports, 200);
     }
 
     public function deactivateAirport(request $request)
@@ -133,29 +103,10 @@ class AirportController extends Controller
                 throw new Exception('Failed to deactivate airport.');
             }
             DB::commit();
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Airport deactivated successfully.',
-            ], 200);
+            return ResponseHelper::success('Airport ' . $airport->name_airport . ' deactivated successfully.', NULL, 200);
         } catch (Exception $th) {
             DB::rollback();
-            if ($th instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                // Handle other exceptions
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to deactivate airport: ' . $th->getMessage(),
-                ], 500);
-            }
+            return ResponseHelper::error($th);
         }
     }
 
@@ -184,15 +135,7 @@ class AirportController extends Controller
                 ]);
                 if ($insertLog) {
                     DB::commit();
-                    return response()->json([
-                        'status' => 'success',
-                        'code' => 200,
-
-                        'meta_data' => [
-                            'code' => 200,
-                            'message' => 'Airport activated successfully.',
-                        ]
-                    ], 200);
+                    return ResponseHelper::success('Airport ' . $airport->name_airport . ' activated successfully.', NULL, 200);
                 }
             } else {
                 throw new Exception('Failed to activate airport.');
@@ -205,7 +148,8 @@ class AirportController extends Controller
                 'code' => 500,
                 'meta_data' => [
                     'code' => 500,
-                    'message' => $th->getMessage(),
+                    'message' => 'An error occurred while activating the airport',
+                    'errors' => $th->getMessage(),
                 ],
 
             ], 500);
@@ -247,15 +191,7 @@ class AirportController extends Controller
                     ]);
                     if ($log) {
                         DB::commit();
-                        return response()->json([
-                            'status' => 'success',
-                            'code' => 200,
-
-                            'meta_data' => [
-                                'code' => 200,
-                                'message' => 'Airport updated successfully.',
-                            ],
-                        ], 200);
+                        return ResponseHelper::success('Airport updated successfully.', NULL, 200);
                     }
                 } else {
                     throw new Exception('Failed to update airport.');
@@ -265,25 +201,7 @@ class AirportController extends Controller
             }
         } catch (Exception $th) {
             DB::rollback();
-            if ($th instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                // Handle other exceptions
-                if ($th instanceof Exception) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' =>  $th->getMessage(),
-                    ], 500);
-                }
-            }
+            return ResponseHelper::error($th);
         }
     }
 }

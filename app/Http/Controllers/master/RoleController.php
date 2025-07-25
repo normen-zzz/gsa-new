@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
 
 class RoleController extends Controller
 {
@@ -33,15 +34,7 @@ class RoleController extends Controller
             ->orderBy('roles.id_role', 'asc')
             ->paginate($limit);
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $roles,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Roles retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Roles retrieved successfully.', $roles->items(), 200);
     }
     public function getRoleById($id)
     {
@@ -61,22 +54,10 @@ class RoleController extends Controller
             ->first();
 
         if (!$role) {
-            return response()->json([
-                'code' => 404,
-                'status' => 'error',
-                'message' => 'Role not found.'
-            ], 404);
+            return ResponseHelper::success('Role not found.', NULL, 404);
         }
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $role,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Role retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Role retrieved successfully.', $role, 200);
     }
     public function createRole(Request $request)
     {
@@ -100,34 +81,10 @@ class RoleController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 201,
-                'status' => 'success',
-                'data' => ['id_role' => $role],
-                'meta_data' => [
-                    'code' => 201,
-                    'message' => 'Role created successfully.',
-                ]
-            ], 201);
+            return ResponseHelper::success('Role created successfully.', NULL, 201);
         } catch (Exception $e) {
             DB::rollBack();
-            if ($e instanceof ValidationException) {
-                return response()->json([
-                    'code' => 422,
-                    'status' => 'error',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation failed.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ]
-                ], 422);
-            } else {
-                return response()->json([
-                    'code' => 500,
-                    'status' => 'error',
-                    'message' => $e->getMessage()
-                ], 500);
-            }
+            return ResponseHelper::error($e);
         }
     }
     public function updateRole(Request $request)
@@ -157,39 +114,11 @@ class RoleController extends Controller
                 throw new Exception('Failed to update role.');
             } else {
                 DB::commit();
-                return response()->json([
-                    'code' => 200,
-                    'status' => 'success',
-                    'meta_data' => [
-                        'code' => 200,
-                        'message' => 'Role updated successfully.',
-                    ]
-                ], 200);
+                return ResponseHelper::success('Role updated successfully.', NULL, 200);
             }
         } catch (Exception $e) {
             DB::rollBack();
-            if ($e instanceof ValidationException) {
-                return response()->json([
-                    'code' => 422,
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'code' => 500,
-                    'status' => 'error',
-                    'message' => $e->getMessage(),
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => $e->getMessage(),
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($e);
         }
     }
 

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Models\flow\JobModel;
+use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
 
 
 class JobController extends Controller
@@ -83,15 +85,8 @@ class JobController extends Controller
                     ]);
                     if ($insertLog) {
                         DB::commit();
-                        return response()->json([
-                            'status' => 'success',
-                            'code' => 200,
-                            'meta_data' => [
-                                'code' => 200,
-                                'message' => 'Job updated successfully.',
-                            ],
-
-                        ], 200);
+                        return ResponseHelper::success('Job updated successfully.', NULL, 200);
+                       
                     } else {
                         throw new Exception('Failed to log job update action.');
                     }
@@ -103,28 +98,7 @@ class JobController extends Controller
             }
         } catch (Exception $th) {
             DB::rollBack();
-            if ($th instanceof \Illuminate\Validation\ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 422,
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 500,
-                    'message' => 'An error occurred while updating the job: ' . $th->getMessage(),
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => 'An error occurred while updating the job: ' . $th->getMessage(),
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($th);
         }
     }
 
@@ -135,17 +109,9 @@ class JobController extends Controller
             $limit = $request->input('limit', 10);
             $search = $request->input('searchKey', '');
             $jobs = $jobModel->getJob($search, $limit);
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'data' => $jobs,
-            ], 200);
+            return ResponseHelper::success('Jobs retrieved successfully.', $jobs, 200);
         } catch (Exception $th) {
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'message' => $th->getMessage(),
-            ], 500);
+            return ResponseHelper::error($th);
         }
     }
 }

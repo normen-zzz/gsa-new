@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
+use GuzzleHttp\Psr7\Response;
 
 class AirlineController extends Controller
 {
@@ -23,15 +25,7 @@ class AirlineController extends Controller
 
         $airlines = $query->paginate($limit);
 
-        return response()->json([
-            'status' => 'success',
-            'code' => 200,
-            'data' => $airlines,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Airlines retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Airlines retrieved successfully.', $airlines->items(), 200);
     }
 
     public function getAirlineById($id)
@@ -47,15 +41,7 @@ class AirlineController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'code' => 200,
-            'data' => $airline,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Airline retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Airline retrieved successfully.', $airline, 200);
     }
 
     public function createAirline(Request $request)
@@ -77,42 +63,12 @@ class AirlineController extends Controller
 
             if ($insertAirline) {
                 DB::commit();
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Airline created successfully.',
-                    'data' => [
-                        'id_airline' => $insertAirline,
-                        'name' => $data['name'],
-                        'code' => $data['code'],
-                        'status' => $data['status'],
-                        'created_at' => now(),
-                    ],
-                ], 201);
+                return ResponseHelper::success('Airline created successfully.', NULL, 201);
             } else {
                 throw new Exception('Failed to create airline.');
             }
         } catch (Exception $e) {
-            if ($e instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 422,
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            }
-
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => 'An error occurred while creating the airline.' . $e->getMessage(),
-                ],
-
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 
@@ -137,35 +93,13 @@ class AirlineController extends Controller
 
             if ($updateAirline) {
                 DB::commit();
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Airline updated successfully.',
-                ], 200);
+                return ResponseHelper::success('Airline updated successfully.', NULL, 200);
             } else {
                 throw new Exception('Failed to update airline.');
             }
         } catch (Exception $e) {
             DB::rollback();
-            if ($e instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'code' => 422,
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $e->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            }
-
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => 'An error occurred while updating the airline: ' . $e->getMessage(),
-                ],
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 }
