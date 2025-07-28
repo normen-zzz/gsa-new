@@ -163,6 +163,7 @@ class AirportController extends Controller
             'name_airport' => 'required|string|max:100|unique:airports,name_airport,'.$id.',id_airport',
             'code_airport' => 'required|string|max:10|unique:airports,code_airport,'.$id.',id_airport',
             'id_country' => 'required|integer|exists:countries,id_country',
+            'status' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
