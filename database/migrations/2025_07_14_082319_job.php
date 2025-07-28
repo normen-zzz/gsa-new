@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id('id_job');
             $table->unsignedBigInteger('id_shippinginstruction');
             $table->unsignedBigInteger('id_awb');
-            $table->unsignedBigInteger('agent')->nullable();
-            $table->unsignedBigInteger('consignee')->nullable();
+            $table->unsignedBigInteger('agent');
+            $table->unsignedBigInteger('data_agent');
+            $table->string('consignee')->nullable();
             $table->date('etd');
             $table->date('eta');
             $table->timestamps();
@@ -30,7 +31,7 @@ return new class extends Migration
         Schema::create('log_job', function (Blueprint $table) {
             $table->id('id_logjob');
             $table->unsignedBigInteger('id_job');
-            $table->text('action');
+            $table->json('action');
             $table->unsignedBigInteger('id_user');
             $table->timestamps();
         });
