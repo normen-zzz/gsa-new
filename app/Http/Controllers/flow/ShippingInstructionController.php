@@ -20,8 +20,6 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'd.name_customer as consignee',
             'd.id_customer as id_consignee',
-            'c.data_customer as agent_data',
-            'd.data_customer as consignee_data',
             'a.type',
             'a.eta',
             'a.etd',
@@ -54,7 +52,7 @@ class ShippingInstructionController extends Controller
             ->orWhere('f.name_airport', 'like', '%' . $search . '%')
             ->orderBy('a.created_at', 'desc');
 
-            
+
 
         $instructions = $query->paginate($limit);
         $instructions->getCollection()->transform(function ($instruction) {
@@ -64,18 +62,21 @@ class ShippingInstructionController extends Controller
             } else {
                 $instruction->dimensions = [];
             }
-           
-            if (!empty($instruction->agent_data)) {
-                $instruction->agent_data = json_decode($instruction->agent_data, true);
-            } else {
-                $instruction->agent_data = [];
-            }
-            if (!empty($instruction->consignee_data)) {
-                $instruction->consignee_data = json_decode($instruction->consignee_data, true);
-            } else {
-                $instruction->consignee_data = [];
-            }
-             return $instruction;
+
+            $agentData = DB::table('data_customer')
+                ->where('id_customer', $instruction->id_agent)
+                ->where('is_primary', true)
+                ->first();
+            $consigneeData = DB::table('data_customer')
+                ->where('id_customer', $instruction->id_consignee)
+                ->where('is_primary', true)
+                ->first();
+            
+            $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
+            $consigneeData->id_datacustomer = $consigneeData ? $consigneeData->id_datacustomer : null;
+            $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
+            $instruction->consignee_data = $consigneeData ? json_decode($consigneeData->data, true) : [];
+            return $instruction;
         });
 
         return response()->json([
@@ -101,7 +102,6 @@ class ShippingInstructionController extends Controller
             'c.data_customer as agent_data',
             'd.data_customer as consignee_data',
             'a.type',
-           
             'a.eta',
             'a.etd',
             'e.name_airport as pol',
@@ -127,8 +127,8 @@ class ShippingInstructionController extends Controller
             ->leftJoin('airports AS f', 'a.pod', '=', 'f.id_airport')
             ->where('a.id_shippinginstruction', $id)
             ->orderBy('a.id_shippinginstruction', 'desc')->first();
-        
-            // json decode dimensions
+
+        // json decode dimensions
         if ($instruction && $instruction->dimensions) {
             $instruction->dimensions = json_decode($instruction->dimensions, true);
         } else {
@@ -183,7 +183,7 @@ class ShippingInstructionController extends Controller
 
         $data['created_by'] = $request->user()->id_user;
         // date y-m-d H:i:s
-        
+
 
         $dimensions = $request->validate([
             'dimensions' => 'nullable|array',
@@ -398,7 +398,7 @@ class ShippingInstructionController extends Controller
                     'consignee' => $request->input('consignee'),
                     'etd' => $request->input('etd'),
                     'eta' => $request->input('eta'),
-                    
+
                     'created_at' => now(),
                     'created_by' => $request->user()->id_user,
                 ];
@@ -432,8 +432,6 @@ class ShippingInstructionController extends Controller
                 ]
             ], 500);
         }
-
-        
     }
 
     public function rejectShippingInstruction(Request $request)
@@ -485,4 +483,5 @@ class ShippingInstructionController extends Controller
             ], 500);
         }
     }
+    
 }

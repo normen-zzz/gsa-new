@@ -5,6 +5,8 @@ namespace App\Http\Controllers\master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
 
 class UsersController extends Controller
 {
@@ -22,11 +24,7 @@ class UsersController extends Controller
 
         $users = $query->paginate($limit);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Users retrieved successfully.',
-            'data' => $users,
-        ]);
+      return ResponseHelper::success('Users retrieved successfully.', $users, 200);
     }
     public function getUserById($id)
     {
@@ -52,16 +50,10 @@ class UsersController extends Controller
             ->first();
 
         if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found.',
-            ], 404);
+            return ResponseHelper::success('User not found.', NULL, 404);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $user,
-        ]);
+       return ResponseHelper::success('User retrieved successfully.', $user, 200);
     }
 
     

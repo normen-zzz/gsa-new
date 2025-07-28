@@ -299,5 +299,24 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
 
         ]);
+
+        DB::table('airlines')->insert([
+            'name_airline' => 'Ethiopian Airlines',
+            'code_airline' => 'ET',
+            'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1, // Assuming the admin user has ID 1
+        ]);
+        DB::table('airlines')->insert([
+            'name_airline' => 'Srilankan Airlines',
+            'code_airline' => 'UL',
+            'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1, // Assuming the admin user has ID 1
+        ]);
     }
+
+
 }

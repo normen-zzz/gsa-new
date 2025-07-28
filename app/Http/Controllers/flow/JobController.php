@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Models\flow\JobModel;
+use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
 
 
 class JobController extends Controller
@@ -21,7 +23,7 @@ class JobController extends Controller
                 'awb' => 'required|string|max:50|exists:awb,awb',
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'consignee' => 'required|integer|exists:customers,id_customer',
-                
+
                 'etd' => 'required|date',
                 'eta' => 'required|date',
                 'commodity' => 'required|string|max:255',
@@ -36,10 +38,10 @@ class JobController extends Controller
                 'status' => 'required|in:created_by_cs, handled_by_ops, declined_by_ops,deleted',
                 'pol' => 'required|integer|exists:airports,id_airport',
                 'pod' => 'required|integer|exists:airports,id_airport',
-                 'data_flight' => 'nullable|array',
-            'data_flight.*.flight_number' => 'required|string|max:255',
-            'data_flight.*.departure' => 'required|date',
-            'data_flight.*.arrival' => 'required|date',
+                'data_flight' => 'nullable|array',
+                'data_flight.*.flight_number' => 'required|string|max:255',
+                'data_flight.*.departure' => 'required|date',
+                'data_flight.*.arrival' => 'required|date',
 
             ]);
 
@@ -48,7 +50,7 @@ class JobController extends Controller
             $dataJob = [
                 'agent' => $data['agent'],
                 'consignee' => $data['consignee'],
-                
+
                 'etd' => $data['etd'],
                 'eta' => $data['eta'],
                 'updated_by' => $request->user()->id_user,
@@ -83,15 +85,8 @@ class JobController extends Controller
                     ]);
                     if ($insertLog) {
                         DB::commit();
-                        return response()->json([
-                            'status' => 'success',
-                            'code' => 200,
-                            'meta_data' => [
-                                'code' => 200,
-                                'message' => 'Job updated successfully.',
-                            ],
-
-                        ], 200);
+                        return ResponseHelper::success('Job updated successfully.', NULL, 200);
+                       
                     } else {
                         throw new Exception('Failed to log job update action.');
                     }
@@ -103,15 +98,7 @@ class JobController extends Controller
             }
         } catch (Exception $th) {
             DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => $th->getMessage(),
-                ],
-
-            ], 500);
+            return ResponseHelper::error($th);
         }
     }
 
@@ -122,17 +109,9 @@ class JobController extends Controller
             $limit = $request->input('limit', 10);
             $search = $request->input('searchKey', '');
             $jobs = $jobModel->getJob($search, $limit);
-            return response()->json([
-                'status' => 'success',
-                'code' => 200,
-                'data' => $jobs,
-            ], 200);
+            return ResponseHelper::success('Jobs retrieved successfully.', $jobs, 200);
         } catch (Exception $th) {
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'message' => $th->getMessage(),
-            ], 500);
+            return ResponseHelper::error($th);
         }
     }
 }

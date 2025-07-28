@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\master;
 
-use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
 
 class MenuController extends Controller
 {
@@ -46,15 +48,7 @@ class MenuController extends Controller
 
         //    end insert child_menu to $menus
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $menus,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Menus retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Menus retrieved successfully.', $menus, 200);
     }
 
     public function getListMenuById($id)
@@ -64,18 +58,10 @@ class MenuController extends Controller
             ->first();
 
         if (!$menu) {
-            return response()->json([
-                'code' => 404,
-                'status' => 'error',
-                'message' => 'Menu not found.'
-            ], 404);
+           return ResponseHelper::success('Menu not found.', NULL, 404);
         }
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $menu,
-        ]);
+        return ResponseHelper::success('Menu retrieved successfully.', $menu, 200);
     }
 
     public function createListMenu(Request $request)
@@ -99,22 +85,10 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 201,
-                'status' => 'success',
-                'meta_data' => [
-                    'code' => 201,
-                    'message' => 'Menu created successfully.',
-                ],
-
-            ], 201);
+            return ResponseHelper::success('Menu created successfully.', NULL, 201);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'message' => 'Failed to create menu: ' . $e->getMessage(),
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 
@@ -145,24 +119,10 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 200,
-                'status' => 'success',
-                'meta_data' => [
-                    'code' => 200,
-                    'message' => 'Menu updated successfully.',
-                ]
-            ], 200);
+            return ResponseHelper::success('Menu updated successfully.', NULL, 200);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => 'Failed to update menu: ' . $e->getMessage(),
-                ]
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 
@@ -192,16 +152,7 @@ class MenuController extends Controller
             })
             ->orderBy('child_menu.id_childmenu', 'desc')
             ->paginate($limit);
-
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $menus,
-            'meta_data' => [
-                'code' => 200,
-                'message' => 'Child menus retrieved successfully.',
-            ]
-        ], 200);
+        return ResponseHelper::success('Child menus retrieved successfully.', $menus, 200);
     }
     public function getListChildMenuById($id)
     {
@@ -225,18 +176,10 @@ class MenuController extends Controller
             ->first();
 
         if (!$menu) {
-            return response()->json([
-                'code' => 404,
-                'status' => 'error',
-                'message' => 'Child menu not found.'
-            ], 404);
+           return ResponseHelper::success('Child menu not found.', NULL, 404);
         }
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'data' => $menu,
-        ]);
+        return ResponseHelper::success('Child menu retrieved successfully.', $menu, 200);
     }
 
     public function createListChildMenu(Request $request)
@@ -260,19 +203,10 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 201,
-                'status' => 'success',
-                'message' => 'Child menu created successfully.',
-                'data' => $menu,
-            ], 201);
+            return ResponseHelper::success('Child menu created successfully.', NULL, 201);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'message' => 'Failed to create child menu: ' . $e->getMessage(),
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 
@@ -306,18 +240,10 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'code' => 200,
-                'status' => 'success',
-                'message' => 'Child menu updated successfully.',
-            ], 200);
+            return ResponseHelper::success('Child menu updated successfully.', NULL, 200);
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'message' => 'Failed to update child menu: ' . $e->getMessage(),
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 }
