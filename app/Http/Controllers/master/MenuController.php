@@ -102,7 +102,7 @@ class MenuController extends Controller
                 'name' => 'required|string|max:255|unique:list_menu,name,' . $id . ',id_listmenu',
                 'icon' => 'nullable|string|max:255',
                 'path' => 'required|string|max:255|unique:list_menu,path,' . $id . ',id_listmenu',
-                'status' => 'required|boolean|default:true',
+                'status' => 'required|boolean',
             ]);
 
             $menu = DB::table('list_menu')
@@ -111,7 +111,7 @@ class MenuController extends Controller
                     'name' => $request->input('name'),
                     'icon' => $request->input('icon'),
                     'path' => $request->input('path'),
-                    'status' => $request->input('status', 1),
+                    'status' => $request->input('status', true),
                     'updated_at' => now(),
                 ]);
 
@@ -193,7 +193,7 @@ class MenuController extends Controller
                 'name' => 'required|string|max:255|unique:list_childmenu,name',
                 'icon' => 'nullable|string|max:255',
                 'path' => 'required|string|max:255|unique:list_childmenu,path',
-                'status' => 'required|boolean|default:true',
+                'status' => 'required|boolean',
             ]);
 
             $menu = DB::table('list_childmenu')->insert([
@@ -201,7 +201,7 @@ class MenuController extends Controller
                 'name' => $request->input('name'),
                 'icon' => $request->input('icon'),
                 'path' => $request->input('path'),
-                'status' => $request->input('status'),
+                'status' => $request->input('status', true),
             ]);
 
             DB::commit();
@@ -224,7 +224,7 @@ class MenuController extends Controller
                 'name' => 'required|string|max:255|unique:list_childmenu,name,' . $id . ',id_listchildmenu',
                 'icon' => 'nullable|string|max:255',
                 'path' => 'required|string|max:255|unique:list_childmenu,path,' . $id . ',id_listchildmenu',
-                'status' => 'required|boolean|default:true',
+                'status' => 'required|boolean',
             ]);
 
             $menu = DB::table('list_childmenu')
@@ -234,7 +234,7 @@ class MenuController extends Controller
                     'name' => $request->input('name'),
                     'icon' => $request->input('icon'),
                     'path' => $request->input('path'),
-                    'status' => $request->input('status'),
+                    'status' => $request->input('status') ?? true,
                     'updated_at' => now(),
                 ]);
 

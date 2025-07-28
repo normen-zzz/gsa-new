@@ -51,13 +51,13 @@ class AirlineController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|max:10|unique:airlines,code',
-                'status' => 'required|boolean|default:true',
+                'status' => 'required|boolean',
             ]);
 
             $insertAirline = DB::table('airlines')->insertGetId([
                 'name' => $data['name'],
                 'code' => $data['code'],
-                'status' => $data['status'],
+                'status' => $data['status'] ?? true,
                 'created_at' => now(),
             ]);
 

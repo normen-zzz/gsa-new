@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
-use GuzzleHttp\Psr7\Response;
 
 class AirportController extends Controller
 {
@@ -20,7 +19,7 @@ class AirportController extends Controller
                 'name_airport' => 'required|string|max:100|unique:airports,name_airport',
                 'code_airport' => 'required|string|max:10|unique:airports,code_airport',
                 'id_country' => 'required|integer|exists:countries,id_country',
-                'status' => 'nullable|boolean|default:true',
+                'status' => 'required|boolean',
             ]);
 
             $data['created_by'] = $request->user()->id_user;

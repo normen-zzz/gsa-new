@@ -67,14 +67,14 @@ class RoleController extends Controller
                 'id_division' => 'required|exists:divisions,id_division',
                 'name' => 'required|string|max:255|unique:roles,name',
                 'description' => 'nullable|string|max:500',
-                'status' => 'required|boolean|default:true'
+                'status' => 'required|boolean'
             ]);
 
             $role = DB::table('roles')->insertGetId([
                 'id_division' => $request->input('id_division'),
                 'name' => $request->input('name'),
                 'description' => $request->input('description', ''),
-                'status' => $request->input('status'),
+                'status' => $request->input('status', true),
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
