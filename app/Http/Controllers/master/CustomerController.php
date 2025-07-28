@@ -314,7 +314,7 @@ class CustomerController extends Controller
                 'id_customer' => 'required|integer|exists:customers,id_customer',
                 'name_customer' => 'required|string|min:3|unique:customers,name_customer,' . $request->input('id_customer') . ',id_customer',
                 'type' => 'required|in:agent,consignee',
-                'data_customer' => 'required|array',
+                'data_customer' => 'nullable|array',
                 'data_customer.*.id_datacustomer' => 'nullable|integer|exists:data_customer,id_datacustomer',
                 'data_customer.*.email' => 'nullable|email|max:255',
                 'data_customer.*.phone' => 'nullable|string|max:20',
