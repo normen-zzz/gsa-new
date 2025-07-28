@@ -4,6 +4,8 @@ namespace App\Http\Controllers\master;
 
 use Exception;
 use Illuminate\Http\Request;
+use GuzzleHttp\Psr7\Response;
+use App\Helpers\ResponseHelper;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -14,56 +16,31 @@ class CountryController extends Controller
 {
     public function createCountry(Request $request)
     {
-        $data = $request->validate([
+       
+
+        DB::beginTransaction();
+        try {
+             $data = $request->validate([
             'name_country' => 'required|string|max:100|unique:countries,name_country',
             'status' => 'required|boolean',
 
         ]);
 
         $data['created_by'] = $request->user()->id_user;
-
-        DB::beginTransaction();
-        try {
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
             $country = DB::table('countries')->insert($data);
 
             if ($country) {
-                return response()->json([
-                    'status' => 'success',
-                    'code' => 201,
-                    'data' => $data,
-                    'meta_data' => [
-                        'code' => 201,
-                        'message' => 'Country created successfully.',
-                    ]
-                ], 201);
+                DB::commit();
+                return ResponseHelper::success('Country created successfully.', NULL, 201);
             } else {
                 throw new Exception('Failed to create country.');
             }
-            DB::commit();
+          
         } catch (Exception $th) {
             DB::rollback();
-            if ($th instanceof ValidationException) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'meta_data' => [
-                        'code' => 422,
-                        'message' => 'Validation errors occurred.',
-                        'errors' => $th->validator->errors()->toArray(),
-                    ],
-                ], 422);
-            } else{
-                // Handle other exceptions
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to create country: ' . $th->getMessage(),
-                    'meta_data' => [
-                        'code' => 500,
-                        'message' => 'An error occurred while creating the country.',
-                        'errors' => $th->getMessage(),
-                    ],
-                ], 500);
-            }
+            return ResponseHelper::error($th);
            
         }
     }
@@ -81,7 +58,7 @@ class CountryController extends Controller
         ];
         $query = DB::table('countries')
             ->select($select)
-            ->join('users', 'countries.created_by', '=', 'users.id_user')
+            ->leftJoin('users', 'countries.created_by', '=', 'users.id_user')
             ->where('countries.name_country', 'like', '%' . $search . '%')
             ->orderBy('countries.created_at', 'desc');
 
