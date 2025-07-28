@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_shippinginstruction');
             $table->integer('agent')->unsigned();
             $table->integer('data_agent')->unsigned();
-            $table->string('consignee')->unsigned();
+            $table->string('consignee');
             $table->enum('type', ['direct', 'console'])->default('direct');
             $table->dateTime('eta')->nullable();
             $table->dateTime('etd')->nullable();
@@ -42,6 +42,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('shippinginstruction');
     }
 };

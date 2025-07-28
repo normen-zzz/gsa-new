@@ -18,6 +18,7 @@ class ShippingInstructionController extends Controller
             'a.id_shippinginstruction',
             'c.name_customer as agent',
             'c.id_customer as id_agent',
+            'a.data_agent as id_dataagent',
             'a.consignee as consignee',
            
             'a.type',
@@ -65,7 +66,7 @@ class ShippingInstructionController extends Controller
 
             $agentData = DB::table('data_customer')
                 ->where('id_customer', $instruction->id_agent)
-                ->where('is_primary', true)
+                ->where('id_datacustomer', $instruction->id_dataagent)
                 ->first();
            
             
@@ -92,6 +93,7 @@ class ShippingInstructionController extends Controller
             'a.id_shippinginstruction',
             'c.name_customer as agent',
             'c.id_customer as id_agent',
+            'a.data_agent as id_dataagent',
             'a.consignee as consignee',
             
             'a.type',
@@ -128,8 +130,10 @@ class ShippingInstructionController extends Controller
         }
         $agentData = DB::table('data_customer')
             ->where('id_customer', $instruction->id_agent)
-            ->where('is_primary', true)
+            ->where('id_datacustomer', $instruction->id_dataagent)
             ->first();
+      
+        $instruction->data_agent = $agentData ? json_decode($agentData->data, true) : [];
 
 
         if (!$instruction) {
@@ -143,7 +147,7 @@ class ShippingInstructionController extends Controller
             ], 404);
         }
 
-        return response()->json([
+        return response()->json([   
             'status' => 'success',
             'data' => $instruction,
             'meta_data' => [
@@ -157,6 +161,7 @@ class ShippingInstructionController extends Controller
     {
         $data = $request->validate([
             'agent' => 'required|integer',
+            'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
             'consignee' => 'nullable|integer',
             'etd' => 'required|date',
             'eta' => 'required|date',
@@ -167,6 +172,7 @@ class ShippingInstructionController extends Controller
             'pieces' => 'nullable|integer|min:0',
             'special_instructions' => 'nullable|string',
             'dimensions' => 'nullable|array',
+            
         ]);
 
         $data['created_by'] = $request->user()->id_user;
@@ -237,6 +243,7 @@ class ShippingInstructionController extends Controller
         $data = $request->validate([
             'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
             'agent' => 'required|integer|exists:customers,id_customer',
+            'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
             'consignee' => 'nullable|string',
             'etd' => 'required|date',
             'eta' => 'required|date',
@@ -337,6 +344,7 @@ class ShippingInstructionController extends Controller
             'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
             'awb' => 'required|integer',
             'agent' => 'required|integer|exists:customers,id_customer',
+            'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
             'consignee' => 'nullable|string',
             'etd' => 'required|date',
             'eta' => 'required|date',

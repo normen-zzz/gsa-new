@@ -19,6 +19,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->boolean('status')->default(true);
 
             // Add any additional constraints or indexes if necessary
         });

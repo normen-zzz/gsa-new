@@ -58,7 +58,7 @@ class DivisionController extends Controller
                 'name' => 'required|string|max:255|unique:divisions,name',
                 'description' => 'nullable|string|max:500',
                 'have_role' => 'boolean',
-                'status' => 'boolean'
+                'status' => 'required|boolean|default:true'
             ]);
 
             $division = DB::table('divisions')->insertGetId([
