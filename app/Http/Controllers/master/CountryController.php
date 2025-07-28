@@ -16,19 +16,19 @@ class CountryController extends Controller
 {
     public function createCountry(Request $request)
     {
-       
+
 
         DB::beginTransaction();
         try {
-             $data = $request->validate([
-            'name_country' => 'required|string|max:100|unique:countries,name_country',
-            'status' => 'required|boolean',
+            $data = $request->validate([
+                'name_country' => 'required|string|max:100|unique:countries,name_country',
+                'status' => 'required|boolean',
 
-        ]);
+            ]);
 
-        $data['created_by'] = $request->user()->id_user;
-        $data['created_at'] = now();
-        $data['updated_at'] = now();
+            $data['created_by'] = $request->user()->id_user;
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
             $country = DB::table('countries')->insert($data);
 
             if ($country) {
@@ -37,11 +37,9 @@ class CountryController extends Controller
             } else {
                 throw new Exception('Failed to create country.');
             }
-          
         } catch (Exception $th) {
             DB::rollback();
             return ResponseHelper::error($th);
-           
         }
     }
 
@@ -188,40 +186,32 @@ class CountryController extends Controller
     }
 
     public function updateCountry(Request $request)
-{
-    DB::beginTransaction();
-    try {
-        $id = $request->input('id_country');
+    {
+        DB::beginTransaction();
+        try {
+            $validated = $request->validate([
+                'id_country' => 'required|exists:countries,id_country',
+                'name_country' => 'required|string|max:100|unique:countries,name_country,' . $request->input('id_country') . ',id_country',
+                'status' => 'required|boolean',
+            ]);
 
-        $country = DB::table('countries')->where('id_country', $id)->first();
+            $validated['updated_at'] = now();
+            $validated['updated_by'] = $request->user()->id_user;
 
-        if (!$country) {
-            return ResponseHelper::success('Country not found.', null, 404);
+            $updated = DB::table('countries')
+                ->where('id_country', $validated['id_country'])
+                ->update($validated);
+
+            if (!$updated) {
+                throw new Exception('Failed to update country.');
+            }
+
+            DB::commit();
+
+            return ResponseHelper::success('Country updated successfully.', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
         }
-
-        $validated = $request->validate([
-            'name_country' => 'required|string|max:100|unique:countries,name_country,' . $id . ',id_country',
-            'status' => 'required|boolean',
-        ]);
-
-        $validated['updated_at'] = now();
-        $validated['updated_by'] = $request->user()->id_user;
-
-        $updated = DB::table('countries')
-            ->where('id_country', $id)
-            ->update($validated);
-
-        if (!$updated) {
-            throw new Exception('Failed to update country.');
-        }
-
-        DB::commit();
-
-        return ResponseHelper::success('Country updated successfully.', null, 200);
-    } catch (Exception $e) {
-        DB::rollBack();
-        return ResponseHelper::error($e);
     }
-}
-
 }
