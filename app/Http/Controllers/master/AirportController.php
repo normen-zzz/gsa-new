@@ -160,8 +160,8 @@ class AirportController extends Controller
     {
         $id = $request->input('id_airport');
         $data = $request->validate([
-            'name_airport' => 'required|string|max:100|unique:airports,name_airport,' . $id . ',id_airport',
-            'code_airport' => 'required|string|max:10|unique:airports,code_airport,' . $id . ',id_airport',
+            'name_airport' => 'required|string|max:100|unique:airports,name_airport,'.$id.',id_airport',
+            'code_airport' => 'required|string|max:10|unique:airports,code_airport,'.$id.',id_airport',
             'id_country' => 'required|integer|exists:countries,id_country',
         ]);
 
@@ -179,22 +179,27 @@ class AirportController extends Controller
                         ];
                     }
                 }
-                $update = DB::table('airports')->where('id_airport', $id)->update($data);
-                if ($update) {
-                    // log perubahan
-                    $log =  DB::table('log_airport')->insert([
-                        'id_airport' => $id,
-                        'action' => 'Updated airport: ' . json_encode($changes),
-                        'id_user' => request()->user()->id_user,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                    if ($log) {
-                        DB::commit();
-                        return ResponseHelper::success('Airport updated successfully.', NULL, 200);
-                    }
+                // Always update regardless if data is the same
+                DB::table('airports')->where('id_airport', $id)->update($data);
+                
+                // Log action whether data changed or not
+                $actionMessage = count($changes) > 0 
+                    ? 'Updated airport with changes: ' . json_encode($changes)
+                    : 'Airport update executed (no data changes)';
+                
+                $log = DB::table('log_airport')->insert([
+                    'id_airport' => $id,
+                    'action' => $actionMessage,
+                    'id_user' => request()->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                if ($log) {
+                    DB::commit();
+                    return ResponseHelper::success('Airport updated successfully.', NULL, 200);
                 } else {
-                    throw new Exception('Failed to update airport.');
+                    throw new Exception('Failed to log airport update.');
                 }
             } else {
                 throw new Exception('Airport not found.');
