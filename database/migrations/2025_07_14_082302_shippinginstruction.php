@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('shippinginstruction', function (Blueprint $table) {
             $table->id('id_shippinginstruction');
             $table->integer('agent')->unsigned();
-            $table->integer('consignee')->unsigned();
+            $table->integer('data_agent')->unsigned();
+            $table->string('consignee')->unsigned();
             $table->enum('type', ['direct', 'console'])->default('direct');
             $table->dateTime('eta')->nullable();
             $table->dateTime('etd')->nullable();
@@ -27,7 +28,6 @@ return new class extends Migration
             $table->text('special_instructions')->nullable();
             $table->integer('created_by')->unsigned();
             $table->integer('updated_by')->unsigned()->nullable();
-
             $table->enum('status', ['created_by_sales', 'received_by_cs', 'rejected_by_cs','deleted'])->default('created_by_sales');
             $table->softDeletes();
             $table->integer('deleted_by')->unsigned()->nullable();

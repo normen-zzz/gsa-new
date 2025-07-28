@@ -277,9 +277,9 @@ class DatabaseSeeder extends Seeder
 
         DB::table('shippinginstruction')->insert([
             'agent' => 1, // Assuming the CEVA customer has ID 1
-            'consignee' => 2, // Assuming the DHL customer has ID 2
+            'data_agent' => 1, // Assuming the CEVA customer data has ID 1
+            'consignee' => "tes consignee", // Assuming the DHL customer has ID 2
             'type' => 'direct',
-
             'pol' => 1, // Assuming the Soekarno-Hatta International Airport has ID 1
             'pod' => 2, // Assuming the Miami International Airport has ID 2
             'commodity' => 'Electronics',

@@ -22,8 +22,7 @@ class JobController extends Controller
                 'id_job' => 'required|integer|exists:job,id_job',
                 'awb' => 'required|string|max:50|exists:awb,awb',
                 'agent' => 'required|integer|exists:customers,id_customer',
-                'consignee' => 'required|integer|exists:customers,id_customer',
-
+                'consignee' => 'nullable|string|max:255',
                 'etd' => 'required|date',
                 'eta' => 'required|date',
                 'commodity' => 'required|string|max:255',
@@ -45,12 +44,9 @@ class JobController extends Controller
 
             ]);
 
-            $job = DB::table('job')->where('id_job', $data['id_job'])->first();
-
             $dataJob = [
                 'agent' => $data['agent'],
                 'consignee' => $data['consignee'],
-
                 'etd' => $data['etd'],
                 'eta' => $data['eta'],
                 'updated_by' => $request->user()->id_user,
@@ -78,7 +74,10 @@ class JobController extends Controller
                 if ($updateAwb) {
                     $insertLog = DB::table('log_job')->insert([
                         'id_job' => $data['id_job'],
-                        'action' => 'Updated job id_job: ' . $data['id_job'] . ' - AWB: ' . $data['awb'],
+                        'action' => json_encode([
+                            'action' => 'update',
+                            'data' => $data,
+                        ]),
                         'id_user' => $request->user()->id_user,
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -86,7 +85,6 @@ class JobController extends Controller
                     if ($insertLog) {
                         DB::commit();
                         return ResponseHelper::success('Job updated successfully.', NULL, 200);
-                       
                     } else {
                         throw new Exception('Failed to log job update action.');
                     }
