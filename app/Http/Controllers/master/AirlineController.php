@@ -51,7 +51,7 @@ class AirlineController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|max:10|unique:airlines,code',
-                'status' => 'required|boolean',
+                'status' => 'required|boolean|default:true',
             ]);
 
             $insertAirline = DB::table('airlines')->insertGetId([
