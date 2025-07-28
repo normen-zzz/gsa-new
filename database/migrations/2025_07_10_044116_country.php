@@ -19,6 +19,10 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
         });
 
+        Schema::table('countries', function (Blueprint $table) {
+            $table->unsignedBigInteger('updated_by')->nullable()->after('updated_at');
+        });
+
         Schema::create('log_country', function (Blueprint $table) {
             $table->id('id_logcountry');
             $table->integer('id_country')->unsigned();
@@ -34,6 +38,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('countries');
+        Schema::table('countries', function (Blueprint $table) {
+            $table->dropColumn('updated_by');
+        });
         //
     }
 };

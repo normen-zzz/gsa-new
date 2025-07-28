@@ -186,4 +186,42 @@ class CountryController extends Controller
             ], 500);
         }
     }
+
+    public function updateCountry(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        $id = $request->input('id_country');
+
+        $country = DB::table('countries')->where('id_country', $id)->first();
+
+        if (!$country) {
+            return ResponseHelper::success('Country not found.', null, 404);
+        }
+
+        $validated = $request->validate([
+            'name_country' => 'required|string|max:100|unique:countries,name_country,' . $id . ',id_country',
+            'status' => 'required|boolean',
+        ]);
+
+        $validated['updated_at'] = now();
+        $validated['updated_by'] = $request->user()->id_user;
+
+        $updated = DB::table('countries')
+            ->where('id_country', $id)
+            ->update($validated);
+
+        if (!$updated) {
+            throw new Exception('Failed to update country.');
+        }
+
+        DB::commit();
+
+        return ResponseHelper::success('Country updated successfully.', null, 200);
+    } catch (Exception $e) {
+        DB::rollBack();
+        return ResponseHelper::error($e);
+    }
+}
+
 }
