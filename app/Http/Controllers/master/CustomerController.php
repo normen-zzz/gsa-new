@@ -23,7 +23,7 @@ class CustomerController extends Controller
             $data = $request->validate([
                 'name_customer' => 'required|string|min:3|unique:customers,name_customer',
                 'type' => 'required|in:agent,consignee',
-                'status' => 'required|boolean|default:true',
+                'status' => 'required|boolean',
                 'data_customer' => 'nullable|array',
                 'data_customer.*.email' => 'nullable|email|max:255',
                 'data_customer.*.phone' => 'nullable|string|max:20',
@@ -37,7 +37,7 @@ class CustomerController extends Controller
                 'name_customer' => $data['name_customer'],
                 'type' => $data['type'],
                 'created_by' => $request->user()->id_user,
-                'status' => $data['status'],
+                'status' => $data['status'] ?? true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -321,6 +321,7 @@ class CustomerController extends Controller
                 'data_customer.*.address' => 'required|string',
                 'data_customer.*.tax_id' => 'nullable|string|max:50',
                 'data_customer.*.pic' => 'nullable|string|max:100',
+                'status' => 'required|boolean',
             ]);
 
             $changes = [];
@@ -341,6 +342,7 @@ class CustomerController extends Controller
                     'name_customer' => $data['name_customer'],
                     'type' => $data['type'],
                     'updated_at' => now(),
+                    'status' => $data['status'] ?? true,
                 ]);
                 
             if (!$updateCustomer) {

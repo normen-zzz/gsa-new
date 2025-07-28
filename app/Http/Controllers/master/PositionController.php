@@ -58,7 +58,7 @@ class PositionController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255|unique:positions,name',
                 'description' => 'nullable|string|max:500',
-                'status' => 'required|boolean|default:true'
+                'status' => 'required|boolean'
             ]);
             $position = DB::table('positions')->insertGetId([
                 'name' => $request->input('name'),
@@ -84,7 +84,7 @@ class PositionController extends Controller
                 'id_position' => 'required|exists:positions,id_position',
                 'name' => 'required|string|max:255|unique:positions,name,' . $request->input('id_position') . ',id_position',
                 'description' => 'nullable|string|max:500',
-                'status' => 'required|boolean|default:true'
+                'status' => 'required|boolean'
             ]);
 
             $position = DB::table('positions')

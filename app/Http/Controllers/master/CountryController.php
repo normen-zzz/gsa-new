@@ -16,7 +16,7 @@ class CountryController extends Controller
     {
         $data = $request->validate([
             'name_country' => 'required|string|max:100|unique:countries,name_country',
-            'status' => 'required|boolean|default:true',
+            'status' => 'required|boolean',
 
         ]);
 
