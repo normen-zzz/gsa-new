@@ -2,11 +2,13 @@
 
 namespace App\Models\flow;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Exception;
 
+use App\Helpers\ResponseHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Request;
+
 
 class JobModel extends Model
 {
@@ -16,19 +18,17 @@ class JobModel extends Model
         // Optimasi query untuk kinerja yang lebih baik
         $select = [
             'job.id_job',
+            'job.agent',
             'agent.name_customer as agent_name',
-            'consignee.name_customer as consignee_name',
-            'agent.id_customer as agent_id',
-            'consignee.id_customer as consignee_id',
-            'agent.data_customer as agent_data',
-            'consignee.data_customer as consignee_data',
+            'job.agent as agent_data',
+            'job.consignee',
             'awb.id_awb',
             'awb.awb',
             'awb.etd',
             'awb.eta',
             'awb.pol',
-            'awb.pod',
             'pol.name_airport as pol_name',
+            'awb.pod',
             'pod.name_airport as pod_name',
             'awb.commodity',
             'awb.weight',
@@ -44,7 +44,7 @@ class JobModel extends Model
         $job = DB::table('job')
             ->join('awb', 'job.id_awb', '=', 'awb.id_awb')
             ->join('customers as agent', 'job.agent', '=', 'agent.id_customer')
-            ->join('customers as consignee', 'job.consignee', '=', 'consignee.id_customer')
+            
             ->join('airports as pol', 'awb.pol', '=', 'pol.id_airport')
             ->join('airports as pod', 'awb.pod', '=', 'pod.id_airport')
             // Menggunakan when() untuk kondisi pencarian hanya jika ada
@@ -71,19 +71,71 @@ class JobModel extends Model
             if (!empty($j->dimensions)) {
                 $j->dimensions = json_decode($j->dimensions, true);
             }
-            if (!empty($j->agent_data)) {
-                $j->agent_data = json_decode($j->agent_data, true);
-            } else {
-                $j->agent_data = [];
-            }
-            if (!empty($j->consignee_data)) {
-                $j->consignee_data = json_decode($j->consignee_data, true);
-            } else {
-                $j->consignee_data = [];
-            }
+
+            $agentData = DB::table('data_customer')
+                ->where('id_customer', $j->agent_data)
+                ->first();
+
+            $j->agent_data = $agentData ? json_decode($agentData->data, true) : [];
             return $j;
         });
 
         return $job;
     }
+
+    public function getJobById($id)
+    {
+        $select = [
+            'job.id_job',
+            'job.agent',
+            'agent.name_customer as agent_name',
+            'job.agent as agent_data',
+            'job.consignee',
+            'awb.id_awb',
+            'awb.awb',
+            'awb.etd',
+            'awb.eta',
+            'awb.pol',
+            'pol.name_airport as pol_name',
+            'awb.pod',
+            'pod.name_airport as pod_name',
+            'awb.commodity',
+            'awb.weight',
+            'awb.pieces',
+            'awb.dimensions',
+            'awb.data_flight',
+            'awb.handling_instructions',
+            'job.status',
+            'job.created_at'
+        ];
+
+        $job = DB::table('job')
+            ->join('awb', 'job.id_awb', '=', 'awb.id_awb')
+            ->join('customers as agent', 'job.agent', '=', 'agent.id_customer')
+            
+            ->join('airports as pol', 'awb.pol', '=', 'pol.id_airport')
+            ->join('airports as pod', 'awb.pod', '=', 'pod.id_airport')
+            ->where('job.id_job', $id)
+            ->select($select)
+            ->first();
+
+        if (!$job) {
+            return null;
+        }
+
+        // Decode JSON fields
+        $job->data_flight = json_decode($job->data_flight, true);
+        $job->dimensions = json_decode($job->dimensions, true);
+
+        $agentData = DB::table('data_customer')
+            ->where('id_customer', $job->agent_data)
+            ->first();
+
+        $job->agent_data = $agentData ? json_decode($agentData->data, true) : [];
+
+        return $job;
+    }
+    
+
+    
 }

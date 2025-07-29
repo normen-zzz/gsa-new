@@ -398,6 +398,8 @@ class ShippingInstructionController extends Controller
                 'data_flight.*.departure' => 'required',
                 'data_flight.*.arrival' => 'required',
             ]);
+
+            
             $dataAwb = [
                 'awb' => $request->input('awb'),
                 'etd' => date('Y-m-d H:i:s', strtotime($request->input('etd'))),
