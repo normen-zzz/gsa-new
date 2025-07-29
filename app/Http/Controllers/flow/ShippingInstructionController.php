@@ -395,8 +395,8 @@ class ShippingInstructionController extends Controller
                 'dimensions.*.weight' => 'required|numeric|min:0',
                 'data_flight' => 'nullable|array',
                 'data_flight.*.flight_number' => 'required|string|max:255',
-                'data_flight.*.departure' => 'required|date',
-                'data_flight.*.arrival' => 'required|date',
+                'data_flight.*.departure' => 'required',
+                'data_flight.*.arrival' => 'required',
             ]);
             $dataAwb = [
                 'awb' => $request->input('awb'),
