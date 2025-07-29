@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\flow;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Exception;
+use Illuminate\Http\Request;
+use App\Helpers\ResponseHelper;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class ShippingInstructionController extends Controller
 {
@@ -20,7 +21,7 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'a.data_agent as id_dataagent',
             'a.consignee as consignee',
-           
+
             'a.type',
             'a.eta',
             'a.etd',
@@ -68,8 +69,8 @@ class ShippingInstructionController extends Controller
                 ->where('id_customer', $instruction->id_agent)
                 ->where('id_datacustomer', $instruction->id_dataagent)
                 ->first();
-           
-            
+
+
             $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
             $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
             return $instruction;
@@ -95,7 +96,6 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'a.data_agent as id_dataagent',
             'a.consignee as consignee',
-            
             'a.type',
             'a.eta',
             'a.etd',
@@ -132,7 +132,7 @@ class ShippingInstructionController extends Controller
             ->where('id_customer', $instruction->id_agent)
             ->where('id_datacustomer', $instruction->id_dataagent)
             ->first();
-      
+
         $instruction->data_agent = $agentData ? json_decode($agentData->data, true) : [];
 
 
@@ -147,7 +147,7 @@ class ShippingInstructionController extends Controller
             ], 404);
         }
 
-        return response()->json([   
+        return response()->json([
             'status' => 'success',
             'data' => $instruction,
             'meta_data' => [
@@ -162,7 +162,7 @@ class ShippingInstructionController extends Controller
         $data = $request->validate([
             'agent' => 'required|integer',
             'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
-            'consignee' => 'nullable|integer',
+            'consignee' => 'nullable|string',
             'etd' => 'required|date',
             'eta' => 'required|date',
             'pol' => 'required|integer|exists:airports,id_airport',
@@ -172,18 +172,36 @@ class ShippingInstructionController extends Controller
             'pieces' => 'nullable|integer|min:0',
             'special_instructions' => 'nullable|string',
             'dimensions' => 'nullable|array',
-            
+
         ]);
 
         $data['created_by'] = $request->user()->id_user;
         // date y-m-d H:i:s
 
 
-      
+
 
         DB::beginTransaction();
         try {
-            $instruction = DB::table('shippinginstruction')->insert($data);
+            $instruction = DB::table('shippinginstruction')
+                ->insertGetId([
+                    'agent' => $data['agent'],
+                    'data_agent' => $data['data_agent'],
+                    'consignee' => $data['consignee'],
+                    'etd' => $data['etd'],
+                    'eta' => $data['eta'],
+                    'pol' => $data['pol'],
+                    'pod' => $data['pod'],
+                    'commodity' => $data['commodity'],
+                    'dimensions' => json_encode($data['dimensions'] ?? []),
+                    'weight' => $data['weight'],
+                    'pieces' => $data['pieces'],
+                    'special_instructions' => $data['special_instructions'],
+                    'created_by' => $data['created_by'],
+                    'status' => 'created_by_sales',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             $id_shippinginstruction = DB::getPdo()->lastInsertId();
             if ($instruction) {
                 $addDimensions = true;
@@ -195,7 +213,10 @@ class ShippingInstructionController extends Controller
                             'width' => $dimension['width'] ?? null,
                             'height' => $dimension['height'] ?? null,
                             'weight' => $dimension['weight'] ?? null,
+                            'remarks' => $dimension['remarks'] ?? null,
                             'created_by' => $data['created_by'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
                         ]);
                         if (!$dimensionInsert) {
                             $addDimensions = false;
@@ -204,37 +225,33 @@ class ShippingInstructionController extends Controller
                     }
                 } else {
                     // If no dimensions provided, consider it successful
-                    $addDimensions = true;
+                    $addDimensions = false;
                 }
                 if ($addDimensions) {
                     // add dimensions to data 
                     $data['dimensions'] = $request->dimensions ?? [];
-                    DB::commit();
-                    return response()->json([
-                        'status' => 'success',
-                        'data' => $data,
-
-                        'meta_data' => [
-                            'code' => 201,
-                            'message' => 'Shipping instruction created successfully.',
-                        ],
-                    ], 201);
                 } else {
                     throw new Exception('Failed to add dimensions to shipping instruction.');
+                }
+
+                $log = DB::table('log_shippinginstruction')->insert([
+                    'id_shippinginstruction' => $id_shippinginstruction,
+                    'created_by' => $data['created_by'],
+                    'action' => json_encode(['created' => $data]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                if (!$log) {
+                    throw new Exception('Failed to log shipping instruction creation.');
                 }
             } else {
                 throw new Exception('Failed to create shipping instruction.');
             }
+            DB::commit();
+            return ResponseHelper::success('Shipping instruction created successfully.', NULL, 201);
         } catch (Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => '||Exception|| Failed to create shipping instruction: ' . $e->getMessage(),
-                ]
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 
@@ -253,9 +270,9 @@ class ShippingInstructionController extends Controller
             'weight' => 'nullable|numeric|min:0',
             'pieces' => 'nullable|integer|min:0',
             'special_instructions' => 'nullable|string',
+            'dimensions' => 'nullable|array',
 
         ]);
-
         $data['updated_by'] = $request->user()->id_user;
         $id = $request->input('id_shippinginstruction');
 
@@ -264,38 +281,58 @@ class ShippingInstructionController extends Controller
 
         DB::beginTransaction();
         try {
+            $shippingInstruction = DB::table('shippinginstruction')
+                ->where('id_shippinginstruction', $id)
+                ->first();
             $instruction = DB::table('shippinginstruction')
                 ->where('id_shippinginstruction', $id)
                 ->update($data);
-
             if ($instruction) {
-                DB::commit();
-                return response()->json([
-                    'status' => 'success',
-                    'meta_data' => [
-                        'code' => 200,
-                        'message' => 'Shipping instruction updated successfully.',
-                    ],
-                ], 200);
-            } else {
-                throw new Exception('Failed to update shipping instruction.');
+                DB::table('dimension_shippinginstruction')
+                    ->where('id_shippinginstruction', $id)
+                    ->delete();
+
+                // add dimensions
+                if (isset($request->dimensions) && is_array($request->dimensions) && count($request->dimensions) > 0) {
+                    foreach ($request->dimensions as $dimension) {
+                        DB::table('dimension_shippinginstruction')->insert([
+                            'id_shippinginstruction' => $id,
+                            'length' => $dimension['length'] ?? null,
+                            'width' => $dimension['width'] ?? null,
+                            'height' => $dimension['height'] ?? null,
+                            'weight' => $dimension['weight'] ?? null,
+                            'remarks' => $dimension['remarks'] ?? null,
+                            'created_by' => $data['updated_by'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                $shippingInstruction->dimensions = json_decode($request->dimensions ?? []);
+                $log = DB::table('log_shippinginstruction')->insert([
+                    'id_shippinginstruction' => $id,
+                    'created_by' => $data['updated_by'],
+                    'action' => json_encode(['to' => $data, 'from' => $shippingInstruction]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                if (!$log) {
+                    throw new Exception('Failed to log shipping instruction update.');
+                }
             }
+            DB::commit();
+            return ResponseHelper::success('Shipping instruction updated successfully.', NULL, 200);
         } catch (Exception $e) {
             DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'code' => 500,
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => 'Failed to update shipping instruction: ' . $e->getMessage(),
-                ]
-            ], 500);
+            return ResponseHelper::error($e);
         }
     }
 
-    public function deleteShippingInstruction(Request $request, $id)
+    public function deleteShippingInstruction(Request $request)
     {
-        $instruction = DB::table('shippinginstruction')->where('id', $id)->first();
+        $id = $request->input('id_shippinginstruction');
+        $instruction = DB::table('shippinginstruction')->where('id_shippinginstruction', $id)->first();
 
         if (!$instruction) {
             return response()->json([
@@ -337,33 +374,33 @@ class ShippingInstructionController extends Controller
 
     public function receiveShippingInstruction(Request $request)
     {
-        
+
         DB::beginTransaction();
         try {
             $request->validate([
-            'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
-            'awb' => 'required|integer',
-            'agent' => 'required|integer|exists:customers,id_customer',
-            'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
-            'consignee' => 'nullable|string',
-            'etd' => 'required|date',
-            'eta' => 'required|date',
-            'pol' => 'required|integer|exists:airports,id_airport',
-            'pod' => 'required|integer|exists:airports,id_airport',
-            'commodity' => 'required|string|max:255',
-            'weight' => 'required|numeric|min:0',
-            'pieces' => 'required|integer|min:0',
-            'special_instructions' => 'nullable|string',
-            'dimensions' => 'nullable|array',
-            'dimensions.*.length' => 'required|numeric|min:0',
-            'dimensions.*.width' => 'required|numeric|min:0',
-            'dimensions.*.height' => 'required|numeric|min:0',
-            'dimensions.*.weight' => 'required|numeric|min:0',
-            'data_flight' => 'nullable|array',
-            'data_flight.*.flight_number' => 'required|string|max:255',
-            'data_flight.*.departure' => 'required|date',
-            'data_flight.*.arrival' => 'required|date',
-        ]);
+                'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
+                'awb' => 'required|integer',
+                'agent' => 'required|integer|exists:customers,id_customer',
+                'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
+                'consignee' => 'nullable|string',
+                'etd' => 'required|date',
+                'eta' => 'required|date',
+                'pol' => 'required|integer|exists:airports,id_airport',
+                'pod' => 'required|integer|exists:airports,id_airport',
+                'commodity' => 'required|string|max:255',
+                'weight' => 'required|numeric|min:0',
+                'pieces' => 'required|integer|min:0',
+                'special_instructions' => 'nullable|string',
+                'dimensions' => 'nullable|array',
+                'dimensions.*.length' => 'required|numeric|min:0',
+                'dimensions.*.width' => 'required|numeric|min:0',
+                'dimensions.*.height' => 'required|numeric|min:0',
+                'dimensions.*.weight' => 'required|numeric|min:0',
+                'data_flight' => 'nullable|array',
+                'data_flight.*.flight_number' => 'required|string|max:255',
+                'data_flight.*.departure' => 'required|date',
+                'data_flight.*.arrival' => 'required|date',
+            ]);
             $dataAwb = [
                 'awb' => $request->input('awb'),
                 'etd' => $request->input('etd'),
@@ -474,5 +511,4 @@ class ShippingInstructionController extends Controller
             ], 500);
         }
     }
-    
 }

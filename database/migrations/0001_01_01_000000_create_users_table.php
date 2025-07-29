@@ -92,17 +92,12 @@ return new class extends Migration
             $table->string('name');
             $table->string('icon')->nullable();
             $table->string('path')->nullable();
+            $table->integer('parent_id')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
-        });
-        Schema::create('list_childmenu', function (Blueprint $table) {
-            $table->integer('id_listchildmenu')->autoIncrement();
-            $table->integer('id_listmenu');
-            $table->string('name');
-            $table->string('icon')->nullable();
-            $table->string('path')->nullable();
-            $table->boolean('status')->default(true);
-            $table->timestamps();
+            $table->integer('created_by')->unsigned()->nullable();
+            $table->integer('updated_by')->unsigned()->nullable();
+            $table->softDeletes();
         });
 
         Schema::create('menu_user', function (Blueprint $table) {
@@ -113,6 +108,8 @@ return new class extends Migration
             $table->json('menu')->nullable()->comment('List of menu IDs');
             $table->timestamps();
         });
+
+        
 
 
     }

@@ -133,45 +133,60 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        DB::table('list_menu')->insert([
-            [
-                'name' => 'Dashboard',
-                'icon' => 'dashboard',
-                'path' => '/dashboard',
-                'status' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'name' => 'Master Customer',
-                'icon' => 'people',
-                'path' => '/master-customer',
-                'status' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
+        // Level 1 Menu
+        $dashboardId = DB::table('list_menu')->insertGetId([
+            'name' => 'Dashboard',
+            'icon' => 'fas fa-home',
+            'path' => '/dashboard',
+            'parent_id' => null,
+            'status' => true,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        DB::table('list_childmenu')->insert([
-            [
-                'id_listmenu' => 2, // Assuming Master Customer has ID 2
-                'name' => 'Employee',
-                'icon' => 'person',
-                'path' => '/master-customer/employee',
-                'status' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id_listmenu' => 2, // Assuming Master Customer has ID 2
-                'name' => 'Customer',
-                'icon' => 'business',
-                'path' => '/master-customer/customer',
-                'status' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
+        $managementId = DB::table('list_menu')->insertGetId([
+            'name' => 'User Management',
+            'icon' => 'fas fa-users',
+            'path' => null,
+            'parent_id' => null,
+           
+            'status' => true,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
+
+        // Level 2 Menu
+        $userId = DB::table('list_menu')->insertGetId([
+            'name' => 'Users',
+            'icon' => 'fas fa-user',
+            'path' => '/users',
+            'parent_id' => $managementId,
+          
+            'status' => true,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Level 3 Menu
+        DB::table('list_menu')->insert([
+            'name' => 'Add User',
+            'icon' => 'fas fa-user-plus',
+            'path' => '/users/create',
+            'parent_id' => $userId,
+            'status' => true,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+       
 
         DB::table('menu_user')->insert([
             'id_position' => 1, // Assuming Super Admin position has ID 1
@@ -316,6 +331,8 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
         ]);
+
+        
     }
 
 

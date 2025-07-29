@@ -4,16 +4,17 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\flow\JobController;
+use App\Http\Controllers\master\MenuController;
+use App\Http\Controllers\master\RoleController;
+use App\Http\Controllers\master\UsersController;
 use App\Http\Controllers\master\AirportController;
 use App\Http\Controllers\master\CountryController;
 use App\Http\Controllers\master\CustomerController;
-use App\Http\Controllers\flow\ShippingInstructionController;
-use App\Http\Controllers\flow\JobController;
-use App\Http\Controllers\master\PositionController;
-use App\Http\Controllers\master\RoleController;
-use App\Http\Controllers\master\UsersController;
 use App\Http\Controllers\master\DivisionController;
-use App\Http\Controllers\master\MenuController;
+use App\Http\Controllers\master\PositionController;
+use App\Http\Controllers\master\PermissionController;
+use App\Http\Controllers\flow\ShippingInstructionController;
 
 
 Route::get('/user', function (Request $request) {
@@ -82,6 +83,12 @@ Route::get('/getListChildMenu', [MenuController::class, 'getListChildMenu'])->mi
 Route::get('/getListChildMenuById/{id}', [MenuController::class, 'getListChildMenuById'])->middleware('auth:api');
 Route::post('/createListChildMenu', [MenuController::class, 'createListChildMenu'])->middleware('auth:api');
 Route::put('/updateListChildMenu', [MenuController::class, 'updateListChildMenu'])->middleware('auth:api');
+
+//master permission
+Route::get('/getPermissions', [PermissionController::class, 'getPermissions'])->middleware('auth:api');
+Route::get('/getPermissionById/{id}', [PermissionController::class, 'getPermissionById'])->middleware('auth:api');
+Route::post('/createPermission', [PermissionController::class, 'createPermission'])->middleware('auth:api');
+Route::put('/updatePermission', [PermissionController::class, 'updatePermission'])->middleware('auth:api');
 
 
 

@@ -32,8 +32,16 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->unsigned()->nullable();
             $table->timestamps();
+        });
 
-          
+        Schema::create('log_shippinginstruction', function (Blueprint $table) {
+           $table->id('id_log_shippinginstruction');
+            $table->integer('id_shippinginstruction')->unsigned();
+            $table->integer('created_by')->unsigned();
+            $table->json('action')->nullable();
+            $table->timestamps();
+           
+
         });
     }
 
@@ -43,5 +51,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('shippinginstruction');
+        Schema::dropIfExists('log_shippinginstruction');
     }
 };

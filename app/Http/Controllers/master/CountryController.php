@@ -205,9 +205,7 @@ class CountryController extends Controller
             if (!$updated) {
                 throw new Exception('Failed to update country.');
             }
-
             DB::commit();
-
             return ResponseHelper::success('Country updated successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
