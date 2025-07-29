@@ -420,6 +420,7 @@ class ShippingInstructionController extends Controller
                     'id_shippinginstruction' => $request->input('id_shippinginstruction'),
                     'id_awb' => $id_awb,
                     'agent' => $request->input('agent'),
+                    'data_agent' => $request->input('data_agent'),
                     'consignee' => $request->input('consignee'),
                     'etd' => date('Y-m-d H:i:s', strtotime($request->input('etd'))),
                     'eta' => date('Y-m-d H:i:s', strtotime($request->input('eta'))),
