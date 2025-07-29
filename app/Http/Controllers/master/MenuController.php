@@ -110,6 +110,8 @@ class MenuController extends Controller
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
+        $id_position = $request->input('id_position', null);
+        $id_division = $request->input('id_division', null);
 
 
         $listMenu = DB::table('menu_user AS a')
@@ -139,6 +141,12 @@ class MenuController extends Controller
             'a.can_export',
             'a.can_import'
         )
+            ->when($id_position, function ($query) use ($id_position) {
+                return $query->where('a.id_position', $id_position);
+            })
+            ->when($id_division, function ($query) use ($id_division) {
+                return $query->where('a.id_division', $id_division);
+            })
             ->when($search, function ($query) use ($search) {
                 $query->where('name', 'like', '%' . $search . '%')
                     ->orWhere('path', 'like', '%' . $search . '%');
