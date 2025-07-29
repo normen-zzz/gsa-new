@@ -174,13 +174,8 @@ class ShippingInstructionController extends Controller
             'dimensions' => 'nullable|array',
 
         ]);
-
         $data['created_by'] = $request->user()->id_user;
         // date y-m-d H:i:s
-
-
-
-
         DB::beginTransaction();
         try {
             $instruction = DB::table('shippinginstruction')
@@ -188,8 +183,8 @@ class ShippingInstructionController extends Controller
                     'agent' => $data['agent'],
                     'data_agent' => $data['data_agent'],
                     'consignee' => $data['consignee'],
-                    'etd' => $data['etd'],
-                    'eta' => $data['eta'],
+                    'etd' => date('Y-m-d H:i:s', strtotime($data['etd'])),
+                    'eta' => date('Y-m-d H:i:s', strtotime($data['eta'])),
                     'pol' => $data['pol'],
                     'pod' => $data['pod'],
                     'commodity' => $data['commodity'],
@@ -274,6 +269,8 @@ class ShippingInstructionController extends Controller
 
         ]);
         $data['updated_by'] = $request->user()->id_user;
+        $data['etd'] = date('Y-m-d H:i:s', strtotime($data['etd']));
+        $data['eta'] = date('Y-m-d H:i:s', strtotime($data['eta']));
         $id = $request->input('id_shippinginstruction');
 
 
