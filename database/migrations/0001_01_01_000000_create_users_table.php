@@ -72,7 +72,7 @@ return new class extends Migration
             $table->id('id_permission');
             $table->integer('id_position');
             $table->integer('id_division')->nullable();
-            $table->integer('id_role')->nullable();
+           
             $table->string('path');
             $table->boolean('can_read')->default(false)->comment('Can read the resource 0 = No, 1 = Yes');
             $table->boolean('can_create')->default(false)->comment('Can create the resource 0 = No, 1 = Yes');
@@ -101,12 +101,24 @@ return new class extends Migration
         });
 
         Schema::create('menu_user', function (Blueprint $table) {
-            $table->integer('id_menu_user')->autoIncrement();
+            $table->id('id_menu_user');
             $table->integer('id_position');
             $table->integer('id_division');
-            $table->integer('id_role');
-            $table->json('menu')->nullable()->comment('List of menu IDs');
+            $table->integer('id_listmenu');
+            $table->boolean('can_create')->default(false)->comment('Can create the resource false = No, true = Yes');
+            $table->boolean('can_read')->default(false)->comment('Can read the resource false = No, true = Yes');
+            $table->boolean('can_update')->default(false)->comment('Can update the resource false = No, true = Yes');
+            $table->boolean('can_delete')->default(false)->comment('Can delete the resource false = No, true = Yes');
+            $table->boolean('can_approve')->default(false)->comment('Can approve the resource false = No, true = Yes');
+            $table->boolean('can_reject')->default(false)->comment('Can reject the resource false = No, true = Yes');
+            $table->boolean('can_print')->default(false)->comment('Can print the resource false = No, true = Yes');
+            $table->boolean('can_export')->default(false)->comment('Can export the resource false = No, true = Yes');
+            $table->boolean('can_import')->default(false)->comment('Can import the resource false = No, true = Yes');
             $table->timestamps();
+            $table->softDeletes();
+            $table->boolean('status')->default(true);
+            $table->integer('created_by')->unsigned()->nullable();
+            $table->integer('updated_by')->unsigned()->nullable();
         });
 
         

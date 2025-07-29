@@ -78,11 +78,11 @@ Route::get('/getListMenuById/{id}', [MenuController::class, 'getListMenuById'])-
 Route::post('/createListMenu', [MenuController::class, 'createListMenu'])->middleware('auth:api');
 Route::put('/updateListMenu', [MenuController::class, 'updateListMenu'])->middleware('auth:api');
 
-//Master child menu
-Route::get('/getListChildMenu', [MenuController::class, 'getListChildMenu'])->middleware('auth:api');
-Route::get('/getListChildMenuById/{id}', [MenuController::class, 'getListChildMenuById'])->middleware('auth:api');
-Route::post('/createListChildMenu', [MenuController::class, 'createListChildMenu'])->middleware('auth:api');
-Route::put('/updateListChildMenu', [MenuController::class, 'updateListChildMenu'])->middleware('auth:api');
+//Master Menu User
+Route::get('/getMenuUser', [MenuController::class, 'getMenuUser'])->middleware('auth:api');
+Route::get('/getMenuUserById/{id}', [MenuController::class, 'getMenuUserById'])->middleware('auth:api');
+Route::post('/createMenuUser', [MenuController::class, 'createMenuUser'])->middleware('auth:api');
+Route::put('/updateMenuUser', [MenuController::class, 'updateMenuUser'])->middleware('auth:api');
 
 //master permission
 Route::get('/getPermissions', [PermissionController::class, 'getPermissions'])->middleware('auth:api');

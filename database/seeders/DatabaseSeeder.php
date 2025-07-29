@@ -189,21 +189,19 @@ class DatabaseSeeder extends Seeder
        
 
         DB::table('menu_user')->insert([
-            'id_position' => 1, // Assuming Super Admin position has ID 1
+            'id_position' => 1, // Assuming Super Admin has ID 1
             'id_division' => 1, // Assuming IT division has ID 1
-            'id_role' => 1, // Assuming Super Admin role has ID 1
-            'menu' => json_encode([
-                [
-                    'menu_id' => 2, // Assuming Master Customer has ID 2
-                    'childmenus' => [
-                        ['id_childmenu' => 1], // Assuming employee has ID 1
-                    ]
-                ],
-                [
-                    'menu_id' => 1,
-                    'childmenus' => []
-                ]
-            ]),
+            'id_listmenu' => $dashboardId,
+            'can_create' => true,
+            'can_read' => true,
+            'can_update' => true,
+            'can_delete' => true,
+            'can_approve' => true,
+            'can_reject' => true,
+            'can_print' => true,
+            'can_export' => true,
+            'can_import' => true,
+            'status' => true,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

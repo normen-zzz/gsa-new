@@ -400,8 +400,8 @@ class ShippingInstructionController extends Controller
             ]);
             $dataAwb = [
                 'awb' => $request->input('awb'),
-                'etd' => $request->input('etd'),
-                'eta' => $request->input('eta'),
+                'etd' => date('Y-m-d H:i:s', strtotime($request->input('etd'))),
+                'eta' => date('Y-m-d H:i:s', strtotime($request->input('eta'))),
                 'pol' => $request->input('pol'),
                 'pod' => $request->input('pod'),
                 'commodity' => $request->input('commodity'),
@@ -421,8 +421,8 @@ class ShippingInstructionController extends Controller
                     'id_awb' => $id_awb,
                     'agent' => $request->input('agent'),
                     'consignee' => $request->input('consignee'),
-                    'etd' => $request->input('etd'),
-                    'eta' => $request->input('eta'),
+                    'etd' => date('Y-m-d H:i:s', strtotime($request->input('etd'))),
+                    'eta' => date('Y-m-d H:i:s', strtotime($request->input('eta'))),
 
                     'created_at' => now(),
                     'created_by' => $request->user()->id_user,
