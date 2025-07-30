@@ -21,7 +21,6 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'a.data_agent as id_dataagent',
             'a.consignee as consignee',
-
             'a.type',
             'a.eta',
             'a.etd',
@@ -38,7 +37,9 @@ class ShippingInstructionController extends Controller
             'a.special_instructions',
             'b.name as created_by',
             'a.status',
-            'a.created_at'
+            'a.created_at',
+            'h.awb'
+
         ];
 
         $query = DB::table('shippinginstruction AS a')
@@ -48,6 +49,8 @@ class ShippingInstructionController extends Controller
             ->leftJoin('data_customer AS d', 'a.data_agent', '=', 'd.id_datacustomer')
             ->leftJoin('airports AS e', 'a.pol', '=', 'e.id_airport')
             ->leftJoin('airports AS f', 'a.pod', '=', 'f.id_airport')
+            ->leftJoin('job AS g', 'a.id_shippinginstruction', '=', 'g.id_shippinginstruction')
+            ->leftJoin('awb AS h', 'g.id_awb', '=', 'h.id_awb')
             ->where('d.is_primary', true)
             ->where('c.name_customer', 'like', '%' . $search . '%')
             ->orWhere('e.name_airport', 'like', '%' . $search . '%')
@@ -376,7 +379,7 @@ class ShippingInstructionController extends Controller
         try {
             $request->validate([
                 'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
-                'awb' => 'required|integer',
+                'awb' => 'required|integer|unique:awb,awb',
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
                 'consignee' => 'nullable|string',

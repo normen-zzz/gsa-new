@@ -18,17 +18,17 @@ class JobController extends Controller
 
         DB::beginTransaction();
         try {
+            $job = DB::table('job')->where('id_job', $request->id_job)->first();
             $data = $request->validate([
                 'id_job' => 'required|integer|exists:job,id_job',
-                'awb' => 'required|string|max:50|exists:awb,awb',
-                'agent' => 'required|integer|exists:customers,id_customer',
+                'awb' => 'required|string|max:50|unique:awb,awb',
                 'consignee' => 'nullable|string|max:255',
                 'etd' => 'required|date',
                 'eta' => 'required|date',
                 'commodity' => 'required|string|max:255',
                 'weight' => 'required|numeric|min:0',
                 'pieces' => 'required|integer|min:1',
-                'dimensions' => 'nullable|json',
+                'dimensions' => 'nullable|array',
                 'dimensions.*.length' => 'required|numeric|min:0',
                 'dimensions.*.width' => 'required|numeric|min:0',
                 'dimensions.*.height' => 'required|numeric|min:0',
@@ -45,11 +45,12 @@ class JobController extends Controller
             ]);
 
             $dataJob = [
-                'agent' => $data['agent'],
+               
                 'consignee' => $data['consignee'],
                 'etd' => $data['etd'],
                 'eta' => $data['eta'],
                 'updated_by' => $request->user()->id_user,
+                'updated_at' => now(),
             ];
 
             $dataAwb = [
@@ -68,9 +69,11 @@ class JobController extends Controller
                 'updated_at' => now(),
             ];
 
+           
+
             $updateJob = DB::table('job')->where('id_job', $data['id_job'])->update($dataJob);
             if ($updateJob) {
-                $updateAwb =  DB::table('awb')->where('awb', $data['awb'])->update($dataAwb);
+                $updateAwb =  DB::table('awb')->where('id_awb', $job->id_awb)->update($dataAwb);
                 if ($updateAwb) {
                     $insertLog = DB::table('log_job')->insert([
                         'id_job' => $data['id_job'],

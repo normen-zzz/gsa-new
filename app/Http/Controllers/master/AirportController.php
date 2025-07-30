@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 
 class AirportController extends Controller
@@ -23,6 +22,8 @@ class AirportController extends Controller
             ]);
 
             $data['created_by'] = $request->user()->id_user;
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
 
             $airport = DB::table('airports')->insert($data);
             if ($airport) {

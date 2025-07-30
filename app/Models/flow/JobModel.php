@@ -28,8 +28,10 @@ class JobModel extends Model
             'awb.eta',
             'awb.pol',
             'pol.name_airport as pol_name',
+            'pol.code_airport as pol_code',
             'awb.pod',
             'pod.name_airport as pod_name',
+            'pod.code_airport as pod_code',
             'awb.commodity',
             'awb.weight',
             'awb.pieces',
@@ -135,7 +137,75 @@ class JobModel extends Model
 
         return $job;
     }
-    
+
+    public function updateJob (Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->validate([
+                'id_job' => 'required|integer|exists:job,id_job',
+                'awb' => 'required|string|max:50|exists:awb,awb',
+                'consignee' => 'nullable|string|max:255',
+                'etd' => 'required|date',
+                'eta' => 'required|date',
+                'commodity' => 'required|string|max:255',
+                'weight' => 'required|numeric|min:0',
+                'pieces' => 'required|integer|min:1',
+                'dimensions' => 'nullable|json',
+                'dimensions.*.length' => 'required|numeric|min:0',
+                'dimensions.*.width' => 'required|numeric|min:0',
+                'dimensions.*.height' => 'required|numeric|min:0',
+                'dimensions.*.weight' => 'required|numeric|min:0',
+                'special_instructions' => 'nullable|string|max:500',
+                'status' => 'required|in:created_by_cs, handled_by_ops, declined_by_ops,deleted',
+                'pol' => 'required|integer|exists:airports,id_airport',
+                'pod' => 'required|integer|exists:airports,id_airport',
+                'data_flight' => 'nullable|array',
+                'data_flight.*.flight_number' => 'required|string|max:255',
+                'data_flight.*.departure' => 'required|date',
+                'data_flight.*.arrival' => 'required|date',
+
+            ]);
+
+            $dataJob = [
+                'consignee' => $data['consignee'],
+                'etd' => $data['etd'],
+                'eta' => $data['eta'],
+                'updated_by' => $request->user()->id_user,
+            ];
+
+            $dataAwb = [
+                'awb' => $data['awb'],
+                'etd' => $data['etd'],
+                'eta' => $data['eta'],
+                'pol' => $data['pol'],
+                'pod' => $data['pod'],
+                'commodity' => $data['commodity'],
+                'weight' => $data['weight'],
+                'pieces' => $data['pieces'],
+                'dimensions' => json_encode($data['dimensions']),
+                'data_flight' => json_encode($data['data_flight']),
+                'handling_instructions' => $data['special_instructions'],
+                'created_by' => $request->user()->id_user,
+                'updated_at' => now(),
+            ];  
+            $updateJob = DB::table('job')->where('id_job', $data['id_job'])->update($dataJob);
+            if ($updateJob) {
+                $updateAwb =  DB::table('awb')->where('awb', $data['awb'])->update($dataAwb);
+                if ($updateAwb) {
+                    DB::commit();
+                    return ResponseHelper::success('Job updated successfully.', NULL, 200);
+                } else {
+                    throw new Exception('Failed to update AWB.');
+                }
+            } else {
+                throw new Exception('Failed to update job.');
+            }
+        } catch (Exception $th) {
+            DB::rollBack();
+            return ResponseHelper::error($th);
+        }
+    }
 
     
 }
