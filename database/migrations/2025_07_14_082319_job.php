@@ -14,12 +14,18 @@ return new class extends Migration
         Schema::create('job', function (Blueprint $table) {
             $table->id('id_job');
             $table->unsignedBigInteger('id_shippinginstruction');
-            $table->unsignedBigInteger('id_awb');
+            $table->string('awb');
             $table->unsignedBigInteger('agent');
             $table->unsignedBigInteger('data_agent');
             $table->string('consignee')->nullable();
             $table->date('etd');
             $table->date('eta');
+            $table->integer('pol');
+            $table->integer('pod');
+            $table->string('commodity');
+            $table->decimal('weight');
+            $table->integer('pieces');
+            $table->string('special_instructions')->nullable();
             $table->timestamps();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();

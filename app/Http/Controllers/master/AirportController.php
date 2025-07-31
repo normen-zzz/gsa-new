@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Helpers\ResponseHelper;
 
+date_default_timezone_set('Asia/Jakarta');
+
 class AirportController extends Controller
 {
     public function createAirport(Request $request)

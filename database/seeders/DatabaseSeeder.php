@@ -293,6 +293,8 @@ class DatabaseSeeder extends Seeder
             'data_agent' => 1, // Assuming the CEVA customer data has ID 1
             'consignee' => "tes consignee", // Assuming the DHL customer has ID 2
             'type' => 'direct',
+            'etd' => now()->addDays(3),
+            'eta' => now()->addDays(5),
             'pol' => 1, // Assuming the Soekarno-Hatta International Airport has ID 1
             'pod' => 2, // Assuming the Miami International Airport has ID 2
             'commodity' => 'Electronics',
@@ -310,6 +312,8 @@ class DatabaseSeeder extends Seeder
             'status' => 'created_by_sales',
             'created_at' => now(),
             'updated_at' => now(),
+            'received_at' => null,
+            'received_by' => null,
 
         ]);
 

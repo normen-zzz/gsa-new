@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('dimension_shippinginstruction', function (Blueprint $table) {
             $table->id('id_dimension');
             $table->unsignedBigInteger('id_shippinginstruction')->nullable();
-            $table->decimal('length', 8, 2)->nullable();
-            $table->decimal('width', 8, 2)->nullable();
-            $table->decimal('height', 8, 2)->nullable();
-            $table->decimal('weight', 8, 2)->nullable();
+            $table->decimal('length')->nullable();
+            $table->decimal('width')->nullable();
+            $table->decimal('height')->nullable();
+            $table->decimal('weight')->nullable();
             $table->integer('created_by')->unsigned();
             // remarks 
             $table->text('remarks')->nullable();

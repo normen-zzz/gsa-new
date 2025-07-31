@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('dimension_hawb', function (Blueprint $table) {
             $table->id('id_dimensionhawb');
             $table->unsignedBigInteger('id_hawb');
-            $table->decimal('length', 8, 2);
-            $table->decimal('width', 8, 2);
-            $table->decimal('height', 8, 2);
-            $table->decimal('weight', 8, 2);
+            $table->decimal('length');
+            $table->decimal('width');
+            $table->decimal('height');
+            $table->decimal('weight');
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();

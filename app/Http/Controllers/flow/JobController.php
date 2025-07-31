@@ -10,6 +10,7 @@ use App\Models\flow\JobModel;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 
+date_default_timezone_set('Asia/Jakarta');
 
 class JobController extends Controller
 {
@@ -19,9 +20,10 @@ class JobController extends Controller
         DB::beginTransaction();
         try {
             $job = DB::table('job')->where('id_job', $request->id_job)->first();
+            $awb = DB::table('awb')->where('id_awb', $job->id_awb)->first();
             $data = $request->validate([
                 'id_job' => 'required|integer|exists:job,id_job',
-                'awb' => 'required|string|max:50|unique:awb,awb',
+                'awb' => 'required|string|max:50|unique:awb,awb,' . $awb->awb . ',awb',
                 'consignee' => 'nullable|string|max:255',
                 'etd' => 'required|date',
                 'eta' => 'required|date',
@@ -45,7 +47,7 @@ class JobController extends Controller
             ]);
 
             $dataJob = [
-               
+
                 'consignee' => $data['consignee'],
                 'etd' => $data['etd'],
                 'eta' => $data['eta'],
@@ -69,17 +71,29 @@ class JobController extends Controller
                 'updated_at' => now(),
             ];
 
-           
+
 
             $updateJob = DB::table('job')->where('id_job', $data['id_job'])->update($dataJob);
             if ($updateJob) {
                 $updateAwb =  DB::table('awb')->where('id_awb', $job->id_awb)->update($dataAwb);
                 if ($updateAwb) {
+                    $dataAwb['dimensions'] = json_decode($dataAwb['dimensions'], true);
+                    $dataAwb['data_flight'] = json_decode($dataAwb['data_flight'], true);
+                    $awb->dimensions = json_decode($awb->dimensions, true);
+                    $awb->data_flight = json_decode($awb->data_flight, true);
+                    $dataJob['id_job'] = $data['id_job'];
+                    $dataJob['id_awb'] = $job->id_awb;
                     $insertLog = DB::table('log_job')->insert([
                         'id_job' => $data['id_job'],
                         'action' => json_encode([
                             'action' => 'update',
-                            'data' => $data,
+                            'data' => [
+
+                                'job_after' => $dataJob,
+                                'job_before' => $job,
+                                'awb_after' => $dataAwb,
+                                'awb_before' => $awb,
+                            ],
                         ]),
                         'id_user' => $request->user()->id_user,
                         'created_at' => now(),
@@ -111,6 +125,21 @@ class JobController extends Controller
             $search = $request->input('searchKey', '');
             $jobs = $jobModel->getJob($search, $limit);
             return ResponseHelper::success('Jobs retrieved successfully.', $jobs, 200);
+        } catch (Exception $th) {
+            return ResponseHelper::error($th);
+        }
+    }
+
+    public function getJobById(Request $request)
+    {
+        try {
+            $jobModel = new JobModel();
+            $id = $request->input('id');
+            $job = $jobModel->getJobById($id);
+            if (!$job) {
+                return ResponseHelper::success('Job not found.', NULL, 404);
+            }
+            return ResponseHelper::success('Job retrieved successfully.', $job, 200);
         } catch (Exception $th) {
             return ResponseHelper::error($th);
         }

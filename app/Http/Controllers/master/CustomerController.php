@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 use GuzzleHttp\Psr7\Response;
 
+date_default_timezone_set('Asia/Jakarta');
+
 class CustomerController extends Controller
 {
     public function createCustomer(Request $request)

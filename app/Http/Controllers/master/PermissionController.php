@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 use Exception;
 
+date_default_timezone_set('Asia/Jakarta');
 class PermissionController extends Controller
 {
     public function getPermissions(Request $request)

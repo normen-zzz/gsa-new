@@ -11,6 +11,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
+date_default_timezone_set('Asia/Jakarta');
+
 
 class CountryController extends Controller
 {

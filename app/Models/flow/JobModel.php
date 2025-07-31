@@ -18,43 +18,36 @@ class JobModel extends Model
         // Optimasi query untuk kinerja yang lebih baik
         $select = [
             'job.id_job',
+            'job.id_shippinginstruction',
             'job.agent',
             'agent.name_customer as agent_name',
             'job.agent as agent_data',
             'job.consignee',
-            'awb.id_awb',
-            'awb.awb',
-            'awb.etd',
-            'awb.eta',
-            'awb.pol',
+            'job.etd',
+            'job.eta',
+            'job.pol',
             'pol.name_airport as pol_name',
-            'pol.code_airport as pol_code',
-            'awb.pod',
+            'job.pod',
             'pod.name_airport as pod_name',
-            'pod.code_airport as pod_code',
-            'awb.commodity',
-            'awb.weight',
-            'awb.pieces',
-            'awb.dimensions',
-            'awb.data_flight',
-            'awb.handling_instructions',
+            'job.commodity',
+            'job.weight',
+            'job.pieces',
+            'job.special_instructions',
             'job.status',
             'job.created_at',
-
-
+            'job.updated_at',
+            'job.created_by',
+            'job.updated_by',
         ];
         $job = DB::table('job')
-            ->join('awb', 'job.id_awb', '=', 'awb.id_awb')
-            ->join('customers as agent', 'job.agent', '=', 'agent.id_customer')
-            
-            ->join('airports as pol', 'awb.pol', '=', 'pol.id_airport')
-            ->join('airports as pod', 'awb.pod', '=', 'pod.id_airport')
+            ->leftJoin('customers as agent', 'job.agent', '=', 'agent.id_customer')
+            ->leftJoin('airports as pol', 'job.pol', '=', 'pol.id_airport')
+            ->leftJoin('airports as pod', 'job.pod', '=', 'pod.id_airport')
             // Menggunakan when() untuk kondisi pencarian hanya jika ada
             ->when(!empty($search), function ($query) use ($search) {
                 return $query->where(function ($q) use ($search) {
-                    $q->where('awb.awb', 'like', '%' . $search . '%')
-                        ->orWhere('agent.name_customer', 'like', '%' . $search . '%')
-                        ->orWhere('consignee.name_customer', 'like', '%' . $search . '%')
+                    $q->where('agent.name_customer', 'like', '%' . $search . '%')
+                        ->orWhere('job.consignee', 'like', '%' . $search . '%')
                         ->orWhere('pol.name_airport', 'like', '%' . $search . '%')
                         ->orWhere('pod.name_airport', 'like', '%' . $search . '%');
                 });
@@ -65,147 +58,108 @@ class JobModel extends Model
             )
             ->paginate($limit);
 
-        // Mengoptimalkan proses decode JSON dengan transform collection
-        $job->getCollection()->transform(function ($j) {
-            if (!empty($j->data_flight)) {
-                $j->data_flight = json_decode($j->data_flight, true);
-            }
-            if (!empty($j->dimensions)) {
-                $j->dimensions = json_decode($j->dimensions, true);
+        $job->getCollection()->transform(function ($item) {
+            $dimension_job = DB::table('dimension_job')
+                ->where('id_job', $item->id_job)
+                ->get();
+            if ($dimension_job) {
+                $item->dimensions_job = $dimension_job;
             }
 
-            $agentData = DB::table('data_customer')
-                ->where('id_customer', $j->agent_data)
+            $data_flightjob = DB::table('flight_job')
+                ->where('id_job', $item->id_job)
+                ->get();
+            if ($data_flightjob) {
+                $item->data_flightjob = $data_flightjob;
+            }
+
+            $shippingInstruction = DB::table('shippinginstruction')
+                ->where('id_shippinginstruction', $item->id_shippinginstruction)
                 ->first();
+            if ($shippingInstruction) {
+                $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions, true);
+                $item->data_shippinginstruction = $shippingInstruction;
+            }
 
-            $j->agent_data = $agentData ? json_decode($agentData->data, true) : [];
-            return $j;
+            $awb = DB::table('awb')
+                ->where('id_job', $item->id_job)
+                ->first();
+            if ($awb) {
+                $item->data_awb = $awb;
+                $data_awb = $item->data_awb;
+                $dimension_awb = DB::table('dimension_awb')
+                    ->where('id_awb', $data_awb->id_awb)
+                    ->get();
+                if ($dimension_awb) {
+                    $data_awb->dimensions_awb = $dimension_awb;
+                }
+                $flight_awb = DB::table('flight_awb')
+                    ->where('id_awb', $data_awb->id_awb)
+                    ->get();
+                if ($flight_awb) {
+                    $data_awb->data_flightawb = $flight_awb;
+                }
+            }
+            return $item;
         });
 
         return $job;
+        
+        
     }
 
     public function getJobById($id)
     {
-        $select = [
-            'job.id_job',
-            'job.agent',
-            'agent.name_customer as agent_name',
-            'job.agent as agent_data',
-            'job.consignee',
-            'awb.id_awb',
-            'awb.awb',
-            'awb.etd',
-            'awb.eta',
-            'awb.pol',
-            'pol.name_airport as pol_name',
-            'awb.pod',
-            'pod.name_airport as pod_name',
-            'awb.commodity',
-            'awb.weight',
-            'awb.pieces',
-            'awb.dimensions',
-            'awb.data_flight',
-            'awb.handling_instructions',
-            'job.status',
-            'job.created_at'
-        ];
-
         $job = DB::table('job')
-            ->join('awb', 'job.id_awb', '=', 'awb.id_awb')
-            ->join('customers as agent', 'job.agent', '=', 'agent.id_customer')
-            
-            ->join('airports as pol', 'awb.pol', '=', 'pol.id_airport')
-            ->join('airports as pod', 'awb.pod', '=', 'pod.id_airport')
-            ->where('job.id_job', $id)
-            ->select($select)
+            ->where('id_job', $id)
             ->first();
 
         if (!$job) {
             return null;
         }
 
-        // Decode JSON fields
-        $job->data_flight = json_decode($job->data_flight, true);
-        $job->dimensions = json_decode($job->dimensions, true);
+        $job->dimensions_job = DB::table('dimension_job')
+            ->where('id_job', $job->id_job)
+            ->get();
 
-        $agentData = DB::table('data_customer')
-            ->where('id_customer', $job->agent_data)
+        $job->data_flightjob = DB::table('flight_job')
+            ->where('id_job', $job->id_job)
+            ->get();
+
+        $shippingInstruction = DB::table('shippinginstruction')
+            ->where('id_shippinginstruction', $job->id_shippinginstruction)
             ->first();
+        if ($shippingInstruction) {
+            $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions, true);
+            $job->data_shippinginstruction = $shippingInstruction;
+        }
 
-        $job->agent_data = $agentData ? json_decode($agentData->data, true) : [];
+        $awb = DB::table('awb')
+            ->where('id_job', $job->id_job)
+            ->first();
+        if ($awb) {
+            $awb->dimensions = json_decode($awb->dimensions, true);
+            $awb->data_flight = json_decode($awb->data_flight, true);
+            $job->data_awb = $awb;
+
+            $dimension_awb = DB::table('dimension_awb')
+                ->where('id_awb', $awb->id_awb)
+                ->get();
+            if ($dimension_awb) {
+                $awb->dimensions_awb = $dimension_awb;
+            }
+
+            $flight_awb = DB::table('flight_awb')
+                ->where('id_awb', $awb->id_awb)
+                ->get();
+            if ($flight_awb) {
+                $awb->data_flightawb = $flight_awb;
+            }
+        }
 
         return $job;
     }
 
-    public function updateJob (Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            $data = $request->validate([
-                'id_job' => 'required|integer|exists:job,id_job',
-                'awb' => 'required|string|max:50|exists:awb,awb',
-                'consignee' => 'nullable|string|max:255',
-                'etd' => 'required|date',
-                'eta' => 'required|date',
-                'commodity' => 'required|string|max:255',
-                'weight' => 'required|numeric|min:0',
-                'pieces' => 'required|integer|min:1',
-                'dimensions' => 'nullable|json',
-                'dimensions.*.length' => 'required|numeric|min:0',
-                'dimensions.*.width' => 'required|numeric|min:0',
-                'dimensions.*.height' => 'required|numeric|min:0',
-                'dimensions.*.weight' => 'required|numeric|min:0',
-                'special_instructions' => 'nullable|string|max:500',
-                'status' => 'required|in:created_by_cs, handled_by_ops, declined_by_ops,deleted',
-                'pol' => 'required|integer|exists:airports,id_airport',
-                'pod' => 'required|integer|exists:airports,id_airport',
-                'data_flight' => 'nullable|array',
-                'data_flight.*.flight_number' => 'required|string|max:255',
-                'data_flight.*.departure' => 'required|date',
-                'data_flight.*.arrival' => 'required|date',
-
-            ]);
-
-            $dataJob = [
-                'consignee' => $data['consignee'],
-                'etd' => $data['etd'],
-                'eta' => $data['eta'],
-                'updated_by' => $request->user()->id_user,
-            ];
-
-            $dataAwb = [
-                'awb' => $data['awb'],
-                'etd' => $data['etd'],
-                'eta' => $data['eta'],
-                'pol' => $data['pol'],
-                'pod' => $data['pod'],
-                'commodity' => $data['commodity'],
-                'weight' => $data['weight'],
-                'pieces' => $data['pieces'],
-                'dimensions' => json_encode($data['dimensions']),
-                'data_flight' => json_encode($data['data_flight']),
-                'handling_instructions' => $data['special_instructions'],
-                'created_by' => $request->user()->id_user,
-                'updated_at' => now(),
-            ];  
-            $updateJob = DB::table('job')->where('id_job', $data['id_job'])->update($dataJob);
-            if ($updateJob) {
-                $updateAwb =  DB::table('awb')->where('awb', $data['awb'])->update($dataAwb);
-                if ($updateAwb) {
-                    DB::commit();
-                    return ResponseHelper::success('Job updated successfully.', NULL, 200);
-                } else {
-                    throw new Exception('Failed to update AWB.');
-                }
-            } else {
-                throw new Exception('Failed to update job.');
-            }
-        } catch (Exception $th) {
-            DB::rollBack();
-            return ResponseHelper::error($th);
-        }
-    }
 
     
 }

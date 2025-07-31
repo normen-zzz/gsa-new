@@ -10,6 +10,8 @@ use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 use GuzzleHttp\Psr7\Response;
 
+date_default_timezone_set('Asia/Jakarta');
+
 class DivisionController extends Controller
 {
     public function getDivisions(Request $request)

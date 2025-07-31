@@ -13,11 +13,8 @@ return new class extends Migration
     {
         Schema::create('hawb', function (Blueprint $table) {
             $table->id('id_hawb');
-            $table->unsignedBigInteger('id_awb')->nullable();
+            $table->unsignedBigInteger('id_awb');
             $table->string('hawb_number')->unique();
-            $table->date('date')->nullable();
-            $table->text('remarks')->nullable();
-           
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();

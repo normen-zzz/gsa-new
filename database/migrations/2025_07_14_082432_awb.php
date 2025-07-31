@@ -14,6 +14,7 @@ return new class extends Migration
     {
         Schema::create('awb', function (Blueprint $table) {
             $table->id('id_awb');
+            $table->integer('id_job')->unsigned();
             $table->string('awb')->unique();
             $table->date('etd')->nullable();
             $table->date('eta')->nullable();
@@ -22,14 +23,14 @@ return new class extends Migration
             $table->string('commodity');
             $table->integer('weight')->unsigned();
             $table->integer('pieces')->unsigned();
-            $table->json('dimensions')->nullable();
-            $table->json('data_flight')->nullable();
             $table->text('handling_instructions')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->timestamps();
 
         });
+
+       
     }
 
     /**

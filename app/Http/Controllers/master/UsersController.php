@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 
+date_default_timezone_set('Asia/Jakarta');
+
 class UsersController extends Controller
 {
     public function getUsers(Request $request)

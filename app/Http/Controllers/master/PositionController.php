@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 
+date_default_timezone_set('Asia/Jakarta');
+
 
 class PositionController extends Controller
 {
