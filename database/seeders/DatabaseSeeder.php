@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // CREATE MENUS 
+        $this->call(MenuSeeder::class);
+
         // Create a default user
         User::factory()->create([
             'name' => 'admin',
@@ -29,10 +32,49 @@ class DatabaseSeeder extends Seeder
             'status' => true
         ]);
 
+        User::factory()->create([
+            'name' => 'sales',
+            'email' => 'sales@transtama.com',
+            'password' => bcrypt('admin123'),
+            'id_position' => 4,
+            'id_division' => 5,
+            'id_role' => 1,
+            'photo' => null,
+            'phone' => '12345678',
+            'status' => true
+        ]);
+
+        User::factory()->create([
+            'name' => 'cs',
+            'email' => 'cs@transtama.com',
+            'password' => bcrypt('admin123'),
+            'id_position' => 5,
+            'id_division' => 3,
+            'id_role' => 1,
+            'photo' => null,
+            'phone' => '12345678',
+            'status' => true
+        ]);
+
+
         DB::table('positions')->insert([
             [
                 'name' => 'Super Admin',
                 'description' => 'Super Admin Position',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Director',
+                'description' => 'Director Position',
+                'status' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'General Manager',
+                'description' => 'General Manager Position',
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -50,7 +92,7 @@ class DatabaseSeeder extends Seeder
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ]);
         DB::table('divisions')->insert([
             [
@@ -84,7 +126,15 @@ class DatabaseSeeder extends Seeder
                 'have_role' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
+            [
+                'name' => 'Sales',
+                'description' => 'Sales Division',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
 
         DB::table('roles')->insert([
@@ -132,80 +182,6 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ]
         ]);
-
-        // Level 1 Menu
-        $dashboardId = DB::table('list_menu')->insertGetId([
-            'name' => 'Dashboard',
-            'icon' => 'fas fa-home',
-            'path' => '/dashboard',
-            'parent_id' => null,
-            'status' => true,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $managementId = DB::table('list_menu')->insertGetId([
-            'name' => 'User Management',
-            'icon' => 'fas fa-users',
-            'path' => null,
-            'parent_id' => null,
-           
-            'status' => true,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Level 2 Menu
-        $userId = DB::table('list_menu')->insertGetId([
-            'name' => 'Users',
-            'icon' => 'fas fa-user',
-            'path' => '/users',
-            'parent_id' => $managementId,
-          
-            'status' => true,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Level 3 Menu
-        DB::table('list_menu')->insert([
-            'name' => 'Add User',
-            'icon' => 'fas fa-user-plus',
-            'path' => '/users/create',
-            'parent_id' => $userId,
-            'status' => true,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-       
-
-        DB::table('menu_user')->insert([
-            'id_position' => 1, // Assuming Super Admin has ID 1
-            'id_division' => 1, // Assuming IT division has ID 1
-            'id_listmenu' => $dashboardId,
-            'can_create' => true,
-            'can_read' => true,
-            'can_update' => true,
-            'can_delete' => true,
-            'can_approve' => true,
-            'can_reject' => true,
-            'can_print' => true,
-            'can_export' => true,
-            'can_import' => true,
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
 
         DB::table('customers')->insert([
             'name_customer' => 'CEVA',
