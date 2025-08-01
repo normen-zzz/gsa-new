@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('dimension_shippinginstruction', function (Blueprint $table) {
             $table->id('id_dimension');
             $table->unsignedBigInteger('id_shippinginstruction')->nullable();
+            $table->decimal('pieces')->nullable();
             $table->decimal('length')->nullable();
             $table->decimal('width')->nullable();
             $table->decimal('height')->nullable();

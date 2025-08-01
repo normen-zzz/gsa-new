@@ -22,7 +22,8 @@ return new class extends Migration
             $table->integer('pol')->unsigned();
             $table->integer('pod')->unsigned();
             $table->string('commodity')->nullable();
-            $table->decimal('weight', 8, 2)->nullable();
+            $table->decimal('gross_weight', 8, 2)->nullable();
+            $table->decimal('chargeable_weight', 8, 2)->nullable();
             $table->integer('pieces')->unsigned()->nullable();
             $table->json('dimensions')->nullable();
             $table->text('special_instructions')->nullable();

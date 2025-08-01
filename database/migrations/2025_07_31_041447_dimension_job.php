@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('dimension_job', function (Blueprint $table) {
             $table->id('id_dimensionjob');
             $table->unsignedBigInteger('id_job');
-            $table->decimal('length', 8, 2);
-            $table->decimal('width', 8, 2);
-            $table->decimal('height', 8, 2);
-            $table->decimal('weight', 8, 2);
+            $table->decimal('pieces')->nullable();
+            $table->decimal('length')->nullable();
+            $table->decimal('width')->nullable();
+            $table->decimal('height')->nullable();
+            $table->decimal('weight')->nullable();
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
