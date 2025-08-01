@@ -16,23 +16,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // CREATE MENUS 
-        $this->call(MenuSeeder::class);
-        // CREATE DIVISIONS
-        $this->call(DivisionSeeder::class);
-        // CREATE POSITIONS
-        $this->call(PositionSeeder::class);
-        
-        // CREATE PERMISSIONS
-        $this->call(PermissionSeeder::class);
-        // CREATE AIRLINES
-        $this->call(AirlineSeeder::class);
-        // CREATE AIRPORTS
-        $this->call(AirportSeeder::class);
-        // CREATE CUSTOMERS
-        $this->call(CustomerSeeder::class);
-        // CREATE SHIPPING INSTRUCTIONS
-        $this->call(ShippinginstructionSeeder::class);
+       
+
+        $this->call([
+            DivisionSeeder::class,
+            PositionSeeder::class,
+            PermissionSeeder::class,
+            AirlineSeeder::class,
+            AirportSeeder::class,
+            ShippinginstructionSeeder::class,
+            CustomerSeeder::class,
+            MenuSeeder::class,
+        ]);
         // CREATE JOBS
 
         // Create a default user

@@ -23,7 +23,8 @@ class ShippinginstructionSeeder extends Seeder
             'pol' => 1, // Assuming the Soekarno-Hatta International Airport has ID 1
             'pod' => 2, // Assuming the Miami International Airport has ID 2
             'commodity' => 'Electronics',
-            'weight' => 1000, // Weight in grams
+            'gross_weight' => 1000, // Weight in grams
+            'chargeable_weight' => 1200, // Chargeable weight in grams
             'pieces' => 10,
             'dimensions' => json_encode(
                 [
