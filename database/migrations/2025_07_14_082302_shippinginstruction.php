@@ -31,7 +31,12 @@ return new class extends Migration
             $table->integer('updated_by')->unsigned()->nullable();
             $table->datetime('received_at')->nullable();
             $table->integer('received_by')->unsigned()->nullable();
-            $table->enum('status', ['created_by_sales', 'received_by_cs', 'rejected_by_cs','deleted'])->default('created_by_sales');
+            $table->enum('status', [
+                'si_created_by_sales',
+                'si_received_by_cs',
+                'si_rejected_by_cs',
+                'si_deleted'
+            ])->default('si_created_by_sales');
             $table->softDeletes();
             $table->integer('deleted_by')->unsigned()->nullable();
             $table->timestamps();

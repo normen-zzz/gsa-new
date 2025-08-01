@@ -15,18 +15,27 @@ return new class extends Migration
         Schema::create('awb', function (Blueprint $table) {
             $table->id('id_awb');
             $table->integer('id_job')->unsigned();
+            $table->integer('agent')->unsigned();
+            $table->integer('data_agent')->unsigned();
             $table->string('awb')->unique();
             $table->date('etd')->nullable();
             $table->date('eta')->nullable();
             $table->integer('pol')->unsigned();
             $table->integer('pod')->unsigned();
             $table->string('commodity');
-            $table->integer('weight')->unsigned();
+            $table->integer('gross_weight')->unsigned();
+            $table->integer('chargeable_weight')->unsigned();
             $table->integer('pieces')->unsigned();
-            $table->text('handling_instructions')->nullable();
+            $table->text('special_instructions')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->timestamps();
+            $table->enum('status', [
+                'awb_received_by_ops',
+                'awb_handled_by_ops',
+                'awb_declined_by_ops',
+                'awb_deleted'
+            ])->default('awb_received_by_ops');
 
         });
 

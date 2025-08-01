@@ -111,7 +111,7 @@ class ShippingInstructionController extends Controller
                 $job_data = $instruction->job_data;
                 $data_flightjob = DB::table('flight_job')
                     ->select([
-                        'flight_job.id_flight_job',
+                        'flight_job.id_flightjob',
                         'flight_job.flight_number',
                         'flight_job.departure',
                         'flight_job.departure_timezone',
@@ -264,7 +264,7 @@ class ShippingInstructionController extends Controller
             $job_data = $instruction->job_data;
             $data_flightjob = DB::table('flight_job')
                 ->select([
-                    'flight_job.id_flight_job',
+                    'flight_job.id_flightjob',
                     'flight_job.flight_number',
                     'flight_job.departure',
                     'flight_job.departure_timezone',
@@ -383,7 +383,7 @@ class ShippingInstructionController extends Controller
                     'pieces' => $data['pieces'],
                     'special_instructions' => $data['special_instructions'],
                     'created_by' => $data['created_by'],
-                    'status' => 'created_by_sales',
+                    'status' => 'si_created_by_sales',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -624,6 +624,7 @@ class ShippingInstructionController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => Auth::id(),
+                'status' => 'job_created_by_cs',
             ];
 
             $insertJob = DB::table('job')->insertGetId($dataJob);
@@ -664,7 +665,7 @@ class ShippingInstructionController extends Controller
                 }
                 $updateStatus = DB::table('shippinginstruction')
                     ->where('id_shippinginstruction', $request->input('id_shippinginstruction'))
-                    ->update(['status' => 'received_by_cs', 'received_at' => now(), 'received_by' => Auth::id()]);
+                    ->update(['status' => 'si_received_by_cs', 'received_at' => now(), 'received_by' => Auth::id()]);
                 if (!$updateStatus) {
                     throw new Exception('Failed to update shipping instruction status.');
                 }
@@ -694,7 +695,7 @@ class ShippingInstructionController extends Controller
             }
             $update = DB::table('shippinginstruction')
                 ->where('id_shippinginstruction', $id)
-                ->update(['status' => 'rejected_by_cs']);
+                ->update(['status' => 'si_rejected_by_cs']);
 
             if ($update) {
                 DB::commit();

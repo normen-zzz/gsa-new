@@ -148,13 +148,86 @@ class JobController extends Controller
 
     public function excecuteJob(Request $request)
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'id_job' => 'required|integer|exists:job,id_job',
-                'status' => 'required|in:handled_by_ops,declined_by_ops,deleted',
+                'agent' => 'required|integer|exists:customers,id_customer',
+                'data_agent' => 'required|integer|exists:data_customer,id_data_customer',
+                'awb' => 'required|string|max:50',
+                'etd' => 'required|date',
+                'eta' => 'required|date',
+                'pol' => 'required|integer|exists:airports,id_airport',
+                'pod' => 'required|integer|exists:airports,id_airport',
+                'gross_weight' => 'required|numeric|min:0',
+                'chargeable_weight' => 'required|numeric|min:0',
+                'pieces' => 'required|integer|min:1',
+                'commodity' => 'required|string|max:255',
+                'special_instructions' => 'nullable|string|max:500',
+                'dimensions' => 'nullable|array',
+                'flight' => 'nullable|array',
             ]);
+
+            $dataAwb = [
+                'id_job' => $request->id_job,
+                'agent' => $request->agent,
+                'data_agent' => $request->data_agent,
+                'awb' => $request->awb,
+                'etd' => $request->etd,
+                'eta' => $request->eta,
+                'pol' => $request->pol,
+                'pod' => $request->pod,
+                'commodity' => $request->commodity,
+                'gross_weight' => $request->gross_weight,
+                'chargeable_weight' => $request->chargeable_weight,
+                'pieces' => $request->pieces,
+                'special_instructions' => $request->special_instructions,
+                'created_by' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'status' => 'awb_received_by_ops',
+            ];
+            $insertDataAwb = DB::table('awb')->insert($dataAwb);
+            $id_awb = DB::getPdo()->lastInsertId();
+
+            if ($insertDataAwb) {
+                if (isset($request->dimensions) && is_array($request->dimensions)) {
+                    foreach ($request->dimensions as $dimension) {
+                        DB::table('dimension_awb')->insert([
+                            'id_awb' => $id_awb,
+                            'pieces' => $dimension['pieces'],
+                            'length' => $dimension['length'],
+                            'width' => $dimension['width'],
+                            'height' => $dimension['height'],
+                            'weight' => $dimension['weight'],
+                            'remarks' => $dimension['remarks'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+                if (isset($request->flight) && is_array($request->flight)) {
+                    foreach ($request->flight as $flight) {
+                        DB::table('flight_awb')->insert([
+                            'id_awb' => $id_awb,
+                            'flight_number' => $flight['flight_number'],
+                            'departure' => $flight['departure'],
+                            'departure_timezone' => $flight['departure_timezone'],
+                            'arrival' => $flight['arrival'],
+                            'arrival_timezone' => $flight['arrival_timezone'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                            'created_by' => $request->user()->id_user,
+                        ]);
+                    }
+                }
+            } else {
+                throw new Exception('Failed to insert AWB data.');
+            }
         } catch (Exception $th) {
             return ResponseHelper::error($th);
         }
     }
+
+   
 }

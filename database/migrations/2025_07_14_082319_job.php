@@ -32,9 +32,13 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->integer('updated_by')->unsigned()->nullable();
-            $table->enum('status', ['created_by_cs', 'handled_by_ops', 'declined_by_ops','deleted'])->default('created_by_cs');
-            
-
+            $table->enum('status', [
+                'job_created_by_cs',
+                'job_received_by_ops',
+                'job_handled_by_ops',
+                'job_declined_by_ops',
+                'job_deleted'
+            ])->default('job_created_by_cs');
         });
         Schema::create('log_job', function (Blueprint $table) {
             $table->id('id_logjob');
