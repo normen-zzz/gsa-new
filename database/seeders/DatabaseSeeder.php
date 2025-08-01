@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             ShippinginstructionSeeder::class,
             CustomerSeeder::class,
             MenuSeeder::class,
+            MenusSuperAdmin::class
         ]);
         // CREATE JOBS
 
