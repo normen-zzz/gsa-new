@@ -35,7 +35,8 @@ class ShippingInstructionController extends Controller
             'f.id_airport as id_pod',
             'f.code_airport as code_pod',
             'a.commodity',
-            'a.weight',
+            'a.gross_weight',
+            'a.chargeable_weight',
             'a.pieces',
             'a.dimensions',
             'a.special_instructions',
@@ -89,7 +90,8 @@ class ShippingInstructionController extends Controller
                     'job.pod',
                     'pod.name_airport as pod_name',
                     'job.commodity',
-                    'job.weight',
+                    'job.gross_weight',
+                    'job.chargeable_weight',
                     'job.pieces',
                     'job.special_instructions',
                     'job.created_by',
@@ -127,6 +129,7 @@ class ShippingInstructionController extends Controller
                 $dimension_job = DB::table('dimension_job')
                     ->select([
                         'dimension_job.id_dimensionjob',
+                        'dimension_job.pieces',
                         'dimension_job.length',
                         'dimension_job.width',
                         'dimension_job.height',
@@ -196,7 +199,8 @@ class ShippingInstructionController extends Controller
             'f.id_airport as id_pod',
             'f.code_airport as code_pod',
             'a.commodity',
-            'a.weight',
+            'a.gross_weight',
+            'a.chargeable_weight',
             'a.pieces',
             'a.dimensions',
             'a.special_instructions',
@@ -239,7 +243,8 @@ class ShippingInstructionController extends Controller
                 'job.pod',
                 'pod.name_airport as pod_name',
                 'job.commodity',
-                'job.weight',
+                'job.gross_weight',
+                'job.chargeable_weight',
                 'job.pieces',
                 'job.special_instructions',
                 'job.created_by',
@@ -277,6 +282,7 @@ class ShippingInstructionController extends Controller
             $dimension_job = DB::table('dimension_job')
                 ->select([
                     'dimension_job.id_dimensionjob',
+                    'dimension_job.pieces',
                     'dimension_job.length',
                     'dimension_job.width',
                     'dimension_job.height',
@@ -350,7 +356,8 @@ class ShippingInstructionController extends Controller
             'pol' => 'required|integer|exists:airports,id_airport',
             'pod' => 'required|integer|exists:airports,id_airport',
             'commodity' => 'nullable|string|max:255',
-            'weight' => 'nullable|numeric|min:0',
+            'gross_weight' => 'nullable|numeric|min:0',
+            'chargeable_weight' => 'nullable|numeric|min:0',
             'pieces' => 'nullable|integer|min:0',
             'special_instructions' => 'nullable|string',
             'dimensions' => 'nullable|array',
@@ -371,7 +378,8 @@ class ShippingInstructionController extends Controller
                     'pod' => $data['pod'],
                     'commodity' => $data['commodity'],
                     'dimensions' => json_encode($data['dimensions'] ?? []),
-                    'weight' => $data['weight'],
+                    'gross_weight' => $data['gross_weight'],
+                    'chargeable_weight' => $data['chargeable_weight'],
                     'pieces' => $data['pieces'],
                     'special_instructions' => $data['special_instructions'],
                     'created_by' => $data['created_by'],
@@ -386,6 +394,7 @@ class ShippingInstructionController extends Controller
                     foreach ($request->dimensions as $dimension) {
                         $dimensionInsert = DB::table('dimension_shippinginstruction')->insert([
                             'id_shippinginstruction' => $id_shippinginstruction,
+                            'pieces' => $dimension['pieces'] ??null, // Default to 1 if not provided
                             'length' => $dimension['length'] ?? null,
                             'width' => $dimension['width'] ?? null,
                             'height' => $dimension['height'] ?? null,
@@ -444,7 +453,8 @@ class ShippingInstructionController extends Controller
             'pol' => 'required|integer|exists:airports,id_airport',
             'pod' => 'required|integer|exists:airports,id_airport',
             'commodity' => 'nullable|string|max:255',
-            'weight' => 'nullable|numeric|min:0',
+            'gross_weight' => 'nullable|numeric|min:0',
+            'chargeable_weight' => 'nullable|numeric|min:0',
             'pieces' => 'nullable|integer|min:0',
             'special_instructions' => 'nullable|string',
             'dimensions' => 'nullable|array',
@@ -476,6 +486,7 @@ class ShippingInstructionController extends Controller
                     foreach ($request->dimensions as $dimension) {
                         DB::table('dimension_shippinginstruction')->insert([
                             'id_shippinginstruction' => $id,
+                            'pieces' => $dimension['pieces'] ?? null, // Default to 1 if not provided
                             'length' => $dimension['length'] ?? null,
                             'width' => $dimension['width'] ?? null,
                             'height' => $dimension['height'] ?? null,
@@ -567,10 +578,12 @@ class ShippingInstructionController extends Controller
                 'pol' => 'required|integer|exists:airports,id_airport',
                 'pod' => 'required|integer|exists:airports,id_airport',
                 'commodity' => 'required|string|max:255',
-                'weight' => 'required|numeric|min:0',
+                'gross_weight' => 'required|numeric|min:0',
+                'chargeable_weight' => 'required|numeric|min:0',
                 'pieces' => 'required|integer|min:0',
                 'special_instructions' => 'nullable|string',
                 'dimensions' => 'nullable|array',
+                'dimensions.*.pieces' => 'required|integer|min:0',
                 'dimensions.*.length' => 'required|numeric|min:0',
                 'dimensions.*.width' => 'required|numeric|min:0',
                 'dimensions.*.height' => 'required|numeric|min:0',
@@ -604,7 +617,8 @@ class ShippingInstructionController extends Controller
                 'pol' => $request->input('pol'),
                 'pod' => $request->input('pod'),
                 'commodity' => $request->input('commodity'),
-                'weight' => $request->input('weight'),
+                'gross_weight' => $request->input('gross_weight'),
+                'chargeable_weight' => $request->input('chargeable_weight'),
                 'pieces' => $request->input('pieces'),
                 'special_instructions' => $request->input('special_instructions'),
                 'created_at' => now(),
@@ -618,6 +632,7 @@ class ShippingInstructionController extends Controller
                     foreach ($request->dimensions as $key => $value) {
                         $dimension_job = [
                             'id_job' => $insertJob,
+                            'pieces' => $value['pieces'], // Default to 1 if not provided
                             'length' => $value['length'],
                             'width' => $value['width'],
                             'height' => $value['height'],
