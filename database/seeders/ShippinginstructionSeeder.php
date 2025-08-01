@@ -35,7 +35,7 @@ class ShippinginstructionSeeder extends Seeder
             ),
             'special_instructions' => 'Handle with care',
             'created_by' => 1, // Assuming the admin user has ID 1
-            'status' => 'created_by_sales',
+            'status' => 'si_created_by_sales',
             'created_at' => now(),
             'updated_at' => now(),
             'received_at' => null,

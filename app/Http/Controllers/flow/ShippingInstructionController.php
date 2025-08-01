@@ -600,7 +600,7 @@ class ShippingInstructionController extends Controller
                 ->where('id_shippinginstruction', $request->input('id_shippinginstruction'))
                 ->first();
 
-            if ($shippingInstruction->status !== 'created_by_sales') {
+            if ($shippingInstruction->status !== 'si_created_by_sales') {
                 throw new Exception('Shipping instruction is not in a valid state to be received.');
             }
 

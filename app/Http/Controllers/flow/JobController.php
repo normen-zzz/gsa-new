@@ -146,14 +146,14 @@ class JobController extends Controller
         }
     }
 
-    public function excecuteJob(Request $request)
+    public function executeJob(Request $request)
     {
         DB::beginTransaction();
         try {
             $request->validate([
                 'id_job' => 'required|integer|exists:job,id_job',
                 'agent' => 'required|integer|exists:customers,id_customer',
-                'data_agent' => 'required|integer|exists:data_customer,id_data_customer',
+                'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
                 'awb' => 'required|string|max:50',
                 'etd' => 'required|date',
                 'eta' => 'required|date',
@@ -203,6 +203,7 @@ class JobController extends Controller
                             'remarks' => $dimension['remarks'],
                             'created_at' => now(),
                             'updated_at' => now(),
+                            'created_by' => $request->user()->id_user,
                         ]);
                     }
                 }
@@ -224,10 +225,66 @@ class JobController extends Controller
             } else {
                 throw new Exception('Failed to insert AWB data.');
             }
+             DB::commit();
+        return ResponseHelper::success('Job executed successfully.', NULL, 201);
+
         } catch (Exception $th) {
+            DB::rollBack();
             return ResponseHelper::error($th);
         }
+       
     }
 
-   
+    public function getAwb(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $searchKey = $request->input('searchKey', '');
+
+        $awb = DB::table('awb')
+            ->leftJoin('job', 'awb.id_job', '=', 'job.id_job')
+            ->leftJoin('customers as agent', 'awb.agent', '=', 'agent.id_customer')
+            ->leftJoin('airports as pol', 'awb.pol', '=', 'pol.id_airport')
+            ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
+            ->select(
+               'awb.id_awb',
+                'awb.id_job',
+                'awb.agent',
+                'customers.name_customer as agent_name',
+                'awb.data_agent as id_data_agent',
+                'data_customer.data as data_agent',
+                'awb.awb',
+                'awb.etd',
+                'awb.eta',
+                'awb.pol',
+                'pol.name_airport as pol_name',
+                'awb.pod',
+                'pod.name_airport as pod_name',
+                'awb.commodity',
+                'awb.gross_weight',
+                'awb.chargeable_weight',
+                'awb.pieces',
+                'awb.special_instructions',
+            )
+            ->when(!empty($searchKey), function ($query) use ($searchKey) {
+                return $query->where(function ($q) use ($searchKey) {
+                    $q->where('awb.awb', 'like', '%' . $searchKey . '%')
+                        ->orWhere('customers.name_customer', 'like', '%' . $searchKey . '%')
+                        ->orWhere('pol.name_airport', 'like', '%' . $searchKey . '%')
+                        ->orWhere('pod.name_airport', 'like', '%' . $searchKey . '%');
+                });
+            })
+            ->orderBy('awb.id_awb', 'desc')
+            ->paginate($limit);
+        $awb->getCollection()->transform(function ($item) {
+            $dimensions = DB::table('dimension_awb')
+                ->where('id_awb', $item->id_awb)
+                ->get();
+            if ($dimensions) {
+                $item->dimension_awb = $dimensions;
+            } else {
+                $item->dimension_awb = [];
+            }
+        });
+        return $awb;
+    }
 }

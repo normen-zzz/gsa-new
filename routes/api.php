@@ -109,6 +109,7 @@ Route::get('/getShippingInstructionById', [ShippingInstructionController::class,
 Route::get('/getJob', [JobController::class, 'getJob'])->middleware('auth:api');
 Route::put('/updateJob', [JobController::class, 'updateJob'])->middleware('auth:api');
 Route::get('/getJobById', [JobController::class, 'getJobById'])->middleware('auth:api');
+Route::put('/executeJob', [JobController::class, 'executeJob'])->middleware('auth:api');
 
 
 
