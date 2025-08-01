@@ -145,4 +145,16 @@ class JobController extends Controller
             return ResponseHelper::error($th);
         }
     }
+
+    public function excecuteJob(Request $request)
+    {
+        try {
+            $request->validate([
+                'id_job' => 'required|integer|exists:job,id_job',
+                'status' => 'required|in:handled_by_ops,declined_by_ops,deleted',
+            ]);
+        } catch (Exception $th) {
+            return ResponseHelper::error($th);
+        }
+    }
 }

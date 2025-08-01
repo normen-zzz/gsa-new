@@ -499,7 +499,7 @@ class ShippingInstructionController extends Controller
                     }
                 }
 
-                $shippingInstruction->dimensions = json_decode($request->dimensions ?? []);
+                $shippingInstruction->dimensions = $request->dimensions ?? [];
                 $log = DB::table('log_shippinginstruction')->insert([
                     'id_shippinginstruction' => $id,
                     'created_by' => $data['updated_by'],
