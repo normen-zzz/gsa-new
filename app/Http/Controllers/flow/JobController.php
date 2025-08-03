@@ -19,96 +19,106 @@ class JobController extends Controller
 
         DB::beginTransaction();
         try {
-            $job = DB::table('job')->where('id_job', $request->id_job)->first();
-            $awb = DB::table('awb')->where('id_awb', $job->id_awb)->first();
-            $data = $request->validate([
+
+            $request->validate([
                 'id_job' => 'required|integer|exists:job,id_job',
-                'awb' => 'required|string|max:50|unique:awb,awb,' . $awb->awb . ',awb',
-                'consignee' => 'nullable|string|max:255',
+                'awb' => 'required|string|max:50',
+                'agent' => 'required|integer|exists:customers,id_customer',
+                'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
                 'etd' => 'required|date',
                 'eta' => 'required|date',
+                'pol' => 'required|integer|exists:airports,id_airport',
+                'pod' => 'required|integer|exists:airports,id_airport',
                 'commodity' => 'required|string|max:255',
                 'gross_weight' => 'required|numeric|min:0',
                 'chargeable_weight' => 'required|numeric|min:0',
                 'pieces' => 'required|integer|min:1',
-                'dimensions' => 'nullable|array',
-                'dimensions.*.length' => 'required|numeric|min:0',
-                'dimensions.*.width' => 'required|numeric|min:0',
-                'dimensions.*.height' => 'required|numeric|min:0',
-                'dimensions.*.weight' => 'required|numeric|min:0',
                 'special_instructions' => 'nullable|string|max:500',
-                'status' => 'required|in:created_by_cs, handled_by_ops, declined_by_ops,deleted',
-                'pol' => 'required|integer|exists:airports,id_airport',
-                'pod' => 'required|integer|exists:airports,id_airport',
-                'data_flight' => 'nullable|array',
-                'data_flight.*.flight_number' => 'required|string|max:255',
-                'data_flight.*.departure' => 'required|date',
-                'data_flight.*.arrival' => 'required|date',
-
+                'dimensions_job' => 'nullable|array',
+                'flight_job' => 'nullable|array',
             ]);
 
-            $dataJob = [
+            $updateJob = JobModel::findOrFail($request->id_job);
+            $awb = DB::table('awb')->where('id_job', $updateJob->id_job)->first();
+            if ($awb) {
+               throw new Exception('Job already has an associated AWB. Please update the AWB instead.');
+            }
+            $updateJob->awb = $request->awb;
+            $updateJob->agent = $request->agent;
+            $updateJob->data_agent = $request->data_agent;
+            $updateJob->etd = $request->etd;
+            $updateJob->eta = $request->eta;
+            $updateJob->pol = $request->pol;
+            $updateJob->pod = $request->pod;
+            $updateJob->commodity = $request->commodity;
+            $updateJob->gross_weight = $request->gross_weight;
+            $updateJob->chargeable_weight = $request->chargeable_weight;
+            $updateJob->pieces = $request->pieces;
+            $updateJob->special_instructions = $request->special_instructions;
+            $updateJob->updated_by = $request->user()->id_user;
 
-                'consignee' => $data['consignee'],
-                'etd' => $data['etd'],
-                'eta' => $data['eta'],
-                'updated_by' => $request->user()->id_user,
-                'updated_at' => now(),
-            ];
-
-            $dataAwb = [
-                'awb' => $data['awb'],
-                'etd' => $data['etd'],
-                'eta' => $data['eta'],
-                'pol' => $data['pol'],
-                'pod' => $data['pod'],
-                'commodity' => $data['commodity'],
-                'weight' => $data['weight'],
-                'pieces' => $data['pieces'],
-                'dimensions' => json_encode($data['dimensions']),
-                'data_flight' => json_encode($data['data_flight']),
-                'handling_instructions' => $data['special_instructions'],
-                'created_by' => $request->user()->id_user,
-                'updated_at' => now(),
-            ];
-
-
-
-            $updateJob = DB::table('job')->where('id_job', $data['id_job'])->update($dataJob);
-            if ($updateJob) {
-                $updateAwb =  DB::table('awb')->where('id_awb', $job->id_awb)->update($dataAwb);
-                if ($updateAwb) {
-                    $dataAwb['dimensions'] = json_decode($dataAwb['dimensions'], true);
-                    $dataAwb['data_flight'] = json_decode($dataAwb['data_flight'], true);
-                    $awb->dimensions = json_decode($awb->dimensions, true);
-                    $awb->data_flight = json_decode($awb->data_flight, true);
-                    $dataJob['id_job'] = $data['id_job'];
-                    $dataJob['id_awb'] = $job->id_awb;
-                    $insertLog = DB::table('log_job')->insert([
-                        'id_job' => $data['id_job'],
-                        'action' => json_encode([
-                            'action' => 'update',
-                            'data' => [
-
-                                'job_after' => $dataJob,
-                                'job_before' => $job,
-                                'awb_after' => $dataAwb,
-                                'awb_before' => $awb,
-                            ],
-                        ]),
-                        'id_user' => $request->user()->id_user,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                    if ($insertLog) {
-                        DB::commit();
-                        return ResponseHelper::success('Job updated successfully.', NULL, 200);
-                    } else {
-                        throw new Exception('Failed to log job update action.');
+            if ($updateJob->save()) {
+                // Handle dimensions and flight data if provided
+                if (isset($request->dimensions_job) && is_array($request->dimensions_job)) {
+                   
+                    foreach ($request->dimensions_job  as $dimension) {
+                        if (isset($dimension['id_dimensionjob']) && $dimension['id_dimensionjob']) {
+                            DB::table('dimension_job')->where('id_dimensionjob', $dimension['id_dimensionjob'])->update([
+                                'pieces' => $dimension['pieces'],
+                                'length' => $dimension['length'],
+                                'width' => $dimension['width'],
+                                'height' => $dimension['height'],
+                                'weight' => $dimension['weight'],
+                                'remarks' => $dimension['remarks'],
+                                'updated_at' => now(),
+                                'updated_by' => $request->user()->id_user,
+                            ]);
+                        } else {
+                            DB::table('dimension_job')->insert([
+                                'id_job' => $updateJob->id_job,
+                                'pieces' => $dimension['pieces'],
+                                'length' => $dimension['length'],
+                                'width' => $dimension['width'],
+                                'height' => $dimension['height'],
+                                'weight' => $dimension['weight'],
+                                'remarks' => $dimension['remarks'],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                                'created_by' => $request->user()->id_user,
+                            ]);
+                        }
                     }
-                } else {
-                    throw new Exception('Failed to update AWB.');
                 }
+
+                if (isset($request->flight_job) && is_array($request->flight_job)) {
+                    foreach ($request->flight_job as $flight) {
+                        if (isset($flight['id_flightjob']) && $flight['id_flightjob']) {
+                            DB::table('flight_job')->where('id_flightjob', $flight['id_flightjob'])->update([
+                                'flight_number' => $flight['flight_number'],
+                                'departure' => $flight['departure'],
+                                'departure_timezone' => $flight['departure_timezone'],
+                                'arrival' => $flight['arrival'],
+                                'arrival_timezone' => $flight['arrival_timezone'],
+                                'updated_at' => now(),
+                                'updated_by' => $request->user()->id_user,
+                            ]);
+                        } else {
+                            DB::table('flight_job')->insert([
+                                'id_job' => $updateJob->id_job,
+                                'flight_number' => $flight['flight_number'],
+                                'departure' => $flight['departure'],
+                                'departure_timezone' => $flight['departure_timezone'],
+                                'arrival' => $flight['arrival'],
+                                'arrival_timezone' => $flight['arrival_timezone'],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                                'created_by' => $request->user()->id_user,
+                            ]);
+                        }
+                    }
+                }
+                DB::commit();
+                return ResponseHelper::success('Job updated successfully.', NULL, 200);
             } else {
                 throw new Exception('Failed to update job.');
             }
@@ -225,14 +235,12 @@ class JobController extends Controller
             } else {
                 throw new Exception('Failed to insert AWB data.');
             }
-             DB::commit();
-        return ResponseHelper::success('Job executed successfully.', NULL, 201);
-
+            DB::commit();
+            return ResponseHelper::success('Job executed successfully.', NULL, 201);
         } catch (Exception $th) {
             DB::rollBack();
             return ResponseHelper::error($th);
         }
-       
     }
 
     public function getAwb(Request $request)
@@ -246,7 +254,7 @@ class JobController extends Controller
             ->leftJoin('airports as pol', 'awb.pol', '=', 'pol.id_airport')
             ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
             ->select(
-               'awb.id_awb',
+                'awb.id_awb',
                 'awb.id_job',
                 'awb.agent',
                 'customers.name_customer as agent_name',
