@@ -22,7 +22,7 @@ class AirlineController extends Controller
             ->select('id_airline', 'name', 'code', 'status', 'created_at')
             ->where('name', 'like', '%' . $search . '%')
             ->orWhere('code', 'like', '%' . $search . '%')
-            ->orderBy('created_at', 'desc');
+            ->orderBy('id_airline', 'asc');
 
         $airlines = $query->paginate($limit);
 
@@ -60,6 +60,8 @@ class AirlineController extends Controller
                 'code' => $data['code'],
                 'status' => $data['status'] ?? true,
                 'created_at' => now(),
+                'updated_at' => now(),
+                'created_by' => $request->user()->id_user,
             ]);
 
             if ($insertAirline) {
@@ -73,10 +75,11 @@ class AirlineController extends Controller
         }
     }
 
-    public function updateAirline(Request $request, $id)
+    public function updateAirline(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_airline');
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|max:10|unique:airlines,code,' . $id . ',id_airline',

@@ -21,6 +21,8 @@ class ShippingInstructionController extends Controller
         $search = $request->input('searchKey', '');
         $select = [
             'a.id_shippinginstruction',
+            'a.airline',
+            'h.name as airline_name',
             'c.name_customer as agent',
             'c.id_customer as id_agent',
             'a.data_agent as id_dataagent',
@@ -43,6 +45,9 @@ class ShippingInstructionController extends Controller
             'b.name as created_by',
             'a.status',
             'a.created_at',
+            'a.updated_by', 
+            'g.name as updated_by_name',
+
 
 
         ];
@@ -54,6 +59,8 @@ class ShippingInstructionController extends Controller
             ->leftJoin('data_customer AS d', 'a.data_agent', '=', 'd.id_datacustomer')
             ->leftJoin('airports AS e', 'a.pol', '=', 'e.id_airport')
             ->leftJoin('airports AS f', 'a.pod', '=', 'f.id_airport')
+            ->leftJoin('users AS g', 'a.updated_by', '=', 'g.id_user')
+            ->leftJoin('airlines AS h', 'a.airline', '=', 'h.id_airline')
             ->where('d.is_primary', true)
             ->where('c.name_customer', 'like', '%' . $search . '%')
             ->orWhere('e.name_airport', 'like', '%' . $search . '%')
@@ -64,7 +71,7 @@ class ShippingInstructionController extends Controller
 
         $instructions = $query->paginate($limit);
         $instructions->getCollection()->transform(function ($instruction) {
-            
+
             // json decode dimensions
             if ($instruction->dimensions) {
                 $instruction->dimensions = json_decode($instruction->dimensions, true);
@@ -76,7 +83,7 @@ class ShippingInstructionController extends Controller
                 ->where('id_customer', $instruction->id_agent)
                 ->where('id_datacustomer', $instruction->id_dataagent)
                 ->first();
-                 $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
+            $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
             $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
 
             $job = DB::table('job')
@@ -86,6 +93,8 @@ class ShippingInstructionController extends Controller
                     'job.agent',
                     'agent.name_customer as agent_name',
                     'job.consignee',
+                    'job.airline',
+                    'airline.name as airline_name',
                     'job.etd',
                     'job.eta',
                     'job.pol',
@@ -106,6 +115,7 @@ class ShippingInstructionController extends Controller
                 ->leftJoin('airports AS pol', 'job.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports AS pod', 'job.pod', '=', 'pod.id_airport')
                 ->leftJoin('users AS user', 'job.created_by', '=', 'user.id_user')
+                ->leftJoin('airlines AS airline', 'job.airline', '=', 'airline.id_airline')
                 ->where('id_shippinginstruction', $instruction->id_shippinginstruction)
                 ->first();
 
@@ -149,7 +159,41 @@ class ShippingInstructionController extends Controller
                 $job_data->data_flightjob = $data_flightjob;
                 $job_data->dimensions_job = $dimension_job;
 
+                $selectAwb = [
+                    'awb.id_awb',
+                    'awb.id_job',
+                    'awb.awb',
+                    'awb.agent',
+                    'agent.name_customer as agent_name',
+                    'awb.consignee',
+                    'awb.airline',
+                    'airline.name as airline_name',
+                    'awb.etd',
+                    'awb.eta',
+                    'awb.pol',
+                    'pol.name_airport as pol_name',
+                    'awb.pod',
+                    'pod.name_airport as pod_name',
+                    'awb.commodity',
+                    'awb.gross_weight',
+                    'awb.chargeable_weight',
+                    'awb.pieces',
+                    'awb.special_instructions',
+                    'awb.created_by',
+                    'created_by.name as created_by_name',
+                    'awb.updated_by',
+                    'updated_by.name as updated_by_name',
+                    'awb.created_at',
+                    'awb.updated_at',
+                ];
                 $awb = DB::table('awb')
+                    ->select($selectAwb)
+                    ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
+                    ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
+                    ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
+                    ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
+                    ->leftJoin('users AS updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+                    ->leftJoin('airlines AS airline', 'awb.airline', '=', 'airline.id_airline')
                     ->where('id_job', $job->id_job)
                     ->first();
                 if ($awb) {
@@ -168,14 +212,14 @@ class ShippingInstructionController extends Controller
                         $awb_data->data_flight = $data_flightawb;
                     }
                 }
-            } else{
+            } else {
                 $instruction->job_data = [];
                 $instruction->awb_data = [];
             }
 
 
 
-           
+
             return $instruction;
         });
 
@@ -194,6 +238,8 @@ class ShippingInstructionController extends Controller
             'c.id_customer as id_agent',
             'a.data_agent as id_dataagent',
             'a.consignee as consignee',
+            'a.airline',
+            'h.name as airline_name',
             'a.type',
             'a.eta',
             'a.etd',
@@ -218,6 +264,7 @@ class ShippingInstructionController extends Controller
             ->leftJoin('customers AS c', 'a.agent', '=', 'c.id_customer')
             ->leftJoin('airports AS e', 'a.pol', '=', 'e.id_airport')
             ->leftJoin('airports AS f', 'a.pod', '=', 'f.id_airport')
+            ->leftJoin('airlines AS h', 'a.airline', '=', 'h.id_airline')
             ->where('a.id_shippinginstruction', $id)
             ->orderBy('a.id_shippinginstruction', 'desc')->first();
 
@@ -241,6 +288,8 @@ class ShippingInstructionController extends Controller
                 'job.agent',
                 'agent.name_customer as agent_name',
                 'job.consignee',
+                'job.airline',
+                'airline.name as airline_name',
                 'job.etd',
                 'job.eta',
                 'job.pol',
@@ -261,6 +310,7 @@ class ShippingInstructionController extends Controller
             ->leftJoin('airports AS pol', 'job.pol', '=', 'pol.id_airport')
             ->leftJoin('airports AS pod', 'job.pod', '=', 'pod.id_airport')
             ->leftJoin('users AS user', 'job.created_by', '=', 'user.id_user')
+            ->leftJoin('airlines AS airline', 'job.airline', '=', 'airline.id_airline')
             ->where('id_shippinginstruction', $instruction->id_shippinginstruction)
             ->first();
 
@@ -307,7 +357,41 @@ class ShippingInstructionController extends Controller
             if ($data_flightjob) {
                 $job_data->flight_job = $data_flightjob;
             }
+            $selectAwb = [
+                'awb.id_awb',
+                'awb.id_job',
+                'awb.awb',
+                'awb.agent',
+                'agent.name_customer as agent_name',
+                'awb.consignee',
+                'awb.airline',
+                'airline.name as airline_name',
+                'awb.etd',
+                'awb.eta',
+                'awb.pol',
+                'pol.name_airport as pol_name',
+                'awb.pod',
+                'pod.name_airport as pod_name',
+                'awb.commodity',
+                'awb.gross_weight',
+                'awb.chargeable_weight',
+                'awb.pieces',
+                'awb.special_instructions',
+                'awb.created_by',
+                'created_by.name as created_by_name',
+                'awb.updated_by',
+                'updated_by.name as updated_by_name',
+                'awb.created_at',
+                'awb.updated_at',
+            ];
             $awb = DB::table('awb')
+                ->select($selectAwb)
+                ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
+                ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
+                ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
+                ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users AS updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines AS airline', 'awb.airline', '=', 'airline.id_airline')
                 ->where('id_job', $job->id_job)
                 ->first();
             if ($awb) {
@@ -325,11 +409,10 @@ class ShippingInstructionController extends Controller
                 if ($data_flightawb) {
                     $awb_data->flight_awb = $data_flightawb;
                 }
-            } 
+            }
         } else {
             $instruction->job_data = [];
             $instruction->awb_data = [];
-          
         }
 
 
@@ -360,6 +443,7 @@ class ShippingInstructionController extends Controller
             'agent' => 'required|integer',
             'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
             'consignee' => 'nullable|string',
+            'airline' => 'required|integer|exists:airlines,id_airline',
             'etd' => 'required|date',
             'eta' => 'required|date',
             'pol' => 'required|integer|exists:airports,id_airport',
@@ -381,6 +465,7 @@ class ShippingInstructionController extends Controller
                     'agent' => $data['agent'],
                     'data_agent' => $data['data_agent'],
                     'consignee' => $data['consignee'],
+                    'airline' => $data['airline'],
                     'etd' => date('Y-m-d H:i:s', strtotime($data['etd'])),
                     'eta' => date('Y-m-d H:i:s', strtotime($data['eta'])),
                     'pol' => $data['pol'],
@@ -403,7 +488,7 @@ class ShippingInstructionController extends Controller
                     foreach ($request->dimensions as $dimension) {
                         $dimensionInsert = DB::table('dimension_shippinginstruction')->insert([
                             'id_shippinginstruction' => $id_shippinginstruction,
-                            'pieces' => $dimension['pieces'] ??null, // Default to 1 if not provided
+                            'pieces' => $dimension['pieces'] ?? null, // Default to 1 if not provided
                             'length' => $dimension['length'] ?? null,
                             'width' => $dimension['width'] ?? null,
                             'height' => $dimension['height'] ?? null,
@@ -457,6 +542,7 @@ class ShippingInstructionController extends Controller
             'agent' => 'required|integer|exists:customers,id_customer',
             'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
             'consignee' => 'nullable|string',
+            'airline' => 'required|integer|exists:airlines,id_airline',
             'etd' => 'required|date',
             'eta' => 'required|date',
             'pol' => 'required|integer|exists:airports,id_airport',
@@ -582,6 +668,7 @@ class ShippingInstructionController extends Controller
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
                 'consignee' => 'nullable|string',
+                'airline' => 'required|integer|exists:airlines,id_airline',
                 'etd' => 'required|date',
                 'eta' => 'required|date',
                 'pol' => 'required|integer|exists:airports,id_airport',
@@ -621,6 +708,7 @@ class ShippingInstructionController extends Controller
                 'agent' => $request->input('agent'),
                 'data_agent' => $request->input('data_agent'),
                 'consignee' => $request->input('consignee'),
+                'airline' => $request->input('airline'),
                 'etd' => date('Y-m-d H:i:s', strtotime($request->input('etd'))),
                 'eta' => date('Y-m-d H:i:s', strtotime($request->input('eta'))),
                 'pol' => $request->input('pol'),

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('agent');
             $table->unsignedBigInteger('data_agent');
             $table->string('consignee')->nullable();
+            $table->integer('airline')->unsigned();
             $table->date('etd');
             $table->date('eta');
             $table->integer('pol');

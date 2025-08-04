@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('agent')->unsigned();
             $table->integer('data_agent')->unsigned();
             $table->string('consignee');
+            $table->integer('airline')->unsigned();
             $table->enum('type', ['direct', 'console'])->default('direct');
             $table->dateTime('etd')->nullable();
             $table->dateTime('eta')->nullable();

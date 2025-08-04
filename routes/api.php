@@ -8,6 +8,7 @@ use App\Http\Controllers\flow\JobController;
 use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
 use App\Http\Controllers\master\UsersController;
+use App\Http\Controllers\master\AirlineController;
 use App\Http\Controllers\master\AirportController;
 use App\Http\Controllers\master\CountryController;
 use App\Http\Controllers\master\CustomerController;
@@ -25,7 +26,7 @@ Route::get('/user', function (Request $request) {
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
 Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
 
 
@@ -89,6 +90,12 @@ Route::get('/getPermissions', [PermissionController::class, 'getPermissions'])->
 Route::get('/getPermissionById/{id}', [PermissionController::class, 'getPermissionById'])->middleware('auth:api');
 Route::post('/createPermission', [PermissionController::class, 'createPermission'])->middleware('auth:api');
 Route::put('/updatePermission', [PermissionController::class, 'updatePermission'])->middleware('auth:api');
+
+//master airlines
+Route::get('/getAirlines', [AirlineController::class, 'getAirlines'])->middleware('auth:api');
+Route::get('/getAirlineById', [AirlineController::class, 'getAirlineById'])->middleware('auth:api');
+Route::post('/createAirline', [AirlineController::class, 'createAirline'])->middleware('auth:api');
+Route::put('/updateAirline', [AirlineController::class, 'updateAirline'])->middleware('auth:api');
 
 
 

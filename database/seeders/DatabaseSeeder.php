@@ -27,7 +27,9 @@ class DatabaseSeeder extends Seeder
             ShippinginstructionSeeder::class,
             CustomerSeeder::class,
             MenuSeeder::class,
-            MenusSuperAdmin::class
+            MenusSuperAdmin::class,
+            TypecostSeeder::class, // Uncomment if you want to seed typecost
+            TypesellingSeeder::class, // Uncomment if you want to seed typeselling
         ]);
         // CREATE JOBS
 

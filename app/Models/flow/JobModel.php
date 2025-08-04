@@ -21,6 +21,7 @@ class JobModel extends Model
         'agent',
         'data_agent',
         'consignee',
+        'airline',
         'etd',
         'eta',
         'pol',
@@ -46,6 +47,8 @@ class JobModel extends Model
             'agent.name_customer as agent_name',
             'job.agent as agent_data',
             'job.consignee',
+            'job.airline',
+            'airlines.name as airline_name',
             'job.etd',
             'job.eta',
             'job.pol',
@@ -67,6 +70,11 @@ class JobModel extends Model
             ->leftJoin('customers as agent', 'job.agent', '=', 'agent.id_customer')
             ->leftJoin('airports as pol', 'job.pol', '=', 'pol.id_airport')
             ->leftJoin('airports as pod', 'job.pod', '=', 'pod.id_airport')
+            ->leftJoin('users as created_by', 'job.created_by', '=', 'created_by.id_user')
+            ->leftJoin('users as updated_by', 'job.updated_by', '=', 'updated_by.id_user')
+            ->leftJoin('airlines', 'job.airline', '=', 'airlines.id_airline')
+            ->select($select)
+
             // Menggunakan when() untuk kondisi pencarian hanya jika ada
             ->when(!empty($search), function ($query) use ($search) {
                 return $query->where(function ($q) use ($search) {
@@ -103,6 +111,8 @@ class JobModel extends Model
                 'agent.name_customer as agent_name',
                 'shippinginstruction.data_agent',
                 'shippinginstruction.consignee',
+                'shippinginstruction.airline',
+                'airlines.name as airline_name',
                 'shippinginstruction.type',
                 'shippinginstruction.etd',
                 'shippinginstruction.eta',
@@ -141,6 +151,7 @@ class JobModel extends Model
                 ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
                 ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
                 ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
+                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
                 ->where('id_shippinginstruction', $item->id_shippinginstruction)
                 ->first();
             if ($shippingInstruction) {
@@ -185,6 +196,7 @@ class JobModel extends Model
             ->leftJoin('airports as pod', 'job.pod', '=', 'pod.id_airport')
             ->leftJoin('users as created_by', 'job.created_by', '=', 'created_by.id_user')
             ->leftJoin('users as updated_by', 'job.updated_by', '=', 'updated_by.id_user')
+            ->leftJoin('airlines', 'job.airline', '=', 'airlines.id_airline')
 
             ->where('job.id_job', $id)
             ->select(
@@ -194,6 +206,8 @@ class JobModel extends Model
                 'agent.name_customer as agent_name',
                 'job.data_agent',
                 'job.consignee',
+                'job.airline',
+                'airlines.name as airline_name',
                 'job.etd',
                 'job.eta',
                 'job.pol',
@@ -230,6 +244,8 @@ class JobModel extends Model
                 'shippinginstruction.agent',
                 'agent.name_customer as agent_name',
                 'shippinginstruction.consignee',
+                'shippinginstruction.airline',
+                'airlines.name as airline_name',
                 'shippinginstruction.type',
                 'shippinginstruction.etd',
                 'shippinginstruction.eta',
@@ -268,6 +284,7 @@ class JobModel extends Model
                 ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
                 ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
                 ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
+                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
                 ->where('id_shippinginstruction', $job->id_shippinginstruction)
                 ->first();
             if ($shippingInstruction) {
@@ -282,6 +299,8 @@ class JobModel extends Model
                 'awb.agent',
                 'agent.name_customer as agent_name',
                 'awb.consignee',
+                'awb.airline',
+                'airlines.name as airline_name',
                 'awb.etd',
                 'awb.eta',
                 'awb.pol',
@@ -308,6 +327,7 @@ class JobModel extends Model
                 ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
                 ->leftJoin('users as created_by', 'awb.created_by', '=', 'created_by.id_user')
                 ->leftJoin('users as updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines', 'awb.airline', '=', 'airlines.id_airline')
                 ->where('id_job', $job->id_job)
                 ->first();
             if ($awb) {
@@ -344,6 +364,8 @@ class JobModel extends Model
             'awb.agent',
             'agent.name_customer as agent_name',
             'awb.consignee',
+            'awb.airline',
+            'airlines.name as airline_name',
             'awb.etd',
             'awb.eta',
             'awb.pol',
@@ -371,6 +393,7 @@ class JobModel extends Model
             ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
             ->leftJoin('users as created_by', 'awb.created_by', '=', 'created_by.id_user')
             ->leftJoin('users as updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+            ->leftJoin('airlines', 'awb.airline', '=', 'airlines.id_airline')
             ->when(!empty($search), function ($query) use ($search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('agent.name_customer', 'like', '%' . $search . '%')
@@ -409,6 +432,8 @@ class JobModel extends Model
                     'agent.name_customer as agent_name',
                     'shippinginstruction.data_agent',
                     'shippinginstruction.consignee',
+                    'shippinginstruction.airline',
+                    'airlines.name as airline_name',
                     'shippinginstruction.type',
                     'shippinginstruction.etd',
                     'shippinginstruction.eta',
@@ -432,6 +457,7 @@ class JobModel extends Model
                 ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
                 ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
                 ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
                 ->where('id_shippinginstruction', $item->id_shippinginstruction)
                 ->first();
             if ($shippingInstruction) {
@@ -448,6 +474,7 @@ class JobModel extends Model
                 ->leftJoin('airports as pod', 'job.pod', '=', 'pod.id_airport')
                 ->leftJoin('users as created_by', 'job.created_by', '=', 'created_by.id_user')
                 ->leftJoin('users as updated_by', 'job.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines', 'job.airline', '=', 'airlines.id_airline')
                 ->where('job.id_job', $item->id_job)
                 ->select(
                     'job.id_job',
@@ -456,6 +483,8 @@ class JobModel extends Model
                     'agent.name_customer as agent_name',
                     'job.data_agent',
                     'job.consignee',
+                    'job.airline',
+                    'airlines.name as airline_name',
                     'job.etd',
                     'job.eta',
                     'job.pol',
@@ -503,6 +532,8 @@ class JobModel extends Model
             'awb.agent',
             'agent.name_customer as agent_name',
             'awb.consignee',
+            'awb.airline',
+            'airlines.name as airline_name',
             'awb.etd',
             'awb.eta',
             'awb.pol',
@@ -530,6 +561,7 @@ class JobModel extends Model
             ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
             ->leftJoin('users as created_by', 'awb.created_by', '=', 'created_by.id_user')
             ->leftJoin('users as updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+            ->leftJoin('airlines', 'awb.airline', '=', 'airlines.id_airline')
             ->where('awb.id_awb', $id_awb)
             ->first();
         if ($awb) {
@@ -555,6 +587,7 @@ class JobModel extends Model
                 ->leftJoin('airports as pod', 'job.pod', '=', 'pod.id_airport')
                 ->leftJoin('users as created_by', 'job.created_by', '=', 'created_by.id_user')
                 ->leftJoin('users as updated_by', 'job.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines', 'job.airline', '=', 'airlines.id_airline')
                 ->where('job.id_job', $awb->id_job)
                 ->select(
                     'job.id_job',
@@ -563,6 +596,8 @@ class JobModel extends Model
                     'agent.name_customer as agent_name',
                     'job.data_agent',
                     'job.consignee',
+                    'job.airline',
+                    'airlines.name as airline_name',
                     'job.etd',
                     'job.eta',
                     'job.pol',
@@ -601,6 +636,8 @@ class JobModel extends Model
                     'agent.name_customer as agent_name',
                     'shippinginstruction.data_agent',
                     'shippinginstruction.consignee',
+                    'shippinginstruction.airline',
+                    'airlines.name as airline_name',
                     'shippinginstruction.type',
                     'shippinginstruction.etd',
                     'shippinginstruction.eta',
@@ -624,6 +661,7 @@ class JobModel extends Model
                 ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
                 ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
                 ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
                 ->where('id_shippinginstruction', $awb->id_shippinginstruction)
                 ->first();
             if ($shippingInstruction) {

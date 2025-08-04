@@ -18,6 +18,7 @@ class ShippinginstructionSeeder extends Seeder
             'data_agent' => 1, // Assuming the CEVA customer data has ID 1
             'consignee' => "tes consignee", // Assuming the DHL customer has ID 2
             'type' => 'direct',
+            'airline' => 1, // Assuming the ethiopian airline has ID 1
             'etd' => now()->addDays(3),
             'eta' => now()->addDays(5),
             'pol' => 1, // Assuming the Soekarno-Hatta International Airport has ID 1
