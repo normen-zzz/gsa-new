@@ -10,10 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Request;
 
 
-
-
-
-
 class JobModel extends Model
 {
     protected $table = 'job';
@@ -400,6 +396,8 @@ class JobModel extends Model
                 ->get();
             if ($flight_awb) {
                 $item->data_flightawb = $flight_awb;
+            } else{
+                $item->data_flightawb = [];
             }
             
             // Add shipping instruction data
@@ -538,6 +536,16 @@ class JobModel extends Model
                 ->get();
             if ($dimension_awb) {
                 $awb->dimensions_awb = $dimension_awb;
+            } else{
+                $awb->dimensions_awb = [];
+            }
+            $flight_awb = DB::table('flight_awb')
+                ->where('id_awb', $awb->id_awb)
+                ->get();
+            if ($flight_awb) {
+                $awb->data_flightawb = $flight_awb;
+            } else {
+                $awb->data_flightawb = [];
             }
             $job = DB::table('job')
                 ->leftJoin('customers as agent', 'job.agent', '=', 'agent.id_customer')
