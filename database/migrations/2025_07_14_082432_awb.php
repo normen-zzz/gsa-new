@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('id_job')->unsigned();
             $table->integer('agent')->unsigned();
             $table->integer('data_agent')->unsigned();
+            $table->string('consignee')->unique();
             $table->string('awb')->unique();
             $table->date('etd')->nullable();
             $table->date('eta')->nullable();
@@ -36,7 +37,16 @@ return new class extends Migration
                 'awb_declined_by_ops',
                 'awb_deleted'
             ])->default('awb_received_by_ops');
+            $table->integer('updated_by')->unsigned()->nullable();
 
+        });
+
+        Schema::create('log_awb', function (Blueprint $table) {
+            $table->id('id_logawb');
+            $table->unsignedBigInteger('id_awb');
+            $table->json('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
         });
 
        

@@ -21,6 +21,14 @@ return new class extends Migration
             $table->timestamps();
 
         });
+
+        Schema::create('log_hawb', function (Blueprint $table) {
+            $table->id('id_loghawb');
+            $table->unsignedBigInteger('id_hawb');
+            $table->json('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
+        });
     }
 
     /**

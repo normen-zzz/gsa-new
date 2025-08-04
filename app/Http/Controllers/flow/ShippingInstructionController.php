@@ -64,6 +64,7 @@ class ShippingInstructionController extends Controller
 
         $instructions = $query->paginate($limit);
         $instructions->getCollection()->transform(function ($instruction) {
+            
             // json decode dimensions
             if ($instruction->dimensions) {
                 $instruction->dimensions = json_decode($instruction->dimensions, true);
@@ -75,6 +76,8 @@ class ShippingInstructionController extends Controller
                 ->where('id_customer', $instruction->id_agent)
                 ->where('id_datacustomer', $instruction->id_dataagent)
                 ->first();
+                 $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
+            $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
 
             $job = DB::table('job')
                 ->select([
@@ -165,12 +168,14 @@ class ShippingInstructionController extends Controller
                         $awb_data->data_flight = $data_flightawb;
                     }
                 }
+            } else{
+                $instruction->job_data = [];
+                $instruction->awb_data = [];
             }
 
 
 
-            $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
-            $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
+           
             return $instruction;
         });
 
@@ -320,7 +325,11 @@ class ShippingInstructionController extends Controller
                 if ($data_flightawb) {
                     $awb_data->flight_awb = $data_flightawb;
                 }
-            }
+            } 
+        } else {
+            $instruction->job_data = [];
+            $instruction->awb_data = [];
+          
         }
 
 

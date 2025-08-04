@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_salesorder');
             $table->unsignedBigInteger('id_job')->nullable();
             $table->unsignedBigInteger('id_shippinginstruction')->nullable();
-            
+            $table->unsignedBigInteger('id_awb')->nullable();
             $table->date('date')->nullable();
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();

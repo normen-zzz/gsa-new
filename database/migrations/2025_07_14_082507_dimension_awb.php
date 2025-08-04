@@ -24,6 +24,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
+            $table->boolean('is_taken')->default(false);
 
            
         });

@@ -14,18 +14,11 @@ return new class extends Migration
         Schema::create('dimension_hawb', function (Blueprint $table) {
             $table->id('id_dimensionhawb');
             $table->unsignedBigInteger('id_hawb');
-            $table->decimal('pieces')->nullable();
-            $table->decimal('length')->nullable();
-            $table->decimal('width')->nullable();
-            $table->decimal('height')->nullable();
-            $table->decimal('weight')->nullable();
-            $table->text('remarks')->nullable();
+            $table->unsignedBigInteger('id_dimensionawb');
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
-
-            
         });
     }
 
@@ -35,6 +28,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('dimension_hawb');
-       
     }
 };
