@@ -389,7 +389,7 @@ class JobController extends Controller
             }
 
             DB::table('awb')->where('id_awb', $request->id_awb)->update([
-                'status' => 'job_handled_by_ops',
+                'status' => 'awb_handled_by_ops',
                 'updated_at' => now(),
                 'updated_by' => $request->user()->id_user,
             ]);
