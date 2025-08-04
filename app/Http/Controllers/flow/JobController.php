@@ -694,4 +694,23 @@ class JobController extends Controller
             return ResponseHelper::error($e);
         }
     }
+
+    public function getExecuteJob(Request $request)
+    {
+
+        $jobModel = new JobModel();
+        $limit = $request->input('limit', 10);
+        $search = $request->input('searchKey', '');
+        $jobs = $jobModel->getExecuteJob($search, $limit);
+        return ResponseHelper::success('Jobs retrieved successfully.', $jobs, 200);
+    }
+
+    public function getExecuteJobById(Request $request)
+    {
+
+        $jobModel = new JobModel();
+        $jobId = $request->input('id');
+        $job = $jobModel->getExecuteJobById($jobId);
+        return ResponseHelper::success('Job retrieved successfully.', $job, 200);
+    }
 }
