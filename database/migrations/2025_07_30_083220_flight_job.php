@@ -20,6 +20,7 @@ return new class extends Migration
             $table->dateTime('arrival');
             $table->string('arrival_timezone', 50);
             $table->integer('created_by')->unsigned();
+            $table->integer('updated_by')->unsigned()->nullable();
             $table->timestamps();
             $table->softDeletes();
             
