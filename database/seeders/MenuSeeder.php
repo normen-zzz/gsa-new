@@ -44,8 +44,18 @@ class MenuSeeder extends Seeder
             [
                 "title" => "Job",
                 "icon" => "BriefcaseBusiness",
-                "url" => "/dashboard/job",
-                "isActive" => false
+                "url" => "#",
+                "isActive" => false,
+                "items" => [
+                    [
+                        "title" => "Job List",
+                        "url" => "/dashboard/job/job-list",
+                    ],
+                    [
+                        "title" => "Execute Job",
+                        "url" => "/dashboard/job/execute-job",
+                    ],
+                ]
             ],
             [
                 "title" => "Sales Order",
@@ -71,7 +81,6 @@ class MenuSeeder extends Seeder
                 "icon" => "Siren",
                 "isActive" => true
             ]
-           
         ];
 
         $this->insertMenus($menus);
