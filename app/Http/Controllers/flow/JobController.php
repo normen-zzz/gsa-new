@@ -575,7 +575,7 @@ class JobController extends Controller
         }
     }
 
-    public function addHawb(Request $request)
+    public function createHawb(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -611,6 +611,9 @@ class JobController extends Controller
                             'created_by' => $request->user()->id_user,
                         ];
                         DB::table('dimension_hawb')->insert($dimensionHawb);
+                        DB::table('dimension_awb')
+                            ->where('id_dimensionawb', $dimension['id_dimensionawb'])
+                            ->update(['is_taken' => 1, 'updated_at' => now(), 'updated_by' => $request->user()->id_user]);
                     }
                 }
 
@@ -632,7 +635,8 @@ class JobController extends Controller
                 throw new Exception('Failed to create HAWB.');
             }
         } catch (Exception $e) {
-            //throw $th;
+            DB::rollBack();
+            return ResponseHelper::error($e);
         }
     }
 
@@ -643,35 +647,91 @@ class JobController extends Controller
             $request->validate([
                 'id_hawb' => 'required|integer|exists:hawb,id_hawb',
                 'hawb_number' => 'required|string|max:50|unique:hawb,hawb_number,' . $request->id_hawb . ',id_hawb',
-                'dimensions' => 'nullable|array',
-                'dimensions.*.id_dimensionhawb' => 'nullable|integer|exists:dimension_hawb,id_dimensionhawb',
             ], [
                 'hawb_number.unique' => 'This HAWB number already exists.',
             ]);
 
             $hawb = DB::table('hawb')->where('id_hawb', $request->id_hawb)->first();
-            if ($hawb) {
-                $dimension_hawb = DB::table('dimension_hawb')->where('id_hawb', $request->id_hawb)->get();
-                if ($dimension_hawb) {
-                    foreach ($dimension_hawb as $key => $value) {
-                        //update dimension_awb
-                        $updateIsTaken = DB::table('dimension_awb')
-                            ->where('id_dimensionawb', $value->id_dimensionawb)
-                            ->update([
-                                'is_taken' => 0,
-                            ]);
-                        if ($updateIsTaken) {
-                            DB::table('dimension_hawb')
-                                ->where('id_dimensionhawb', $value->id_dimensionhawb)
-                                ->delete();
-                        } else {
-                            throw new Exception('Failed to update dimension status.');
-                        }
+            if (!$hawb) {
+                throw new Exception('HAWB not found.');
+            }
+
+            $updateHawb = DB::table('hawb')->where('id_hawb', $request->id_hawb)->update([
+                'hawb_number' => $request->hawb_number,
+                'updated_at' => now(),
+                'updated_by' => $request->user()->id_user,
+            ]);
+            if (!$updateHawb) {
+                throw new Exception('Failed to update HAWB.');
+            }
+            DB::commit();
+            return ResponseHelper::success('HAWB updated successfully.', NULL, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function addDimensionHawb(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_hawb' => 'required|integer|exists:hawb,id_hawb',
+                'id_dimensionawb' => 'required|integer|exists:dimension_awb,id_dimensionawb',
+            ]);
+
+            $hawb = DB::table('hawb')->where('id_hawb', $request->id_hawb)->first();
+            if (!$hawb) {
+                throw new Exception('HAWB not found.');
+            }
+
+            $dimensionHawb = [
+                'id_hawb' => $request->id_hawb,
+                'id_dimensionawb' => $request->id_dimensionawb,
+                'created_at' => now(),
+                'updated_at' => now(),
+                'created_by' => $request->user()->id_user,
+            ];
+
+            DB::table('dimension_hawb')->insert($dimensionHawb);
+            DB::table('dimension_awb')
+                ->where('id_dimensionawb', $request->id_dimensionawb)
+                ->update(['is_taken' => 1, 'updated_at' => now()]);
+
+            DB::commit();
+            return ResponseHelper::success('Dimension added to HAWB successfully.', NULL, 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteDimensionHawb(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_dimensionhawb' => 'required|integer|exists:dimension_hawb,id_dimensionhawb',
+            ]);
+
+            $dimensionHawb = DB::table('dimension_hawb')->where('id_dimensionhawb', $request->id_dimensionhawb)->first();
+            if ($dimensionHawb) {
+                $delete =  DB::table('dimension_hawb')->where('id_dimensionhawb', $request->id_dimensionhawb)->delete();
+                if ($delete) {
+                    $updateIsTaken = DB::table('dimension_awb')
+                        ->where('id_dimensionawb', $dimensionHawb->id_dimensionawb)
+                        ->update(['is_taken' => 0, 'updated_at' => now(), 'updated_by' => $request->user()->id_user]);
+                    if (!$updateIsTaken) {
+                        throw new Exception('Failed to update dimension status.');
                     }
+                } else {
+                    throw new Exception('Failed to delete dimension.');
                 }
             }
 
-            
+            DB::commit();
+            return ResponseHelper::success('Dimension deleted successfully.', NULL, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -680,25 +740,35 @@ class JobController extends Controller
 
     public function getHawbById(Request $request)
     {
-        $id_hawb = $request->input('id_hawb');
-        $hawb = DB::table('hawb')
-            ->select('hawb.*', 'awb.awb', 'awb.id_job')
-            ->leftJoin('hawb', 'hawb.id_hawb', '=', 'hawb.id_hawb')
-            ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
-            ->where('id_hawb', $id_hawb)
-            ->first();
+        try {
+            $request->validate([
+                'id' => 'required|integer|exists:hawb,id_hawb'
+            ], [
+                'id.required' => 'HAWB ID is required.',
+                'id.integer' => 'HAWB ID must be an integer.',
+                'id.exists' => 'HAWB not found.'
+            ]);
 
-        if (!$hawb) {
-            return ResponseHelper::success('HAWB not found.', null, 404);
+            $id_hawb = $request->input('id');
+            $hawb = DB::table('hawb')
+                ->select('hawb.*', 'awb.awb', 'awb.id_job')
+                ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                ->where('id_hawb', $id_hawb)
+                ->first();
+
+            if (!$hawb) {
+                return ResponseHelper::success('HAWB not found.', null, 404);
+            }
+
+            $dimension_hawb = DB::table('dimension_hawb')
+                ->where('id_hawb', $id_hawb)
+                ->get();
+            $hawb->dimensions_hawb = $dimension_hawb;
+            
+            return ResponseHelper::success('HAWB retrieved successfully.', $hawb, 200);
+        } catch (Exception $e) {
+            return ResponseHelper::error($e);
         }
-
-        $dimensions = DB::table('dimension_hawb')
-            ->where('id_hawb', $id_hawb)
-            ->get();
-
-        $hawb->dimensions = $dimensions;
-
-        return ResponseHelper::success('HAWB retrieved successfully.', $hawb, 200);
     }
 
     public function getExecuteJob(Request $request)

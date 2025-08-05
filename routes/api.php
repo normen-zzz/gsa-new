@@ -123,6 +123,13 @@ Route::put('/executeJob', [JobController::class, 'executeJob'])->middleware('aut
 route::put('/updateExecuteJob', [JobController::class, 'updateExecuteJob'])->middleware('auth:api');
 Route::put('/finishExecuteJob', [JobController::class, 'finishExecuteJob'])->middleware('auth:api');
 
+//hawb
+Route::get('/getHawb', [JobController::class, 'getHawb'])->middleware('auth:api');
+Route::get('/getHawbById', [JobController::class, 'getHawbById'])->middleware('auth:api');
+Route::post('/createHawb', [JobController::class, 'createHawb'])->middleware('auth:api');
+Route::put('/updateHawb', [JobController::class, 'updateHawb'])->middleware('auth:api');
+Route::put('/deleteHawb', [JobController::class, 'deleteHawb'])->middleware('auth:api');
+Route::post('/addDimensionHawb', [JobController::class, 'addDimensionHawb'])->middleware('auth:api');
 
 
 
