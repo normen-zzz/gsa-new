@@ -155,23 +155,23 @@ class CustomerController extends Controller
             'customers.*',
             'users.name as created_by',
         ];
-        
+
         $customer = DB::table('customers')
             ->select($select)
             ->join('users', 'customers.created_by', '=', 'users.id_user')
             ->where('customers.id_customer', $id)
             ->first();
-            
+
         if ($customer) {
             $dataCustomer = DB::table('data_customer')
                 ->select('id_datacustomer', 'data', 'is_primary')
                 ->where('id_customer', $customer->id_customer)
                 ->get();
-                
+
             // Format data_customer according to your desired structure
             $customer->data_customer = $dataCustomer->map(function ($item) {
                 $decodedData = json_decode($item->data, true);
-                
+
                 // If decoded data is an array with nested structure, handle it
                 if (is_array($decodedData)) {
                     // Check if it's wrapped in another array or has a nested structure
@@ -185,7 +185,7 @@ class CustomerController extends Controller
                 } else {
                     $actualData = [];
                 }
-                
+
                 return [
                     'id_datacustomer' => $item->id_datacustomer,
                     'email' => $actualData['email'] ?? null,
@@ -196,7 +196,7 @@ class CustomerController extends Controller
                     'is_primary' => $item->is_primary,
                 ];
             })->toArray();
-            
+
             return ResponseHelper::success('Customer retrieved successfully.', $customer, 200);
         } else {
             return ResponseHelper::success('Customer not found.', null, 404);
@@ -219,11 +219,9 @@ class CustomerController extends Controller
 
             $customer->save();
 
-           return ResponseHelper::success('Customer deactivated successfully.', NULL, 200);
-           
-          
+            return ResponseHelper::success('Customer deactivated successfully.', NULL, 200);
         } else {
-           return ResponseHelper::success('Customer not found.', NULL, 404);
+            return ResponseHelper::success('Customer not found.', NULL, 404);
         }
     }
 
@@ -335,7 +333,7 @@ class CustomerController extends Controller
     public function updateCustomer(Request $request)
     {
         DB::beginTransaction();
-        
+
         try {
             // Validate the request data
             $data = $request->validate([
@@ -349,20 +347,21 @@ class CustomerController extends Controller
                 'data_customer.*.address' => 'required|string',
                 'data_customer.*.tax_id' => 'nullable|string|max:50',
                 'data_customer.*.pic' => 'nullable|string|max:100',
+                'data_customer.*.is_primary' => 'nullable|boolean',
                 'status' => 'required|boolean',
             ]);
 
             $changes = [];
-            
+
             // Check if customer exists
             $customer = DB::table('customers')
                 ->where('id_customer', $data['id_customer'])
                 ->first();
-                
+
             if (!$customer) {
                 throw new Exception('Customer not found.');
             }
-            
+
             // Update customer main data
             $updateCustomer = DB::table('customers')
                 ->where('id_customer', $data['id_customer'])
@@ -372,18 +371,18 @@ class CustomerController extends Controller
                     'updated_at' => now(),
                     'status' => $data['status'] ?? true,
                 ]);
-                
+
             if (!$updateCustomer) {
                 throw new Exception('Failed to update customer.');
             }
-            
+
             // Process customer details
             foreach ($data['data_customer'] as $key => $value) {
                 $dataCustomer = DB::table('data_customer')
                     ->where('id_datacustomer', $value['id_datacustomer'] ?? null)
                     ->where('id_customer', $data['id_customer'])
                     ->first();
-                
+
                 if ($dataCustomer) {
                     // Update existing data customer
                     $dataUpdateInsert = [
@@ -391,7 +390,7 @@ class CustomerController extends Controller
                         'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
                         'updated_at' => now(),
                     ];
-                    
+
                     // Track changes for logging
                     $oldData = json_decode($dataCustomer->data, true);
                     foreach ($value as $field => $newValue) {
@@ -417,7 +416,7 @@ class CustomerController extends Controller
                         'created_by' => $request->user()->id_user,
                         'updated_at' => now(),
                     ];
-                    
+
                     // Track new entries for logging
                     if (!isset($changes['new_data_customer'])) {
                         $changes['new_data_customer'] = [];
@@ -431,11 +430,24 @@ class CustomerController extends Controller
                 // Update or insert data
                 DB::table('data_customer')->updateOrInsert(
                     [
-                        'id_datacustomer' => $value['id_datacustomer'] ?? null, 
+                        'id_datacustomer' => $value['id_datacustomer'] ?? null,
                         'id_customer' => $data['id_customer']
                     ],
                     $dataUpdateInsert
                 );
+            }
+
+            $countIsPrimary = DB::table('data_customer')
+                ->where('id_customer', $data['id_customer'])
+                ->where('is_primary', true)
+                ->count();
+            if ($countIsPrimary > 1) {
+                //hapus salah satu is_primary
+                DB::table('data_customer')
+                    ->where('id_customer', $data['id_customer'])
+                    ->where('is_primary', true)
+                    ->limit($countIsPrimary - 1)
+                    ->update(['is_primary' => false]);
             }
 
             // Log the changes
@@ -446,16 +458,15 @@ class CustomerController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            
+
             if (!$log) {
                 throw new Exception('Failed to log customer update action.');
             }
-            
+
             // Commit transaction
             DB::commit();
-            
+
             return ResponseHelper::success('Customer updated successfully.', NULL, 200);
-            
         } catch (Exception $th) {
             // Rollback transaction on error
             DB::rollback();

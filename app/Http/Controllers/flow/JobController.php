@@ -9,6 +9,7 @@ use Exception;
 use App\Models\flow\JobModel;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
+use GuzzleHttp\Psr7\Response;
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -649,59 +650,55 @@ class JobController extends Controller
             ]);
 
             $hawb = DB::table('hawb')->where('id_hawb', $request->id_hawb)->first();
-            if (!$hawb) {
-                throw new Exception('HAWB not found.');
-            }
-
-            $dataHawb = [
-                'hawb_number' => $request->hawb_number,
-                'updated_at' => now(),
-                'updated_by' => $request->user()->id_user,
-            ];
-
-            DB::table('hawb')->where('id_hawb', $request->id_hawb)->update($dataHawb);
-
-            if (isset($request->dimensions) && is_array($request->dimensions)) {
-                foreach ($request->dimensions as $dimension) {
-                    if (isset($dimension['id_dimensionhawb']) && $dimension['id_dimensionhawb']) {
-                        DB::table('dimension_hawb')
-                            ->where('id_dimensionhawb', $dimension['id_dimensionhawb'])
+            if ($hawb) {
+                $dimension_hawb = DB::table('dimension_hawb')->where('id_hawb', $request->id_hawb)->get();
+                if ($dimension_hawb) {
+                    foreach ($dimension_hawb as $key => $value) {
+                        //update dimension_awb
+                        $updateIsTaken = DB::table('dimension_awb')
+                            ->where('id_dimensionawb', $value->id_dimensionawb)
                             ->update([
-                                'updated_at' => now(),
-                                'updated_by' => $request->user()->id_user,
+                                'is_taken' => 0,
                             ]);
-                    } else {
-                        DB::table('dimension_hawb')->insert([
-                            'id_hawb' => $request->id_hawb,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                            'created_by' => $request->user()->id_user,
-                        ]);
+                        if ($updateIsTaken) {
+                            DB::table('dimension_hawb')
+                                ->where('id_dimensionhawb', $value->id_dimensionhawb)
+                                ->delete();
+                        } else {
+                            throw new Exception('Failed to update dimension status.');
+                        }
                     }
                 }
             }
 
-            DB::table('log_hawb')->insert([
-                'id_hawb' => $request->id_hawb,
-                'action' => json_encode([
-                    'before' => [
-                        'hawb_number' => $hawb->hawb_number,
-                    ],
-                    'after' => [
-                        'hawb_number' => $dataHawb['hawb_number'],
-                        'dimensions' => $request->dimensions ?? []
-                    ]
-                ]),
-                'id_user' => $request->user()->id_user,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            DB::commit();
-            return ResponseHelper::success('HAWB updated successfully.', NULL, 200);
+            
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
         }
+    }
+
+    public function getHawbById(Request $request)
+    {
+        $id_hawb = $request->input('id_hawb');
+        $hawb = DB::table('hawb')
+            ->select('hawb.*', 'awb.awb', 'awb.id_job')
+            ->leftJoin('hawb', 'hawb.id_hawb', '=', 'hawb.id_hawb')
+            ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+            ->where('id_hawb', $id_hawb)
+            ->first();
+
+        if (!$hawb) {
+            return ResponseHelper::success('HAWB not found.', null, 404);
+        }
+
+        $dimensions = DB::table('dimension_hawb')
+            ->where('id_hawb', $id_hawb)
+            ->get();
+
+        $hawb->dimensions = $dimensions;
+
+        return ResponseHelper::success('HAWB retrieved successfully.', $hawb, 200);
     }
 
     public function getExecuteJob(Request $request)
