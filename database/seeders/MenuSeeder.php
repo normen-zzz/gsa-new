@@ -17,12 +17,16 @@ class MenuSeeder extends Seeder
                 "isActive" => false,
                 "items" => [
                     [
-                        "title" => "Customer",
-                        "url" => "/dashboard/master/master-customer"
+                        "title" => "Airlines",
+                        "url" => "/dashboard/master/master-airlines"
                     ],
                     [
                         "title" => "Airport",
                         "url" => "/dashboard/master/master-airport"
+                    ],
+                    [
+                        "title" => "Customer",
+                        "url" => "/dashboard/master/master-customer"
                     ],
                     [
                         "title" => "Wilayah",
@@ -69,12 +73,12 @@ class MenuSeeder extends Seeder
                 "icon" => "BookText",
                 "isActive" => false
             ],
-            [
-                "title" => "No HAWB",
-                "url" => "/dashboard/no-hawb",
-                "icon" => "Backpack",
-                "isActive" => false
-            ],
+            // [
+            //     "title" => "No HAWB",
+            //     "url" => "/dashboard/no-hawb",
+            //     "icon" => "Backpack",
+            //     "isActive" => false
+            // ],
             [
                 "title" => "Role Management",
                 "url" => "/dashboard/role-management",

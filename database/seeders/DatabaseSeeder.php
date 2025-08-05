@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             AirlineSeeder::class,
             AirportSeeder::class,
-            ShippinginstructionSeeder::class,
+            // ShippinginstructionSeeder::class,
             CustomerSeeder::class,
             MenuSeeder::class,
             MenusSuperAdmin::class,

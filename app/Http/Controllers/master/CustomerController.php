@@ -155,25 +155,51 @@ class CustomerController extends Controller
             'customers.*',
             'users.name as created_by',
         ];
+        
         $customer = DB::table('customers')
             ->select($select)
             ->join('users', 'customers.created_by', '=', 'users.id_user')
-            ->where('customers.id_customer', $id)->first();
+            ->where('customers.id_customer', $id)
+            ->first();
+            
         if ($customer) {
             $dataCustomer = DB::table('data_customer')
                 ->select('id_datacustomer', 'data', 'is_primary')
                 ->where('id_customer', $customer->id_customer)
                 ->get();
+                
+            // Format data_customer according to your desired structure
             $customer->data_customer = $dataCustomer->map(function ($item) {
+                $decodedData = json_decode($item->data, true);
+                
+                // If decoded data is an array with nested structure, handle it
+                if (is_array($decodedData)) {
+                    // Check if it's wrapped in another array or has a nested structure
+                    if (isset($decodedData[0]) && is_array($decodedData[0])) {
+                        $actualData = $decodedData[0];
+                    } else if (isset($decodedData['data_customer']) && is_array($decodedData['data_customer'])) {
+                        $actualData = $decodedData['data_customer'][0] ?? $decodedData['data_customer'];
+                    } else {
+                        $actualData = $decodedData;
+                    }
+                } else {
+                    $actualData = [];
+                }
+                
                 return [
                     'id_datacustomer' => $item->id_datacustomer,
-                    'data' => json_decode($item->data, true),
+                    'email' => $actualData['email'] ?? null,
+                    'phone' => $actualData['phone'] ?? null,
+                    'address' => $actualData['address'] ?? null,
+                    'tax_id' => $actualData['tax_id'] ?? null,
+                    'pic' => $actualData['pic'] ?? null,
+                    'is_primary' => $item->is_primary,
                 ];
             })->toArray();
+            
             return ResponseHelper::success('Customer retrieved successfully.', $customer, 200);
         } else {
-           return ResponseHelper::success('Customer not found.', NULL, 404);
-           
+            return ResponseHelper::success('Customer not found.', null, 404);
         }
     }
 
