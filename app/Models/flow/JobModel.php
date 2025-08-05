@@ -241,6 +241,12 @@ class JobModel extends Model
                 ->where('id_job', $job->id_job)
                 ->get();
 
+            $job->data_agent = DB::table('data_customer')
+                ->where('id_datacustomer', $job->data_agent)
+                ->first();
+                $job->data_agent->data = json_decode($job->data_agent->data, true);
+
+
             $select = [
                 'shippinginstruction.id_shippinginstruction',
                 'shippinginstruction.agent',
@@ -415,17 +421,17 @@ class JobModel extends Model
             if ($dimension_awb) {
                 $item->dimensions_awb = $dimension_awb;
             }
-            
+
             // Add flight data to each AWB
             $flight_awb = DB::table('flight_awb')
                 ->where('id_awb', $item->id_awb)
                 ->get();
             if ($flight_awb) {
                 $item->data_flightawb = $flight_awb;
-            } else{
+            } else {
                 $item->data_flightawb = [];
             }
-            
+
             // Add shipping instruction data
             $shippingInstruction = DB::table('shippinginstruction')
                 ->select(
@@ -468,7 +474,7 @@ class JobModel extends Model
             } else {
                 $item->data_shippinginstruction = [];
             }
-            
+
             // Add job data
             $job = DB::table('job')
                 ->leftJoin('customers as agent', 'job.agent', '=', 'agent.id_customer')
@@ -519,7 +525,7 @@ class JobModel extends Model
             } else {
                 $item->data_job = [];
             }
-            
+
             return $item;
         });
         return $awb;
@@ -573,7 +579,7 @@ class JobModel extends Model
                 ->get();
             if ($dimension_awb) {
                 $awb->dimensions_awb = $dimension_awb;
-            } else{
+            } else {
                 $awb->dimensions_awb = [];
             }
             $flight_awb = DB::table('flight_awb')
