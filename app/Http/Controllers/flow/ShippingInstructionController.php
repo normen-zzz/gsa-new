@@ -25,7 +25,7 @@ class ShippingInstructionController extends Controller
             'h.name as airline_name',
             'c.name_customer as agent',
             'c.id_customer as id_agent',
-            'a.data_agent as id_dataagent',
+            'a.data_agent as id_data_agent',
             'a.consignee as consignee',
             'a.type',
             'a.eta',
@@ -92,6 +92,8 @@ class ShippingInstructionController extends Controller
                     'job.id_shippinginstruction',
                     'job.agent',
                     'agent.name_customer as agent_name',
+                    'job.data_agent as id_data_agent',
+                    'data_agent.data as agent_data',
                     'job.consignee',
                     'job.airline',
                     'airline.name as airline_name',
@@ -113,6 +115,7 @@ class ShippingInstructionController extends Controller
                     'job.created_at',
                 ])
                 ->leftJoin('customers AS agent', 'job.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer AS data_agent', 'job.data_agent', '=', 'data_agent.id_datacustomer')
                 ->leftJoin('airports AS pol', 'job.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports AS pod', 'job.pod', '=', 'pod.id_airport')
                 ->leftJoin('users AS user', 'job.created_by', '=', 'user.id_user')
@@ -121,6 +124,7 @@ class ShippingInstructionController extends Controller
                 ->first();
 
             if ($job) {
+                $job->agent_data = json_decode($job->agent_data, true);
                 $instruction->job_data = $job;
                 $job_data = $instruction->job_data;
                 $data_flightjob = DB::table('flight_job')
@@ -166,6 +170,8 @@ class ShippingInstructionController extends Controller
                     'awb.awb',
                     'awb.agent',
                     'agent.name_customer as agent_name',
+                    'awb.data_agent as id_data_agent',
+                    'data_agent.data as agent_data',
                     'awb.consignee',
                     'awb.airline',
                     'airline.name as airline_name',
@@ -190,6 +196,7 @@ class ShippingInstructionController extends Controller
                 $awb = DB::table('awb')
                     ->select($selectAwb)
                     ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
+                    ->leftJoin('data_customer AS data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
                     ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
                     ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
                     ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
@@ -198,6 +205,7 @@ class ShippingInstructionController extends Controller
                     ->where('id_job', $job->id_job)
                     ->first();
                 if ($awb) {
+                    $awb->agent_data = json_decode($awb->agent_data, true);
                     $instruction->awb_data = $awb;
                     $awb_data = $instruction->awb_data;
                     $dimensions_awb = DB::table('dimension_awb')
@@ -237,7 +245,7 @@ class ShippingInstructionController extends Controller
             'a.id_shippinginstruction',
             'c.name_customer as agent',
             'c.id_customer as id_agent',
-            'a.data_agent as id_dataagent',
+            'a.data_agent as id_data_agent',
             'a.consignee as consignee',
             'a.airline',
             'h.name as airline_name',
@@ -288,6 +296,8 @@ class ShippingInstructionController extends Controller
                 'job.id_shippinginstruction',
                 'job.agent',
                 'agent.name_customer as agent_name',
+                'job.data_agent as id_data_agent',
+                'data_agent.data as agent_data',
                 'job.consignee',
                 'job.airline',
                 'airline.name as airline_name',
@@ -309,6 +319,7 @@ class ShippingInstructionController extends Controller
                 'job.created_at',
             ])
             ->leftJoin('customers AS agent', 'job.agent', '=', 'agent.id_customer')
+            ->leftJoin('data_customer AS data_agent', 'job.data_agent', '=', 'data_agent.id_datacustomer')
             ->leftJoin('airports AS pol', 'job.pol', '=', 'pol.id_airport')
             ->leftJoin('airports AS pod', 'job.pod', '=', 'pod.id_airport')
             ->leftJoin('users AS user', 'job.created_by', '=', 'user.id_user')
@@ -317,6 +328,7 @@ class ShippingInstructionController extends Controller
             ->first();
 
         if ($job) {
+            $job->agent_data = json_decode($job->agent_data, true);
             $instruction->job_data = $job;
             $job_data = $instruction->job_data;
             $data_flightjob = DB::table('flight_job')
@@ -365,6 +377,8 @@ class ShippingInstructionController extends Controller
                 'awb.awb',
                 'awb.agent',
                 'agent.name_customer as agent_name',
+                'awb.data_agent as id_data_agent',
+                'data_agent.data as agent_data',
                 'awb.consignee',
                 'awb.airline',
                 'airline.name as airline_name',
@@ -389,6 +403,7 @@ class ShippingInstructionController extends Controller
             $awb = DB::table('awb')
                 ->select($selectAwb)
                 ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer AS data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
                 ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
                 ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
