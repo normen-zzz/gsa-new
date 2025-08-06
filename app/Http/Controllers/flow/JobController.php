@@ -743,10 +743,6 @@ class JobController extends Controller
         try {
             $request->validate([
                 'id' => 'required|integer|exists:hawb,id_hawb'
-            ], [
-                'id.required' => 'HAWB ID is required.',
-                'id.integer' => 'HAWB ID must be an integer.',
-                'id.exists' => 'HAWB not found.'
             ]);
 
             $id_hawb = $request->input('id');
@@ -761,10 +757,16 @@ class JobController extends Controller
             }
 
             $dimension_hawb = DB::table('dimension_hawb')
+            ->select('dimension_hawb.*', 'dimension_awb.pieces', 'dimension_awb.length', 'dimension_awb.width', 'dimension_awb.height', 'dimension_awb.weight', 'dimension_awb.remarks')
+                
+            ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
                 ->where('id_hawb', $id_hawb)
                 ->get();
-            $hawb->dimensions_hawb = $dimension_hawb;
-            
+            if ($dimension_hawb) {
+                $hawb->dimensions_hawb = $dimension_hawb;
+            }
+
+
             return ResponseHelper::success('HAWB retrieved successfully.', $hawb, 200);
         } catch (Exception $e) {
             return ResponseHelper::error($e);
