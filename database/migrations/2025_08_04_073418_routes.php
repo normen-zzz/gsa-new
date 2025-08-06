@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('airline')->unsigned();
             $table->integer('pol')->unsigned();
             $table->integer('pod')->unsigned();
-            $table->string('route_name')->unique();
+            
             $table->string('description')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();

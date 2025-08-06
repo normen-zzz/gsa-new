@@ -539,7 +539,7 @@ class JobModel extends Model
             'job.id_shippinginstruction',
             'awb.awb',
             'awb.agent',
-            'agent.name_customer as agent_name',
+            'data_agent.data as agent_data',
             'awb.consignee',
             'awb.airline',
             'airlines.name as airline_name',
@@ -565,6 +565,7 @@ class JobModel extends Model
         $awb = DB::table('awb')
             ->select($selectAwb)
             ->leftJoin('customers as agent', 'awb.agent', '=', 'agent.id_customer')
+            ->leftJoin('data_customer as data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
             ->leftJoin('job', 'awb.id_job', '=', 'job.id_job')
             ->leftJoin('airports as pol', 'awb.pol', '=', 'pol.id_airport')
             ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
@@ -574,6 +575,7 @@ class JobModel extends Model
             ->where('awb.id_awb', $id_awb)
             ->first();
         if ($awb) {
+            $awb->agent_data = json_decode($awb->agent_data, true);
             $dimension_awb = DB::table('dimension_awb')
                 ->where('id_awb', $awb->id_awb)
                 ->get();
