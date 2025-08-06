@@ -25,8 +25,7 @@ return new class extends Migration
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
             $table->boolean('is_taken')->default(false);
-
-           
+            $table->integer('updated_by')->unsigned()->nullable();
         });
     }
 

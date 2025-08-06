@@ -67,7 +67,7 @@ class AirportController extends Controller
         return ResponseHelper::success('Airports retrieved successfully.', $airports, 200);
     }
 
-    public function deactivateAirport(request $request)
+    public function deactivateAirport(Request $request)
     {
         $id = $request->input('id_airport');
         $airport = DB::table('airports')->where('id_airport', $id)->first();
