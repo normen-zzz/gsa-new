@@ -41,32 +41,7 @@ class TypesellingController extends Controller
         return ResponseHelper::success('Type sellings retrieved successfully.', $typesellings, 200);
     }
 
-    public function getTypesellingById($id)
-    {
-         $select = [
-            'typeselling.id_typeselling',
-            'typeselling.initials',
-            'typeselling.name',
-            'typeselling.description',
-            'typeselling.created_at',
-            'typeselling.updated_at',
-            'typeselling.deleted_at',
-            'typeselling.created_by',
-            'typeselling.updated_by',
-            'users.name as created_by_name'
-        ];
-        $typeselling = DB::table('typeselling')
-            ->select($select)
-            ->leftJoin('users', 'typeselling.created_by', '=', 'users.id')
-            ->where('id_typeselling', $id)
-            ->first();
-
-        if (!$typeselling) {
-            return ResponseHelper::success('Type selling not found.', NULL, 404);
-        }
-
-        return ResponseHelper::success('Type selling retrieved successfully.', $typeselling, 200);
-    }
+    
 
     public function createTypeselling(Request $request)
     {
@@ -86,25 +61,27 @@ class TypesellingController extends Controller
             $insertId = DB::table('typeselling')->insertGetId($data);
 
             DB::commit();
-            return ResponseHelper::success('Type selling created successfully.', ['id_typeselling' => $insertId], 201);
+            return ResponseHelper::success('Type selling created successfully.',null, 201);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
         }
     }
 
-    public function updateTypeselling(Request $request, $id)
+    public function updateTypeselling(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_typeselling'); // Assuming the ID is passed in the route
             $request->validate([
-                'initials' => 'sometimes|required|string|max:10|unique:typeselling,initials,' . $id . ',id_typeselling',
+                'initials' => 'sometimes|required|string|unique:typeselling,initials,' . $id . ',id_typeselling',
                 'name' => 'sometimes|required|string|max:255|unique:typeselling,name,' . $id . ',id_typeselling',
                 'description' => 'nullable|string|max:500',
             ]);
 
             $data = $request->only(['initials', 'name', 'description']);
             $data['updated_at'] = now();
+            $data['updated_by'] = $request->user()->id; // Assuming updated_by is the ID of the authenticated user
 
             DB::table('typeselling')
                 ->where('id_typeselling', $id)
@@ -118,13 +95,14 @@ class TypesellingController extends Controller
         }
     }
 
-    public function deleteTypeselling($id)
+    public function deleteTypeselling(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_typeselling'); // Assuming the ID is passed in the request
             $deleted = DB::table('typeselling')
                 ->where('id_typeselling', $id)
-                ->update(['deleted_at' => now(), 'deleted_by' => 1]);
+                ->update(['deleted_at' => now(), 'deleted_by' => 1, 'status' => 'inactive']);
 
             if ($deleted) {
                 DB::commit();
@@ -138,13 +116,14 @@ class TypesellingController extends Controller
         }
     }
 
-    public function restoreTypeselling($id)
+    public function restoreTypeselling(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_typeselling'); // Assuming the ID is passed in the request
             $restored = DB::table('typeselling')
                 ->where('id_typeselling', $id)
-                ->update(['deleted_at' => null, 'deleted_by' => null]);
+                ->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'active']);
 
             if ($restored) {
                 DB::commit();

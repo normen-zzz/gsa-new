@@ -52,7 +52,7 @@ class TypecostController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'initials' => 'required|string|max:10|unique:typecost,initials',
+                'initials' => 'required|string|unique:typecost,initials',
                 'name' => 'required|string|max:255|unique:typecost,name',
                 'description' => 'nullable|string|max:500',
             ]);
@@ -64,7 +64,7 @@ class TypecostController extends Controller
 
             $insertedId = DB::table('typecost')->insertGetId($data);
             DB::commit();
-            return ResponseHelper::success('Type cost created successfully.', ['id' => $insertedId], 201);
+            return ResponseHelper::success('Type cost created successfully.',null, 201);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -99,13 +99,18 @@ class TypecostController extends Controller
         }
     }
 
-    public function deleteTypecost($id)
+    public function deleteTypecost(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_typecost');
+            $check = DB::table('typecost')
+                ->where('id_typecost', $id)
+                ->first();
+               
             $deleted = DB::table('typecost')
                 ->where('id_typecost', $id)
-                ->update(['deleted_at' => now(), 'deleted_by' => 1]);
+                ->update(['deleted_at' => now(), 'deleted_by' => 1, 'status' => 'inactive']);
 
             if ($deleted) {
                 DB::commit();
@@ -118,13 +123,14 @@ class TypecostController extends Controller
             return ResponseHelper::error($e);
         }
     }
-    public function restoreTypecost($id)
+    public function restoreTypecost(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_typecost');
             $restored = DB::table('typecost')
                 ->where('id_typecost', $id)
-                ->update(['deleted_at' => null, 'deleted_by' => null]);
+                ->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'active']);
 
             if ($restored) {
                 DB::commit();
