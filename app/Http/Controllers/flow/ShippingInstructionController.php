@@ -45,7 +45,7 @@ class ShippingInstructionController extends Controller
             'b.name as created_by',
             'a.status',
             'a.created_at',
-            'a.updated_by', 
+            'a.updated_by',
             'g.name as updated_by_name',
 
 
@@ -74,14 +74,15 @@ class ShippingInstructionController extends Controller
 
             // json decode dimensions
             if ($instruction->dimensions) {
-                $instruction->dimensions = json_decode($instruction->dimensions, true);
+                $instruction->dimensions_shippinginstruction = json_decode($instruction->dimensions, true);
+                unset($instruction->dimensions); // remove original dimensions field
             } else {
-                $instruction->dimensions = [];
+                $instruction->dimensions_shippinginstruction = [];
             }
 
             $agentData = DB::table('data_customer')
                 ->where('id_customer', $instruction->id_agent)
-                ->where('id_datacustomer', $instruction->id_dataagent)
+                ->where('id_datacustomer', $instruction->id_data_agent)
                 ->first();
             $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
             $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
@@ -212,13 +213,56 @@ class ShippingInstructionController extends Controller
                         ->where('id_awb', $awb_data->id_awb)
                         ->get();
                     if ($dimensions_awb) {
-                        $awb_data->dimensions = $dimensions_awb;
+                        $awb_data->dimensions_awb = $dimensions_awb;
                     }
                     $data_flightawb = DB::table('flight_awb')
                         ->where('id_awb', $awb_data->id_awb)
                         ->get();
                     if ($data_flightawb) {
-                        $awb_data->data_flight = $data_flightawb;
+                        $awb_data->data_flightawb = $data_flightawb;
+                    }
+
+                    $awb->hawb_data = DB::table('hawb')
+                        ->select([
+                            'hawb.id_hawb',
+                            'hawb.id_awb',
+                            'awb.awb',
+                            'hawb.hawb_number',
+                            'hawb.created_by',
+                            'user.name as created_by_name',
+                            'hawb.created_at',
+                            'hawb.updated_at',
+                            'hawb.updated_by',
+                        ])
+                        ->leftJoin('users AS user', 'hawb.created_by', '=', 'user.id_user')
+                        ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                        ->where('hawb.id_awb', $awb_data->id_awb)
+                        ->get();
+                    if ($awb->hawb_data) {
+                        $awb->hawb_data->transform(function ($hawb) {
+                            $hawb->dimensions_hawb = DB::table('dimension_hawb')
+                                ->select([
+                                    'dimension_hawb.id_dimensionhawb',
+                                    'dimension_hawb.id_dimensionawb',
+                                    'dimension_awb.pieces',
+                                    'dimension_awb.length',
+                                    'dimension_awb.width',
+                                    'dimension_awb.height',
+                                    'dimension_awb.weight',
+                                    'dimension_awb.remarks',
+                                    'dimension_hawb.created_by',
+                                    'user.name as created_by_name',
+                                    'dimension_hawb.created_at',
+                                    'dimension_hawb.updated_at',
+                                ])
+                                ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                                ->leftJoin('users AS user', 'dimension_hawb.created_by', '=', 'user.id_user')
+                                ->where('id_hawb', $hawb->id_hawb)
+                                ->get();
+                            return $hawb;
+                        });
+                    } else {
+                        $awb->hawb_data = [];
                     }
                 }
             } else {
@@ -279,9 +323,9 @@ class ShippingInstructionController extends Controller
 
         // json decode dimensions
         if ($instruction && $instruction->dimensions) {
-            $instruction->dimensions = json_decode($instruction->dimensions, true);
+            $instruction->dimensions_shippinginstruction = json_decode($instruction->dimensions, true);
         } else {
-            $instruction->dimensions = [];
+            $instruction->dimensions_shippinginstruction = [];
         }
         $agentData = DB::table('data_customer')
             ->where('id_customer', $instruction->id_agent)
@@ -425,6 +469,49 @@ class ShippingInstructionController extends Controller
                     ->get();
                 if ($data_flightawb) {
                     $awb_data->flight_awb = $data_flightawb;
+                }
+
+                $awb_data->hawb_data = DB::table('hawb')
+                    ->select([
+                        'hawb.id_hawb',
+                        'hawb.id_awb',
+                        'awb.awb',
+                        'hawb.hawb_number',
+                        'hawb.created_by',
+                        'user.name as created_by_name',
+                        'hawb.created_at',
+                        'hawb.updated_at',
+                        'hawb.updated_by',
+                    ])
+                    ->leftJoin('users AS user', 'hawb.created_by', '=', 'user.id_user')
+                    ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                    ->where('hawb.id_awb', $awb_data->id_awb)
+                    ->get();
+                if ($awb_data->hawb_data) {
+                    $awb_data->hawb_data->transform(function ($hawb) {
+                        $hawb->dimensions_hawb = DB::table('dimension_hawb')
+                            ->select([
+                                'dimension_hawb.id_dimensionhawb',
+                                'dimension_hawb.id_dimensionawb',
+                                'dimension_awb.pieces',
+                                'dimension_awb.length',
+                                'dimension_awb.width',
+                                'dimension_awb.height',
+                                'dimension_awb.weight',
+                                'dimension_awb.remarks',
+                                'dimension_hawb.created_by',
+                                'user.name as created_by_name',
+                                'dimension_hawb.created_at',
+                                'dimension_hawb.updated_at',
+                            ])
+                            ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                            ->leftJoin('users AS user', 'dimension_hawb.created_by', '=', 'user.id_user')
+                            ->where('id_hawb', $hawb->id_hawb)
+                            ->get();
+                        return $hawb;
+                    });
+                } else{
+                    $awb_data->hawb_data = [];
                 }
             }
         } else {

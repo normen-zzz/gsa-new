@@ -45,6 +45,7 @@ class JobModel extends Model
             'job.id_shippinginstruction',
             'job.agent',
             'agent.name_customer as agent_name',
+            'job.data_agent as id_data_agent',
             'data_agent.data as agent_data',
             'job.consignee',
             'job.airline',
@@ -69,7 +70,7 @@ class JobModel extends Model
         ];
         $job = DB::table('job')
             ->leftJoin('customers as agent', 'job.agent', '=', 'agent.id_customer')
-            ->leftJoin('data_customer as data_agent', 'job.agent_data', '=', 'data_agent.id_datacustomer')
+            ->leftJoin('data_customer as data_agent', 'job.data_agent', '=', 'data_agent.id_datacustomer')
             ->leftJoin('airports as pol', 'job.pol', '=', 'pol.id_airport')
             ->leftJoin('airports as pod', 'job.pod', '=', 'pod.id_airport')
             ->leftJoin('users as created_by', 'job.created_by', '=', 'created_by.id_user')
@@ -161,16 +162,58 @@ class JobModel extends Model
                 ->first();
             if ($shippingInstruction) {
                 $shippingInstruction->agent_data = json_decode($shippingInstruction->agent_data, true);
-                $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions, true);
+                $shippingInstruction->dimensions_shippinginstruction = json_decode($shippingInstruction->dimensions, true);
+                unset($shippingInstruction->dimensions);
                 $item->data_shippinginstruction = $shippingInstruction;
             } else {
                 $item->data_shippinginstruction = [];
             }
 
             $awb = DB::table('awb')
-                ->where('id_job', $item->id_job)
+                ->leftJoin('customers as agent', 'awb.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer as data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
+                ->leftJoin('airports as pol', 'awb.pol', '=', 'pol.id_airport')
+                ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
+                ->leftJoin('users as created_by', 'awb.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users as updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines', 'awb.airline', '=', 'airlines.id_airline')
+                ->select(
+                    [
+                         'awb.id_awb',
+                    'awb.id_job',
+                    'awb.awb',
+                    'awb.agent',
+                    'agent.name_customer as agent_name',
+                    'awb.data_agent as id_data_agent',
+                    'data_agent.data as agent_data',
+                    'awb.consignee',
+                    'awb.airline',
+                    'airlines.name as airline_name',
+                    'awb.etd',
+                    'awb.eta',
+                    'awb.pol',
+                    'pol.name_airport as pol_name',
+                    'awb.pod',
+                    'pod.name_airport as pod_name',
+                    'awb.commodity',
+                    'awb.gross_weight',
+                    'awb.chargeable_weight',
+                    'awb.pieces',
+                    'awb.special_instructions',
+                    'awb.created_by',
+                    'created_by.name as created_by_name',
+                    'awb.updated_by',
+                    'updated_by.name as updated_by_name',
+                    'awb.created_at',
+                    'awb.updated_at',
+                    ]
+                )
+                
+                ->where('awb.id_job', $item->id_job)
+                
                 ->first();
             if ($awb) {
+                $awb->agent_data = json_decode($awb->agent_data, true);
                 $item->data_awb = $awb;
                 $data_awb = $item->data_awb;
                 $dimension_awb = DB::table('dimension_awb')
@@ -185,6 +228,48 @@ class JobModel extends Model
                 if ($flight_awb) {
                     $data_awb->data_flightawb = $flight_awb;
                 }
+                $awb->hawb_data = DB::table('hawb')
+                        ->select([
+                            'hawb.id_hawb',
+                            'hawb.id_awb',
+                            'awb.awb',
+                            'hawb.hawb_number',
+                            'hawb.created_by',
+                            'user.name as created_by_name',
+                            'hawb.created_at',
+                            'hawb.updated_at',
+                            'hawb.updated_by',
+                        ])
+                        ->leftJoin('users AS user', 'hawb.created_by', '=', 'user.id_user')
+                        ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                        ->where('hawb.id_awb', $awb->id_awb)
+                        ->get();
+                    if ($awb->hawb_data) {
+                        $awb->hawb_data->transform(function ($hawb) {
+                            $hawb->dimensions_hawb = DB::table('dimension_hawb')
+                                ->select([
+                                    'dimension_hawb.id_dimensionhawb',
+                                    'dimension_hawb.id_dimensionawb',
+                                    'dimension_awb.pieces',
+                                    'dimension_awb.length',
+                                    'dimension_awb.width',
+                                    'dimension_awb.height',
+                                    'dimension_awb.weight',
+                                    'dimension_awb.remarks',
+                                    'dimension_hawb.created_by',
+                                    'user.name as created_by_name',
+                                    'dimension_hawb.created_at',
+                                    'dimension_hawb.updated_at',
+                                ])
+                                ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                                ->leftJoin('users AS user', 'dimension_hawb.created_by', '=', 'user.id_user')
+                                ->where('id_hawb', $hawb->id_hawb)
+                                ->get();
+                            return $hawb;
+                        });
+                    } else {
+                        $awb->hawb_data = [];
+                    }
             } else {
                 $item->data_awb = [];
             }
@@ -249,11 +334,7 @@ class JobModel extends Model
                 ->where('id_job', $job->id_job)
                 ->get();
 
-            $job->data_agent = DB::table('data_customer')
-                ->where('id_datacustomer', $job->data_agent)
-                ->first();
-                $job->data_agent->data = json_decode($job->data_agent->data, true);
-
+          
 
             $select = [
                 'shippinginstruction.id_shippinginstruction',
@@ -365,6 +446,47 @@ class JobModel extends Model
                 if ($flight_awb) {
                     $data_awb->data_flightawb = $flight_awb;
                 }
+                $awb->hawb_data = DB::table('hawb')
+                    ->select([
+                        'hawb.id_hawb',
+                        'hawb.id_awb',
+                        'awb.awb',
+                        'hawb.hawb_number',
+                        'hawb.created_by',
+                        'user.name as created_by_name',
+                        'hawb.created_at',
+                        'hawb.updated_at',
+                        'hawb.updated_by',
+                    ])
+                    ->leftJoin('users AS user', 'hawb.created_by', '=', 'user.id_user')
+                    ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                    ->where('hawb.id_awb', $data_awb->id_awb)
+                    ->get();
+                if ($awb->hawb_data) {
+                    $awb->hawb_data->transform(function ($hawb) {
+                        $hawb->dimensions_hawb = DB::table('dimension_hawb')
+                            ->select([
+                                'dimension_hawb.id_dimensionhawb',
+                                'dimension_hawb.id_dimensionawb',
+                                'dimension_awb.pieces',
+                                'dimension_awb.length',
+                                'dimension_awb.width',
+                                'dimension_awb.height',
+                                'dimension_awb.weight',
+                                'dimension_awb.remarks',
+                                'dimension_hawb.created_by',
+                                'user.name as created_by_name',
+                                'dimension_hawb.created_at',
+                                'dimension_hawb.updated_at',
+                            ])
+                            ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                            ->leftJoin('users AS user', 'dimension_hawb.created_by', '=', 'user.id_user')
+                            ->where('id_hawb', $hawb->id_hawb)
+                            ->get();
+                        return $hawb;
+                    });
+                }
+               
             } else {
                 $job->data_awb = [];
             }
@@ -429,6 +551,7 @@ class JobModel extends Model
             ->paginate($limit);
 
         $awb->getCollection()->transform(function ($item) {
+            $item->agent_data = json_decode($item->agent_data, true);
             // Add dimension data to each AWB
             $dimension_awb = DB::table('dimension_awb')
                 ->where('id_awb', $item->id_awb)
@@ -446,51 +569,47 @@ class JobModel extends Model
             } else {
                 $item->data_flightawb = [];
             }
-
-            // Add shipping instruction data
-            $shippingInstruction = DB::table('shippinginstruction')
-                ->select(
-                    'shippinginstruction.id_shippinginstruction',
-                    'shippinginstruction.agent',
-                    'agent.name_customer as agent_name',
-                    'shippinginstruction.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
-                    'shippinginstruction.consignee',
-                    'shippinginstruction.airline',
-                    'airlines.name as airline_name',
-                    'shippinginstruction.type',
-                    'shippinginstruction.etd',
-                    'shippinginstruction.eta',
-                    'shippinginstruction.pol',
-                    'pol.name_airport as pol_name',
-                    'shippinginstruction.pod',
-                    'pod.name_airport as pod_name',
-                    'shippinginstruction.commodity',
-                    'shippinginstruction.gross_weight',
-                    'shippinginstruction.chargeable_weight',
-                    'shippinginstruction.pieces',
-                    'shippinginstruction.dimensions',
-                    'shippinginstruction.special_instructions',
-                    'shippinginstruction.created_by',
-                    'created_by.name as created_by_name',
-                    'shippinginstruction.updated_by',
-                    'updated_by.name as updated_by_name'
-                )
-                ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
-                ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
-                ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
-                ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
-                ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
-                ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
-                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
-                ->where('id_shippinginstruction', $item->id_shippinginstruction)
-                ->first();
-            if ($shippingInstruction) {
-                $shippingInstruction->agent_data = json_decode($shippingInstruction->agent_data, true);
-                $item->data_shippinginstruction = $shippingInstruction;
-                $item->data_shippinginstruction->dimensions = json_decode($item->data_shippinginstruction->dimensions, true);
+            $item->hawb_data = DB::table('hawb')
+                ->select([
+                    'hawb.id_hawb',
+                    'hawb.id_awb',
+                    'awb.awb',
+                    'hawb.hawb_number',
+                    'hawb.created_by',
+                    'user.name as created_by_name',
+                    'hawb.created_at',
+                    'hawb.updated_at',
+                    'hawb.updated_by',
+                ])
+                ->leftJoin('users AS user', 'hawb.created_by', '=', 'user.id_user')
+                ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                ->where('hawb.id_awb', $item->id_awb)
+                ->get();
+            if ($item->hawb_data) {
+                $item->hawb_data->transform(function ($hawb) {
+                    $hawb->dimensions_hawb = DB::table('dimension_hawb')
+                        ->select([
+                            'dimension_hawb.id_dimensionhawb',
+                            'dimension_hawb.id_dimensionawb',
+                            'dimension_awb.pieces',
+                            'dimension_awb.length',
+                            'dimension_awb.width',
+                            'dimension_awb.height',
+                            'dimension_awb.weight',
+                            'dimension_awb.remarks',
+                            'dimension_hawb.created_by',
+                            'user.name as created_by_name',
+                            'dimension_hawb.created_at',
+                            'dimension_hawb.updated_at',
+                        ])
+                        ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                        ->leftJoin('users AS user', 'dimension_hawb.created_by', '=', 'user.id_user')
+                        ->where('id_hawb', $hawb->id_hawb)
+                        ->get();
+                    return $hawb;
+                });
             } else {
-                $item->data_shippinginstruction = [];
+                $item->hawb_data = [];
             }
 
             // Add job data
@@ -615,6 +734,48 @@ class JobModel extends Model
             } else {
                 $awb->data_flightawb = [];
             }
+            $awb->hawb_data = DB::table('hawb')
+                ->select([
+                    'hawb.id_hawb',
+                    'hawb.id_awb',
+                    'awb.awb',
+                    'hawb.hawb_number',
+                    'hawb.created_by',
+                    'user.name as created_by_name',
+                    'hawb.created_at',
+                    'hawb.updated_at',
+                    'hawb.updated_by',
+                ])
+                ->leftJoin('users AS user', 'hawb.created_by', '=', 'user.id_user')
+                ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
+                ->where('hawb.id_awb', $awb->id_awb)
+                ->get();
+            if ($awb->hawb_data) {
+                $awb->hawb_data->transform(function ($hawb) {
+                    $hawb->dimensions_hawb = DB::table('dimension_hawb')
+                        ->select([
+                            'dimension_hawb.id_dimensionhawb',
+                            'dimension_hawb.id_dimensionawb',
+                            'dimension_awb.pieces',
+                            'dimension_awb.length',
+                            'dimension_awb.width',
+                            'dimension_awb.height',
+                            'dimension_awb.weight',
+                            'dimension_awb.remarks',
+                            'dimension_hawb.created_by',
+                            'user.name as created_by_name',
+                            'dimension_hawb.created_at',
+                            'dimension_hawb.updated_at',
+                        ])
+                        ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                        ->leftJoin('users AS user', 'dimension_hawb.created_by', '=', 'user.id_user')
+                        ->where('id_hawb', $hawb->id_hawb)
+                        ->get();
+                    return $hawb;
+                });
+            } else {
+                $awb->hawb_data = [];
+            }
             $job = DB::table('job')
                 ->leftJoin('customers as agent', 'job.agent', '=', 'agent.id_customer')
                 ->leftJoin('data_customer as data_agent', 'job.data_agent', '=', 'data_agent.id_datacustomer')
@@ -668,50 +829,7 @@ class JobModel extends Model
             } else {
                 $awb->data_job = [];
             }
-            $shippingInstruction = DB::table('shippinginstruction')
-                ->select(
-                    'shippinginstruction.id_shippinginstruction',
-                    'shippinginstruction.agent',
-                    'agent.name_customer as agent_name',
-                    'shippinginstruction.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
-                    'shippinginstruction.consignee',
-                    'shippinginstruction.airline',
-                    'airlines.name as airline_name',
-                    'shippinginstruction.type',
-                    'shippinginstruction.etd',
-                    'shippinginstruction.eta',
-                    'shippinginstruction.pol',
-                    'pol.name_airport as pol_name',
-                    'shippinginstruction.pod',
-                    'pod.name_airport as pod_name',
-                    'shippinginstruction.commodity',
-                    'shippinginstruction.gross_weight',
-                    'shippinginstruction.chargeable_weight',
-                    'shippinginstruction.pieces',
-                    'shippinginstruction.dimensions',
-                    'shippinginstruction.special_instructions',
-                    'shippinginstruction.created_by',
-                    'created_by.name as created_by_name',
-                    'shippinginstruction.updated_by',
-                    'updated_by.name as updated_by_name'
-                )
-                ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
-                ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
-                ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
-                ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
-                ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
-                ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
-                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
-                ->where('id_shippinginstruction', $awb->id_shippinginstruction)
-                ->first();
-            if ($shippingInstruction) {
-                $shippingInstruction->agent_data = json_decode($shippingInstruction->agent_data, true);
-                $awb->data_shippinginstruction = $shippingInstruction;
-                $awb->data_shippinginstruction->dimensions = json_decode($awb->data_shippinginstruction->dimensions, true);
-            } else {
-                $awb->data_shippinginstruction = [];
-            }
+           
         }
         return $awb;
     }

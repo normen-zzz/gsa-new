@@ -328,58 +328,7 @@ class JobController extends Controller
         }
     }
 
-    public function getAwb(Request $request)
-    {
-        $limit = $request->input('limit', 10);
-        $searchKey = $request->input('searchKey', '');
-
-        $awb = DB::table('awb')
-            ->leftJoin('job', 'awb.id_job', '=', 'job.id_job')
-            ->leftJoin('customers as agent', 'awb.agent', '=', 'agent.id_customer')
-            ->leftJoin('airports as pol', 'awb.pol', '=', 'pol.id_airport')
-            ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
-            ->select(
-                'awb.id_awb',
-                'awb.id_job',
-                'awb.agent',
-                'customers.name_customer as agent_name',
-                'awb.data_agent as id_data_agent',
-                'data_customer.data as data_agent',
-                'awb.awb',
-                'awb.etd',
-                'awb.eta',
-                'awb.pol',
-                'pol.name_airport as pol_name',
-                'awb.pod',
-                'pod.name_airport as pod_name',
-                'awb.commodity',
-                'awb.gross_weight',
-                'awb.chargeable_weight',
-                'awb.pieces',
-                'awb.special_instructions',
-            )
-            ->when(!empty($searchKey), function ($query) use ($searchKey) {
-                return $query->where(function ($q) use ($searchKey) {
-                    $q->where('awb.awb', 'like', '%' . $searchKey . '%')
-                        ->orWhere('customers.name_customer', 'like', '%' . $searchKey . '%')
-                        ->orWhere('pol.name_airport', 'like', '%' . $searchKey . '%')
-                        ->orWhere('pod.name_airport', 'like', '%' . $searchKey . '%');
-                });
-            })
-            ->orderBy('awb.id_awb', 'desc')
-            ->paginate($limit);
-        $awb->getCollection()->transform(function ($item) {
-            $dimensions = DB::table('dimension_awb')
-                ->where('id_awb', $item->id_awb)
-                ->get();
-            if ($dimensions) {
-                $item->dimension_awb = $dimensions;
-            } else {
-                $item->dimension_awb = [];
-            }
-        });
-        return $awb;
-    }
+   
 
     public function finishExecuteJob(Request $request)
     {
