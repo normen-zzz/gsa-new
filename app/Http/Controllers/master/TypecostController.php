@@ -1,12 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\master;
 
-use Illuminate\Http\Request;
-use App\Helpers\ResponseHelper;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
 
+date_default_timezone_set('Asia/Jakarta');
 class TypecostController extends Controller
 {
     public function getTypecost(Request $request)

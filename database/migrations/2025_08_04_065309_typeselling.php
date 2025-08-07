@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
             $table->integer('updated_by')->unsigned()->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
         });
     }
 

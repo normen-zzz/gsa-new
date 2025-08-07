@@ -16,13 +16,13 @@ return new class extends Migration
             $table->integer('airline')->unsigned();
             $table->integer('pol')->unsigned();
             $table->integer('pod')->unsigned();
-            
-            $table->string('description')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
             $table->integer('updated_by')->unsigned()->nullable();
+            //status
+            $table->enum('status', ['active', 'inactive'])->default('active');
         });
     }
 
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('routes');
     }
 };

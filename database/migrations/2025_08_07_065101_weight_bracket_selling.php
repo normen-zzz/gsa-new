@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('typecost', function (Blueprint $table) {
-            $table->id('id_typecost');
-            $table->string('initials')->unique();
-            $table->string('name')->unique();
-            $table->string('description')->nullable();
+        Schema::create('weight_bracket_sellings', function (Blueprint $table) {
+            $table->id('id_weight_bracket_selling');
+            $table->decimal('min_weight', 10, 2);
             $table->integer('created_by')->unsigned();
-            $table->softDeletes();
-            $table->integer('deleted_by')->nullable();
-            $table->timestamps();
             $table->integer('updated_by')->unsigned()->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable()->unsigned();
             $table->enum('status', ['active', 'inactive'])->default('active');
         });
     }
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('typecost');
+        //
     }
 };

@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('typecost', function (Blueprint $table) {
-            $table->id('id_typecost');
-            $table->string('initials')->unique();
-            $table->string('name')->unique();
-            $table->string('description')->nullable();
-            $table->integer('created_by')->unsigned();
-            $table->softDeletes();
-            $table->integer('deleted_by')->nullable();
+        Schema::create('weight_bracket_costs', function (Blueprint $table) {
+            $table->id('id_weight_bracket_cost');
+            $table->decimal('min_weight');
             $table->timestamps();
+            $table->softDeletes();
+            $table->integer('created_by')->unsigned();
             $table->integer('updated_by')->unsigned()->nullable();
+            $table->integer('deleted_by')->nullable()->unsigned();
+            
             $table->enum('status', ['active', 'inactive'])->default('active');
+          
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('typecost');
+        Schema::dropIfExists('weight_bracket_costs');
     }
 };

@@ -5,16 +5,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\flow\JobController;
+use App\Http\Controllers\master\CostController;
 use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
 use App\Http\Controllers\master\UsersController;
 use App\Http\Controllers\master\AirlineController;
 use App\Http\Controllers\master\AirportController;
 use App\Http\Controllers\master\CountryController;
+use App\Http\Controllers\master\SellingController;
 use App\Http\Controllers\master\CustomerController;
 use App\Http\Controllers\master\DivisionController;
 use App\Http\Controllers\master\PositionController;
+use App\Http\Controllers\master\TypecostController;
 use App\Http\Controllers\master\PermissionController;
+use App\Http\Controllers\master\TypesellingController;
+use App\Http\Controllers\master\WeightbracketController;
 use App\Http\Controllers\flow\ShippingInstructionController;
 
 
@@ -97,8 +102,50 @@ Route::get('/getAirlineById', [AirlineController::class, 'getAirlineById'])->mid
 Route::post('/createAirline', [AirlineController::class, 'createAirline'])->middleware('auth:api');
 Route::put('/updateAirline', [AirlineController::class, 'updateAirline'])->middleware('auth:api');
 
+//master type selling
+Route::get('/getTypeselling', [TypesellingController::class, 'getTypeselling'])->middleware('auth:api');
+Route::get('/getTypesellingById/{id}', [TypesellingController::class, 'getTypesellingById'])->middleware('auth:api');
+Route::post('/createTypeselling', [TypesellingController::class, 'createTypeselling'])->middleware('auth:api');
+Route::put('/updateTypeselling', [TypesellingController::class, 'updateTypeselling'])->middleware('auth:api');
+Route::put('/deleteTypeselling', [TypesellingController::class, 'deleteTypeselling'])->middleware('auth:api');
+Route::put('/restoreTypeselling', [TypesellingController::class, 'restoreTypeselling'])->middleware('auth:api');
 
+//master type cost
+Route::get('/getTypecost', [TypecostController::class, 'getTypecost'])->middleware('auth:api');
+Route::get('/getTypecostById', [TypecostController::class, 'getTypecostById'])->middleware('auth:api');
+Route::post('/createTypecost', [TypecostController::class, 'createTypecost'])->middleware('auth:api');
+Route::put('/updateTypecost', [TypecostController::class, 'updateTypecost'])->middleware('auth:api');
+Route::put('/deleteTypecost', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
+Route::put('/restoreTypecost', [TypecostController::class, 'restoreTypecost'])->middleware('auth:api');
 
+//master cost
+Route::get('/getCost', [CostController::class, 'getCost'])->middleware('auth:api');
+Route::get('/getCostById', [CostController::class, 'getCostById'])->middleware('auth:api');
+Route::post('/createCost', [CostController::class, 'createCost'])->middleware('auth:api');
+Route::put('/updateCost', [CostController::class, 'updateCost'])->middleware('auth:api');
+Route::put('/deleteCost', [CostController::class, 'deleteCost'])->middleware('auth:api');
+Route::put('/restoreCost', [CostController::class, 'restoreCost'])->middleware('auth:api');
+
+//master selling
+Route::get('/getSelling', [SellingController::class, 'getSelling'])->middleware('auth:api');
+Route::post('/createSelling', [SellingController::class, 'createSelling'])->middleware('auth:api');
+Route::put('/updateSelling', [SellingController::class, 'updateSelling'])->middleware('auth:api');
+Route::put('/deleteSelling', [SellingController::class, 'deleteSelling'])->middleware('auth:api');
+Route::put('/restoreSelling', [SellingController::class, 'restoreSelling'])->middleware('auth:api');
+
+//master weight bracket cost
+Route::get('/getWeightBracketCost', [WeightbracketController::class, 'getWeightBracketCost'])->middleware('auth:api');
+Route::post('/createWeightBracketCost', [WeightbracketController::class, 'createWeightBracketCost'])->middleware('auth:api');
+Route::put('/updateWeightBracketCost', [WeightbracketController::class, 'updateWeightBracketCost'])->middleware('auth:api');
+Route::put('/deleteWeightBracketCost', [WeightbracketController::class, 'deleteWeightBracketCost'])->middleware('auth:api');
+Route::put('/restoreWeightBracketCost', [WeightbracketController::class, 'restoreWeightBracketCost'])->middleware('auth:api');
+
+//master weight bracket selling
+Route::get('/getWeightBracketSelling', [WeightbracketController::class, 'getWeightBracketSelling'])->middleware('auth:api');
+Route::post('/createWeightBracketSelling', [WeightbracketController::class, 'createWeightBracketSelling'])->middleware('auth:api');
+Route::put('/updateWeightBracketSelling', [WeightbracketController::class, 'updateWeightBracketSelling'])->middleware('auth:api');
+Route::put('/deleteWeightBracketSelling', [WeightbracketController::class, 'deleteWeightBracketSelling'])->middleware('auth:api');
+Route::put('/restoreWeightBracketSelling', [WeightbracketController::class, 'restoreWeightBracketSelling'])->middleware('auth:api');
 
 // Flow routes
 

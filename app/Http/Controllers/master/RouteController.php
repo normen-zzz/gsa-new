@@ -21,9 +21,11 @@ class RouteController extends Controller
             'pol.name as pol_name',
             'routes.pod',
             'pod.name as pod_name',
-            'routes.name',
-            'routes.description',
             'routes.created_at',
+            'routes.updated_at',
+            'routes.deleted_at',
+            'routes.created_by',
+            'routes.updated_by',
             'created_by.name as created_by_name'
         ];
 
@@ -48,12 +50,28 @@ class RouteController extends Controller
 
     public function getRouteById($id)
     {
+         $select = [
+            'routes.id_route',
+            'routes.airline',
+            'airlines.name as airline_name',
+            'routes.pol',
+            'pol.name as pol_name',
+            'routes.pod',
+            'pod.name as pod_name',
+            'routes.created_at',
+            'routes.updated_at',
+            'routes.deleted_at',
+            'routes.created_by',
+            'routes.updated_by',
+            'created_by.name as created_by_name'
+        ];
         $route = DB::table('routes')
-            ->select('routes.*', 'airlines.name as airline_name', 'pol.name as pol_name', 'pod.name as pod_name')
+            ->select($select)
             ->leftJoin('airlines', 'routes.airline', '=', 'airlines.id_airline')
             ->leftJoin('airports as pol', 'routes.pol', '=', 'pol.id_airport')
             ->leftJoin('airports as pod', 'routes.pod', '=', 'pod.id_airport')
-            ->where('id_route', $id)
+            ->leftJoin('users as created_by', 'routes.created_by', '=', 'created_by.id')
+            ->where('routes.id_route', $id)
             ->first();
 
         if (!$route) {
@@ -71,8 +89,6 @@ class RouteController extends Controller
                 'airline' => 'required|exists:airlines,id_airline',
                 'pol' => 'required|exists:airports,id_airport',
                 'pod' => 'required|exists:airports,id_airport',
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:500',
             ]);
 
             $data['created_by'] = $request->user()->id; // Assuming the user is authenticated
@@ -100,8 +116,7 @@ class RouteController extends Controller
                 'airline' => 'required|exists:airlines,id_airline',
                 'pol' => 'required|exists:airports,id_airport',
                 'pod' => 'required|exists:airports,id_airport',
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:500',
+               
             ]);
 
             $data['updated_by'] = $request->user()->id; // Assuming the user is authenticated

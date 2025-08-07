@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\master;
 
-use Illuminate\Http\Request;
-use App\Helpers\ResponseHelper;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
+use App\Helpers\ResponseHelper;
+
+date_default_timezone_set('Asia/Jakarta');
 
 class TypesellingController extends Controller
 {
@@ -18,10 +22,16 @@ class TypesellingController extends Controller
             'typeselling.initials',
             'typeselling.name',
             'typeselling.description',
-            'typeselling.created_at'
+            'typeselling.created_at',
+            'typeselling.updated_at',
+            'typeselling.deleted_at',
+            'typeselling.created_by',
+            'typeselling.updated_by',
+            'users.name as created_by_name'
         ];
         $typesellings = DB::table('typeselling')
             ->select($select)
+            ->join('users', 'typeselling.created_by', '=', 'users.id')
             ->when($search, function ($query) use ($search) {
                 return $query->where('typeselling.name', 'like', '%' . $search . '%');
             })
@@ -33,7 +43,21 @@ class TypesellingController extends Controller
 
     public function getTypesellingById($id)
     {
+         $select = [
+            'typeselling.id_typeselling',
+            'typeselling.initials',
+            'typeselling.name',
+            'typeselling.description',
+            'typeselling.created_at',
+            'typeselling.updated_at',
+            'typeselling.deleted_at',
+            'typeselling.created_by',
+            'typeselling.updated_by',
+            'users.name as created_by_name'
+        ];
         $typeselling = DB::table('typeselling')
+            ->select($select)
+            ->leftJoin('users', 'typeselling.created_by', '=', 'users.id')
             ->where('id_typeselling', $id)
             ->first();
 

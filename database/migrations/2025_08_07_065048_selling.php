@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('typecost', function (Blueprint $table) {
-            $table->id('id_typecost');
-            $table->string('initials')->unique();
-            $table->string('name')->unique();
-            $table->string('description')->nullable();
+        Schema::create('selling', function (Blueprint $table) {
+            $table->id('id_selling');
+            $table->integer('id_weight_bracket_selling')->unsigned();
+            $table->integer('id_typeselling')->unsigned();
+            $table->integer('id_route')->unsigned();
             $table->integer('created_by')->unsigned();
-            $table->softDeletes();
-            $table->integer('deleted_by')->nullable();
             $table->timestamps();
-            $table->integer('updated_by')->unsigned()->nullable();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable()->unsigned();
+            $table->integer('updated_by')->unsigned()->nullable();  
             $table->enum('status', ['active', 'inactive'])->default('active');
         });
     }
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('typecost');
+        //
     }
 };
