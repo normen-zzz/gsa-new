@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
+use Illuminate\Support\Facades\Auth;
 
 date_default_timezone_set('Asia/Jakarta');
 class TypecostController extends Controller
@@ -110,7 +111,7 @@ class TypecostController extends Controller
                
             $deleted = DB::table('typecost')
                 ->where('id_typecost', $id)
-                ->update(['deleted_at' => now(), 'deleted_by' => 1, 'status' => 'inactive']);
+                ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']);
 
             if ($deleted) {
                 DB::commit();

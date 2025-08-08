@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
+use Illuminate\Support\Facades\Auth;
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -102,7 +103,7 @@ class TypesellingController extends Controller
             $id = $request->input('id_typeselling'); // Assuming the ID is passed in the request
             $deleted = DB::table('typeselling')
                 ->where('id_typeselling', $id)
-                ->update(['deleted_at' => now(), 'deleted_by' => 1, 'status' => 'inactive']);
+                ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']);
 
             if ($deleted) {
                 DB::commit();

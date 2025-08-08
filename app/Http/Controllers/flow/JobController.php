@@ -9,7 +9,7 @@ use Exception;
 use App\Models\flow\JobModel;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
-use GuzzleHttp\Psr7\Response;
+use Illuminate\Support\Facades\Auth;
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -79,35 +79,18 @@ class JobController extends Controller
                 // Update or insert dimensions
                 if (isset($request->dimensions_job) && is_array($request->dimensions_job)) {
                     foreach ($request->dimensions_job as $dimension) {
-                        if (isset($dimension['id_dimensionjob']) && $dimension['id_dimensionjob']) {
-                            // Update existing dimension
-                            DB::table('dimension_job')
-                                ->where('id_dimensionjob', $dimension['id_dimensionjob'])
-                                ->update([
-                                    'pieces' => $dimension['pieces'],
-                                    'length' => $dimension['length'],
-                                    'width' => $dimension['width'],
-                                    'height' => $dimension['height'],
-                                    'weight' => $dimension['weight'],
-                                    'remarks' => $dimension['remarks'],
-                                    'updated_at' => now(),
-                                    'updated_by' => $request->user()->id_user,
-                                ]);
-                        } else {
-                            // Insert new dimension
-                            DB::table('dimension_job')->insert([
-                                'id_job' => $job->id_job,
-                                'pieces' => $dimension['pieces'],
-                                'length' => $dimension['length'],
-                                'width' => $dimension['width'],
-                                'height' => $dimension['height'],
-                                'weight' => $dimension['weight'],
-                                'remarks' => $dimension['remarks'],
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                                'created_by' => $request->user()->id_user,
-                            ]);
-                        }
+                        DB::table('dimension_job')->insert([
+                            'id_job' => $job->id_job,
+                            'pieces' => $dimension['pieces'],
+                            'length' => $dimension['length'],
+                            'width' => $dimension['width'],
+                            'height' => $dimension['height'],
+                            'weight' => $dimension['weight'],
+                            'remarks' => $dimension['remarks'],
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                            'created_by' => $request->user()->id_user,
+                        ]);
                     }
                 }
 
@@ -328,7 +311,7 @@ class JobController extends Controller
         }
     }
 
-   
+
 
     public function finishExecuteJob(Request $request)
     {
@@ -596,6 +579,7 @@ class JobController extends Controller
             $request->validate([
                 'id_hawb' => 'required|integer|exists:hawb,id_hawb',
                 'hawb_number' => 'required|string|max:50|unique:hawb,hawb_number,' . $request->id_hawb . ',id_hawb',
+                "dimensions_hawb" => 'nullable|array', // hanya untuk insert, tidak bisa update
             ], [
                 'hawb_number.unique' => 'This HAWB number already exists.',
             ]);
@@ -613,6 +597,26 @@ class JobController extends Controller
             if (!$updateHawb) {
                 throw new Exception('Failed to update HAWB.');
             }
+
+            if (isset($request->dimensions_hawb) && is_array($request->dimensions_hawb)) {
+                foreach ($request->dimensions_hawb as $dimension) {
+                    if (isset($dimension['id_dimensionawb']) && $dimension['id_dimensionawb']) {
+                        // Update existing dimension
+                        DB::table('dimension_hawb')
+                            ->where('id_dimensionawb', $dimension['id_dimensionawb'])
+                            ->insert([
+                                'id_hawb' => $request->id_hawb,
+                                'id_dimensionawb' => $dimension['id_dimensionawb'],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                                'created_by' => $request->user()->id_user,
+                            ]);
+                        DB::table('dimension_awb')
+                            ->where('id_dimensionawb', $dimension['id_dimensionawb'])
+                            ->update(['is_taken' => 1, 'updated_at' => now(), 'updated_by' => $request->user()->id_user]);
+                    }
+                }
+            }
             DB::commit();
             return ResponseHelper::success('HAWB updated successfully.', NULL, 200);
         } catch (Exception $e) {
@@ -621,40 +625,7 @@ class JobController extends Controller
         }
     }
 
-    public function addDimensionHawb(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            $request->validate([
-                'id_hawb' => 'required|integer|exists:hawb,id_hawb',
-                'id_dimensionawb' => 'required|integer|exists:dimension_awb,id_dimensionawb',
-            ]);
 
-            $hawb = DB::table('hawb')->where('id_hawb', $request->id_hawb)->first();
-            if (!$hawb) {
-                throw new Exception('HAWB not found.');
-            }
-
-            $dimensionHawb = [
-                'id_hawb' => $request->id_hawb,
-                'id_dimensionawb' => $request->id_dimensionawb,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'created_by' => $request->user()->id_user,
-            ];
-
-            DB::table('dimension_hawb')->insert($dimensionHawb);
-            DB::table('dimension_awb')
-                ->where('id_dimensionawb', $request->id_dimensionawb)
-                ->update(['is_taken' => 1, 'updated_at' => now()]);
-
-            DB::commit();
-            return ResponseHelper::success('Dimension added to HAWB successfully.', NULL, 201);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return ResponseHelper::error($e);
-        }
-    }
 
     public function deleteDimensionHawb(Request $request)
     {
@@ -711,9 +682,9 @@ class JobController extends Controller
             }
 
             $dimension_hawb = DB::table('dimension_hawb')
-            ->select('dimension_hawb.*', 'dimension_awb.pieces', 'dimension_awb.length', 'dimension_awb.width', 'dimension_awb.height', 'dimension_awb.weight', 'dimension_awb.remarks')
-                
-            ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
+                ->select('dimension_hawb.*', 'dimension_awb.pieces', 'dimension_awb.length', 'dimension_awb.width', 'dimension_awb.height', 'dimension_awb.weight', 'dimension_awb.remarks')
+
+                ->leftJoin('dimension_awb', 'dimension_hawb.id_dimensionawb', '=', 'dimension_awb.id_dimensionawb')
                 ->where('id_hawb', $id_hawb)
                 ->get();
             if ($dimension_hawb) {

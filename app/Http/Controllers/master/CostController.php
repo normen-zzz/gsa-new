@@ -19,9 +19,9 @@ class CostController extends Controller
         try {
             // Validate the request data
             $request->validate([
-                'id_weight_bracket_cost' => 'required|integer|exists:weight_bracket_cost,id_weight_bracket_cost',
-                'id_typecost' => 'required|integer|exists:type_cost,id_typecost',
-                'id_route' => 'required|integer|exists:route,id_route',
+                'id_weight_bracket_cost' => 'required|integer|exists:weight_bracket_costs,id_weight_bracket_cost',
+                'id_typecost' => 'required|integer|exists:typecost,id_typecost',
+                'id_route' => 'required|integer|exists:routes,id_route',
             ]);
 
             $checkCost = DB::table('cost')

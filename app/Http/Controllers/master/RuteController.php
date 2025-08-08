@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\master;
 
+use Exception;
 use Illuminate\Http\Request;
 use App\Helpers\ResponseHelper;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
-class RouteController extends Controller
+class RuteController extends Controller
 {
     public function getRoutes(Request $request)
     {
@@ -18,9 +21,9 @@ class RouteController extends Controller
             'routes.airline',
             'airlines.name as airline_name',
             'routes.pol',
-            'pol.name as pol_name',
+            'pol.name_airport as pol_name',
             'routes.pod',
-            'pod.name as pod_name',
+            'pod.name_airport as pod_name',
             'routes.created_at',
             'routes.updated_at',
             'routes.deleted_at',
@@ -34,7 +37,7 @@ class RouteController extends Controller
             ->leftJoin('airlines', 'routes.airline', '=', 'airlines.id_airline')
             ->leftJoin('airports as pol', 'routes.pol', '=', 'pol.id_airport')
             ->leftJoin('airports as pod', 'routes.pod', '=', 'pod.id_airport')
-            ->leftJoin('users as created_by', 'routes.created_by', '=', 'created_by.id')
+            ->leftJoin('users as created_by', 'routes.created_by', '=', 'created_by.id_user')
             ->when($search, function ($query) use ($search) {
                 $query->where('routes.name', 'like', '%' . $search . '%')
                     ->orWhere('airlines.name', 'like', '%' . $search . '%')
@@ -55,9 +58,9 @@ class RouteController extends Controller
             'routes.airline',
             'airlines.name as airline_name',
             'routes.pol',
-            'pol.name as pol_name',
+            'pol.name_airport as pol_name',
             'routes.pod',
-            'pod.name as pod_name',
+            'pod.name_airport as pod_name',
             'routes.created_at',
             'routes.updated_at',
             'routes.deleted_at',
@@ -88,11 +91,24 @@ class RouteController extends Controller
             $data = $request->validate([
                 'airline' => 'required|exists:airlines,id_airline',
                 'pol' => 'required|exists:airports,id_airport',
-                'pod' => 'required|exists:airports,id_airport',
+                'pod' => 'required|exists:airports,id_airport|different:pol',
             ]);
 
-            $data['created_by'] = $request->user()->id; // Assuming the user is authenticated
+            $data['created_by'] = Auth::id(); // Assuming the user is authenticated
             $data['created_at'] = now();
+
+            $checkRoute = DB::table('routes')
+                ->where('airline', $data['airline'])
+                ->where('pol', $data['pol'])
+                ->where('pod', $data['pod'])
+                ->first();
+
+            if ($checkRoute) {
+                throw new Exception('Route already exists.');
+            }
+
+            
+
 
             $insertRoute = DB::table('routes')->insertGetId($data);
 
@@ -108,19 +124,30 @@ class RouteController extends Controller
         }
     }
 
-    public function updateRoute(Request $request, $id)
+    public function updateRoute(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_route'); // Assuming the ID is passed in the request
             $data = $request->validate([
+                'id_route' => 'required|integer|exists:routes,id_route',
                 'airline' => 'required|exists:airlines,id_airline',
                 'pol' => 'required|exists:airports,id_airport',
                 'pod' => 'required|exists:airports,id_airport',
                
             ]);
-
             $data['updated_by'] = $request->user()->id; // Assuming the user is authenticated
             $data['updated_at'] = now();
+
+            $checkRoute = DB::table('routes')
+                ->where('airline', $data['airline'])
+                ->where('pol', $data['pol'])
+                ->where('pod', $data['pod'])
+                ->where('id_route', '!=', $id)
+                ->first();
+            if ($checkRoute) {
+                throw new Exception('Route already exists.');
+            }
 
             $updateRoute = DB::table('routes')->where('id_route', $id)->update($data);
 
@@ -135,13 +162,14 @@ class RouteController extends Controller
             return ResponseHelper::error($e);
         }
     }
-    public function deleteRoute($id)
+    public function deleteRoute(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->input('id_route'); // Assuming the ID is passed in the request
             $deleted = DB::table('routes')
                 ->where('id_route', $id)
-                ->update(['deleted_at' => now(), 'deleted_by' => 1]); // Assuming deleted_by is always 1 for this example
+                ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']); // Assuming deleted_by is always 1 for this example
 
             if ($deleted) {
                 DB::commit();
@@ -154,4 +182,25 @@ class RouteController extends Controller
             return ResponseHelper::error($e);
         }
     }
+    public function restoreRoute(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_route'); // Assuming the ID is passed in the request
+            $restored = DB::table('routes')
+                ->where('id_route', $id)
+                ->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'active']);
+
+            if ($restored) {
+                DB::commit();
+                return ResponseHelper::success('Route restored successfully.', NULL, 200);
+            } else {
+                throw new Exception('Failed to restore route.');
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
 }

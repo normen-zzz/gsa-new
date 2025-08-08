@@ -8,6 +8,7 @@ use App\Http\Controllers\flow\JobController;
 use App\Http\Controllers\master\CostController;
 use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
+use App\Http\Controllers\master\RuteController;
 use App\Http\Controllers\master\UsersController;
 use App\Http\Controllers\master\AirlineController;
 use App\Http\Controllers\master\AirportController;
@@ -148,7 +149,13 @@ Route::put('/updateWeightBracketSelling', [WeightbracketController::class, 'upda
 Route::put('/deleteWeightBracketSelling', [WeightbracketController::class, 'deleteWeightBracketSelling'])->middleware('auth:api');
 Route::put('/restoreWeightBracketSelling', [WeightbracketController::class, 'restoreWeightBracketSelling'])->middleware('auth:api');
 
-// Flow routes
+// master routes
+Route::get('/getRoutes', [RuteController::class, 'getRoutes'])->middleware('auth:api');
+Route::get('/getRouteById/{id}', [RuteController::class, 'getRouteById'])->middleware('auth:api');
+Route::post('/createRoute', [RuteController::class, 'createRoute'])->middleware('auth:api');
+Route::put('/updateRoute', [RuteController::class, 'updateRoute'])->middleware('auth:api');
+Route::put('/deleteRoute', [RuteController::class, 'deleteRoute'])->middleware('auth:api');
+Route::put('/restoreRoute', [RuteController::class, 'restoreRoute'])->middleware('auth:api');
 
 //shipping instruction
 Route::get('/getShippingInstruction', [ShippingInstructionController::class, 'getShippingInstructions'])->middleware('auth:api');
@@ -177,6 +184,7 @@ Route::get('/getHawbById', [JobController::class, 'getHawbById'])->middleware('a
 Route::post('/createHawb', [JobController::class, 'createHawb'])->middleware('auth:api');
 Route::put('/updateHawb', [JobController::class, 'updateHawb'])->middleware('auth:api');
 Route::put('/deleteHawb', [JobController::class, 'deleteHawb'])->middleware('auth:api');
+Route::put('/deleteDimensionhawb', [JobController::class, 'deleteDimensionHawb'])->middleware('auth:api');
 Route::post('/addDimensionHawb', [JobController::class, 'addDimensionHawb'])->middleware('auth:api');
 
 
