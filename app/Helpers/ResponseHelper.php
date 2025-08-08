@@ -13,6 +13,7 @@ class ResponseHelper
             return response()->json([
                 'status' => 'success',
                 'code' => $code,
+                'data' => null,
                 'meta_data' => [
                     'code' => $code,
                     'message' => $message,

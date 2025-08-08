@@ -691,10 +691,15 @@ class JobController extends Controller
     {
         try {
             $request->validate([
-                'id' => 'required|integer|exists:hawb,id_hawb'
+                'id' => 'required|integer'
             ]);
 
+
+
             $id_hawb = $request->input('id');
+            if (!$id_hawb) {
+                return ResponseHelper::success('Empty List', null, 400);
+            }
             $hawb = DB::table('hawb')
                 ->select('hawb.*', 'awb.awb', 'awb.id_job')
                 ->leftJoin('awb', 'hawb.id_awb', '=', 'awb.id_awb')
@@ -702,7 +707,7 @@ class JobController extends Controller
                 ->first();
 
             if (!$hawb) {
-                return ResponseHelper::success('HAWB not found.', null, 404);
+                return ResponseHelper::success('HAWB not found.', null, 200);
             }
 
             $dimension_hawb = DB::table('dimension_hawb')
