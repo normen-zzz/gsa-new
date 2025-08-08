@@ -324,12 +324,13 @@ class ShippingInstructionController extends Controller
         // json decode dimensions
         if ($instruction && $instruction->dimensions) {
             $instruction->dimensions_shippinginstruction = json_decode($instruction->dimensions, true);
+            unset($instruction->dimensions); // remove original dimensions field
         } else {
             $instruction->dimensions_shippinginstruction = [];
         }
         $agentData = DB::table('data_customer')
             ->where('id_customer', $instruction->id_agent)
-            ->where('id_datacustomer', $instruction->id_dataagent)
+            ->where('id_datacustomer', $instruction->id_data_agent)
             ->first();
 
         $instruction->data_agent = $agentData ? json_decode($agentData->data, true) : [];
