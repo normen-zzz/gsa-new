@@ -53,20 +53,20 @@ class CostController extends Controller
         $searchkey = $request->input('searchKey', '');
 
         $query = DB::table('cost')
-            ->join('weight_bracket_cost', 'cost.id_weight_bracket_cost', '=', 'weight_bracket_cost.id_weight_bracket_cost')
-            ->join('type_cost', 'cost.id_typecost', '=', 'type_cost.id_typecost')
-            ->join('route', 'cost.id_route', '=', 'route.id_route')
-            ->join('users', 'cost.created_by', '=', 'users.id')
+            ->join('weight_bracket_costs', 'cost.id_weight_bracket_cost', '=', 'weight_bracket_costs.id_weight_bracket_cost')
+            ->join('typecost', 'cost.id_typecost', '=', 'typecost.id_typecost')
+            ->join('routes', 'cost.id_route', '=', 'routes.id_route')
+            ->join('users', 'cost.created_by', '=', 'users.id_user')
             ->select(
                 'cost.*',
-                'weight_bracket_cost.weight_range',
-                'type_cost.type_name',
-                'route.route_name',
+                'weight_bracket_costs.weight_range',
+                'typecost.type_name',
+                'routes.route_name',
                 'users.name as created_by'
             )->when($searchkey, function ($query) use ($searchkey) {
-                return $query->where('weight_bracket_cost.weight_range', 'like', '%' . $searchkey . '%')
-                    ->orWhere('type_cost.type_name', 'like', '%' . $searchkey . '%')
-                    ->orWhere('route.route_name', 'like', '%' . $searchkey . '%')
+                return $query->where('weight_bracket_costs.weight_range', 'like', '%' . $searchkey . '%')
+                    ->orWhere('typecost.type_name', 'like', '%' . $searchkey . '%')
+                    ->orWhere('routes.route_name', 'like', '%' . $searchkey . '%')
                     ->orWhere('users.name', 'like', '%' . $searchkey . '%');
             });
         $costs = $query->paginate($limit);
