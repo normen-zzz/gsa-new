@@ -115,7 +115,8 @@ Route::get('/getTypecost', [TypecostController::class, 'getTypecost'])->middlewa
 Route::get('/getTypecostById', [TypecostController::class, 'getTypecostById'])->middleware('auth:api');
 Route::post('/createTypecost', [TypecostController::class, 'createTypecost'])->middleware('auth:api');
 Route::put('/updateTypecost', [TypecostController::class, 'updateTypecost'])->middleware('auth:api');
-Route::put('/deleteTypecost', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
+// Route::put('/deleteTypecost', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
+Route::put('/deleteTypecost/{id}', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
 Route::put('/restoreTypecost', [TypecostController::class, 'restoreTypecost'])->middleware('auth:api');
 
 //master cost

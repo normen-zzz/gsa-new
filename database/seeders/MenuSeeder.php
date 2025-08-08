@@ -29,6 +29,19 @@ class MenuSeeder extends Seeder
                         "url" => "/dashboard/master/master-customer"
                     ],
                     [
+                        "title" => "Cost",
+                        "items" => [
+                            [
+                                "title" => "Cost Type",
+                                "url" => "/dashboard/master/master-cost/master-cost-type"
+                            ],
+                            [
+                                "title" => "List Cost",
+                                "url" => "/dashboard/master/master-cost/master-list-cost"
+                            ]
+                        ]
+                    ],
+                    [
                         "title" => "Wilayah",
                         "items" => [
                             [
