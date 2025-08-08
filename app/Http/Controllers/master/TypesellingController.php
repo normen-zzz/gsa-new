@@ -31,7 +31,7 @@ class TypesellingController extends Controller
         ];
         $typesellings = DB::table('typeselling')
             ->select($select)
-            ->join('users', 'typeselling.created_by', '=', 'users.id')
+            ->join('users', 'typeselling.created_by', '=', 'users.id_user')
             ->when($search, function ($query) use ($search) {
                 return $query->where('typeselling.name', 'like', '%' . $search . '%');
             })
