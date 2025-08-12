@@ -86,6 +86,7 @@ class DivisionController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_division');
+            $division = DB::table('divisions')->where('id_division', $id)->first();
             $request->validate([
                 'name' => 'required|string|max:255|unique:divisions,name,' . $id . ',id_division',
                 'description' => 'nullable|string|max:500',
@@ -102,6 +103,26 @@ class DivisionController extends Controller
                     'status' => $request->input('status', true),
                     'updated_at' => now()
                 ]);
+
+            $changes = [];
+            foreach ($request->only(['name', 'description', 'have_role', 'status']) as $key => $value) {
+                if ($division->$key !== $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $division->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+            if (!empty($changes)) {
+                DB::table('log_division')->insert([
+                    'id_division' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             if (!$updated) {
                 throw new Exception('Failed to update division.');

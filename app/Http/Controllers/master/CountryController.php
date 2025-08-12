@@ -79,25 +79,37 @@ class CountryController extends Controller
 
     public function deactivateCountry(Request $request)
     {
-        $id = $request->input('id_country');
-        $country = DB::table('countries')->where('id_country', $id)->first();
 
-        if (!$country) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Country not found.',
-            ], 404);
-        }
 
         DB::beginTransaction();
         try {
+            $id = $request->input('id_country');
+            $country = DB::table('countries')->where('id_country', $id)->first();
+
+            if (!$country) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Country not found.',
+                ], 404);
+            }
             $update = DB::table('countries')
                 ->where('id_country', $id)
                 ->update(['status' => false]);
+
+            $changes = [
+                'type' => 'deactivate',
+                'old' => [
+                    'status' => $country->status,
+
+                ],
+                'new' => [
+                    'status' => false,
+                ]
+            ];
             if ($update) {
                 $insertLog = DB::table('log_country')->insert([
                     'id_country' => $id,
-                    'action' => 'deactivate Id Country: ' . $id . ' Name Country: ' . $country->name_country,
+                    'action' => json_encode($changes),
                     'id_user' => Auth::user()->id_user,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -135,26 +147,36 @@ class CountryController extends Controller
 
     public function activateCountry(Request $request)
     {
-        $id = $request->input('id_country');
-        $country = DB::table('countries')->where('id_country', $id)->first();
-
-        if (!$country) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Country not found.',
-            ], 404);
-        }
 
         DB::beginTransaction();
         try {
+            $id = $request->input('id_country');
+            $country = DB::table('countries')->where('id_country', $id)->first();
+
+            if (!$country) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Country not found.',
+                ], 404);
+            }
+
             $update = DB::table('countries')
                 ->where('id_country', $id)
                 ->update(['status' => true]);
+            $changes = [
+                'type' => 'activate',
+                'old' => [
+                    'status' => !$country->status,
+                ],
+                'new' => [
+                    'status' => true,
+                ]
+            ];
 
             if ($update) {
                 $insertLog = DB::table('log_country')->insert([
                     'id_country' => $id,
-                    'action' => 'Activate Id Country: ' . $id . ' Name Country: ' . $country->name_country,
+                    'action' => json_encode($changes),
                     'id_user' => request()->user()->id_user,
                 ]);
                 if (!$insertLog) {
@@ -191,6 +213,7 @@ class CountryController extends Controller
     {
         DB::beginTransaction();
         try {
+            $country = DB::table('countries')->where('id_country', $request->input('id_country'))->first();
             $validated = $request->validate([
                 'id_country' => 'required|exists:countries,id_country',
                 'name_country' => 'required|string|max:100|unique:countries,name_country,' . $request->input('id_country') . ',id_country',
@@ -203,6 +226,24 @@ class CountryController extends Controller
             $updated = DB::table('countries')
                 ->where('id_country', $validated['id_country'])
                 ->update($validated);
+            $changes = [];
+            foreach ($validated as $key => $value) {
+                if ($country->$key !== $value) {
+                    $changes[$key] = [
+                        'old' => $country->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+            if (!empty($changes)) {
+                DB::table('log_country')->insert([
+                    'id_country' => $validated['id_country'],
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             if (!$updated) {
                 throw new Exception('Failed to update country.');

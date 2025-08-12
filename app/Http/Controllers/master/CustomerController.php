@@ -213,11 +213,30 @@ class CustomerController extends Controller
         // Find the customer by ID
         $customer = CustomerModel::find($data['id_customer']);
 
+        $changes = [
+            'type' => 'deactivate',
+            'old' => [
+                'status' => $customer->status,
+            ],
+            'new' => [
+                'status' => false,
+            ],
+        ];
+
         if ($customer) {
             // Deactivate the customer
             $customer->status = false;
 
             $customer->save();
+
+            // Log the action
+            DB::table('log_customer')->insert([
+                'id_customer' => $data['id_customer'],
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
             return ResponseHelper::success('Customer deactivated successfully.', NULL, 200);
         } else {
@@ -234,11 +253,29 @@ class CustomerController extends Controller
 
         // Find the customer by ID
         $customer = CustomerModel::find($data['id_customer']);
+        $changes = [
+            'type' => 'activate',
+            'old' => [
+                'status' => $customer->status,
+            ],
+            'new' => [
+                'status' => true,
+            ],
+        ];
 
         if ($customer) {
             // Activate the customer
             $customer->status = true;
             $customer->save();
+
+            // Log the action
+            DB::table('log_customer')->insert([
+                'id_customer' => $data['id_customer'],
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
             return ResponseHelper::success('Customer activated successfully.', NULL, 200);
         } else {
@@ -371,6 +408,7 @@ class CustomerController extends Controller
                     'updated_at' => now(),
                     'status' => $data['status'] ?? true,
                 ]);
+                
 
             if (!$updateCustomer) {
                 throw new Exception('Failed to update customer.');

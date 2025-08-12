@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('weight_bracket_sellings', function (Blueprint $table) {
+        Schema::create('weight_bracket_selling', function (Blueprint $table) {
             $table->id('id_weight_bracket_selling');
             $table->decimal('min_weight', 10, 2);
             $table->integer('created_by')->unsigned();
@@ -20,6 +20,14 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->nullable()->unsigned();
             $table->enum('status', ['active', 'inactive'])->default('active');
+        });
+
+        Schema::create('log_weight_bracket_selling', function (Blueprint $table) {
+            $table->id('id_log_weight_bracket_selling');
+            $table->integer('id_weight_bracket_selling')->unsigned();
+            $table->json('action');
+            $table->integer('id_user')->unsigned();
+            $table->timestamps();
         });
     }
 

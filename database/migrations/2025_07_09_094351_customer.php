@@ -39,8 +39,7 @@ return new class extends Migration
         Schema::create('log_customer', function (Blueprint $table) {
             $table->id('id_logcustomer');
             $table->integer('id_customer')->unsigned();
-
-            $table->text('action');
+            $table->json('action');
             $table->integer('id_user')->unsigned();
             $table->timestamps();
         });

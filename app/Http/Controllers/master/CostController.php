@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
-
+use Illuminate\Support\Facades\Auth;
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -22,6 +22,7 @@ class CostController extends Controller
                 'id_weight_bracket_cost' => 'required|integer|exists:weight_bracket_costs,id_weight_bracket_cost',
                 'id_typecost' => 'required|integer|exists:typecost,id_typecost',
                 'id_route' => 'required|integer|exists:routes,id_route',
+                'cost_value' => 'required|numeric|min:0',
             ]);
 
             $checkCost = DB::table('cost')
@@ -36,11 +37,13 @@ class CostController extends Controller
                 'id_weight_bracket_cost' => $request->id_weight_bracket_cost,
                 'id_typecost' => $request->id_typecost,
                 'id_route' => $request->id_route,
-                'created_by' => $request->created_by,
+                'cost_value' => $request->cost_value,
+                'created_by' => Auth::id(), // Assuming the user ID is obtained from the authenticated user
                 'created_at' => now(),
+
             ]);
             DB::commit();
-            return ResponseHelper::success($addCost, 'Cost created successfully');
+            return ResponseHelper::success('Cost created successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -56,17 +59,27 @@ class CostController extends Controller
             ->join('weight_bracket_costs', 'cost.id_weight_bracket_cost', '=', 'weight_bracket_costs.id_weight_bracket_cost')
             ->join('typecost', 'cost.id_typecost', '=', 'typecost.id_typecost')
             ->join('routes', 'cost.id_route', '=', 'routes.id_route')
+            ->join('airlines', 'routes.id_airline', '=', 'airlines.id_airline')
+            ->join('airports as pol', 'routes.pol', '=', 'airports.id_airport')
+            ->join('airports as pod', 'routes.pod', '=', 'airports.id_airport')
             ->join('users', 'cost.created_by', '=', 'users.id_user')
             ->select(
-                'cost.*',
-                'weight_bracket_costs.weight_range',
-                'typecost.type_name',
-                'routes.route_name',
+                'cost.id_cost',
+                'cost.id_weight_bracket_cost',
+                'weight_bracket_costs.min_weight',
+                'cost.id_typecost',
+                'typecost.name as type_cost_name',
+                'cost.id_route',
+                'airlines.name as airline_name',
+                'pol.name as pol_name',
+                'pod.name as pod_name',
                 'users.name as created_by'
             )->when($searchkey, function ($query) use ($searchkey) {
-                return $query->where('weight_bracket_costs.weight_range', 'like', '%' . $searchkey . '%')
-                    ->orWhere('typecost.type_name', 'like', '%' . $searchkey . '%')
-                    ->orWhere('routes.route_name', 'like', '%' . $searchkey . '%')
+                return $query->where('weight_bracket_costs.min_weight', 'like', '%' . $searchkey . '%')
+                    ->orWhere('typecost.name', 'like', '%' . $searchkey . '%')
+                    ->orWhere('airlines.name', 'like', '%' . $searchkey . '%')
+                    ->orWhere('pol.name', 'like', '%' . $searchkey . '%')
+                    ->orWhere('pod.name', 'like', '%' . $searchkey . '%')
                     ->orWhere('users.name', 'like', '%' . $searchkey . '%');
             });
         $costs = $query->paginate($limit);
@@ -77,19 +90,22 @@ class CostController extends Controller
     {
         DB::beginTransaction();
         try {
-            $id = $request->route('id_cost'); // Assuming the ID is passed in the route
+            $id = $request->input('id_cost'); // Assuming the ID is passed in the route
             // Validate the request data
+            $cost = DB::table('cost')->where('id_cost', $id)->first();
             $request->validate([
                 'id_cost' => 'required|integer|exists:cost,id_cost',
-                'id_weight_bracket_cost' => 'required|integer|exists:weight_bracket_cost,id_weight_bracket_cost',
-                'id_typecost' => 'required|integer|exists:type_cost,id_typecost',
-                'id_route' => 'required|integer|exists:route,id_route',
+                'id_weight_bracket_cost' => 'required|integer|exists:weight_bracket_costs,id_weight_bracket_cost',
+                'id_typecost' => 'required|integer|exists:typecost,id_typecost',
+                'id_route' => 'required|integer|exists:routes,id_route',
+                'cost_value' => 'required|numeric|min:0',
             ]);
 
             $checkCost = DB::table('cost')
                 ->where('id_weight_bracket_cost', $request->id_weight_bracket_cost)
                 ->where('id_typecost', $request->id_typecost)
                 ->where('id_route', $request->id_route)
+                ->where('cost_value', $request->cost_value)
                 ->where('id_cost', '!=', $id)
                 ->first();
             if ($checkCost) {
@@ -102,11 +118,31 @@ class CostController extends Controller
                     'id_weight_bracket_cost' => $request->id_weight_bracket_cost,
                     'id_typecost' => $request->id_typecost,
                     'id_route' => $request->id_route,
+                    'cost_value' => $request->cost_value,
                     'updated_by' => $request->updated_by,
                     'updated_at' => now(),
                 ]);
+            $changes = [];
+            foreach ($request->all() as $key => $value) {
+                if ($cost->$key != $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $cost->$key,
+                        'new' => $value
+                    ];
+                }
+            }
+            if (!empty($changes)) {
+                DB::table('log_cost')->insert([
+                    'id_cost' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
             DB::commit();
-            return ResponseHelper::success($updateCost, 'Cost updated successfully');
+            return ResponseHelper::success('Cost updated successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -117,17 +153,33 @@ class CostController extends Controller
     {
         DB::beginTransaction();
         try {
-            $id = $request->route('id'); // Assuming the ID is passed in the route
+            $id = $request->input('id_cost'); // Assuming the ID is passed in the route
             // Validate the request data
             $request->validate([
-                'id' => 'required|integer|exists:cost,id_cost',
+                'id_cost' => 'required|integer|exists:cost,id_cost',
             ]);
 
             $deleteCost = DB::table('cost')
                 ->where('id_cost', $id)
                 ->update(['deleted_at' => now(), 'status' => 'inactive']);
+            $changes = [
+                'type' => 'delete',
+                'old' => [
+                    'status' => 'active',
+                ],
+                'new' => [
+                    'status' => 'inactive',
+                ],
+            ];
+            DB::table('log_cost')->insert([
+                'id_cost' => $id,
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             DB::commit();
-            return ResponseHelper::success($deleteCost, 'Cost deleted successfully');
+            return ResponseHelper::success('Cost deleted successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -138,17 +190,33 @@ class CostController extends Controller
     {
         DB::beginTransaction();
         try {
-            $id = $request->route('id'); // Assuming the ID is passed in the route
+            $id = $request->input('id_cost'); // Assuming the ID is passed in the route
             // Validate the request data
             $request->validate([
-                'id' => 'required|integer|exists:cost,id_cost',
+                'id_cost' => 'required|integer|exists:cost,id_cost',
             ]);
 
             $restoreCost = DB::table('cost')
                 ->where('id_cost', $id)
                 ->update(['deleted_at' => null, 'status' => 'active']);
+            $changes = [
+                'type' => 'restore',
+                'old' => [
+                    'status' => 'inactive',
+                ],
+                'new' => [
+                    'status' => 'active',
+                ],
+            ];
+            DB::table('log_cost')->insert([
+                'id_cost' => $id,
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             DB::commit();
-            return ResponseHelper::success($restoreCost, 'Cost restored successfully');
+            return ResponseHelper::success('Cost restored successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

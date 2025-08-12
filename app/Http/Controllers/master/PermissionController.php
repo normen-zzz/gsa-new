@@ -150,6 +150,7 @@ class PermissionController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_permission');
+            $permission = DB::table('permissions')->where('id_permission', $id)->first();
             $request->validate([
                 'id_permission' => 'required|exists:permissions,id_permission',
                 'id_position' => 'required|exists:positions,id_position',
@@ -187,8 +188,24 @@ class PermissionController extends Controller
                     'updated_at' => now(),  
                     'status' => $request->input('status', true)
                 ]);
-
+            $changes = [];
+            foreach ($request->only(['id_position', 'id_division', 'id_role', 'path', 'can_create', 'can_read', 'can_update', 'can_delete', 'can_approve', 'can_reject', 'can_print', 'can_export', 'can_import', 'status']) as $key => $value) {
+                if ($permission->$key !== $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $permission->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
             if ($updated) {
+                DB::table('log_permission')->insert([
+                    'id_permission' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
                 DB::commit();
                 return ResponseHelper::success('Permission updated successfully.', NULL, 200);
             } else {

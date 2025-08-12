@@ -23,6 +23,14 @@ return new class extends Migration
 
             // Add any additional constraints or indexes if necessary
         });
+
+        Schema::create('log_airline', function (Blueprint $table) {
+            $table->id('id_logairline');
+            $table->unsignedBigInteger('id_airline');
+            $table->json('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
+        });
     }
 
     /**

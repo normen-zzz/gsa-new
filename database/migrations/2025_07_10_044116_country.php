@@ -26,7 +26,7 @@ return new class extends Migration
         Schema::create('log_country', function (Blueprint $table) {
             $table->id('id_logcountry');
             $table->integer('id_country')->unsigned();
-            $table->text('action');
+            $table->json('action');
             $table->integer('id_user')->unsigned();
             $table->timestamps();
         });

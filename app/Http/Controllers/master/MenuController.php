@@ -78,6 +78,7 @@ class MenuController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_listmenu');
+            $list_menu = DB::table('list_menu')->where('id_listmenu', $id)->first();
             $request->validate([
                 'id_listmenu' => 'required|integer|exists:list_menu,id_listmenu',
                 'name' => 'required|string|max:255|unique:list_menu,name,' . $id . ',id_listmenu',
@@ -99,6 +100,23 @@ class MenuController extends Controller
                     'updated_by' => $request->user()->id_user,
                     'updated_at' => now(),
                 ]);
+                $changes = [];
+            foreach ($request->only(['name', 'icon', 'path', 'parent_id', 'status']) as $key => $value) {
+                if ($list_menu->$key !== $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $list_menu->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+            DB::table('log_listmenu')->insert([
+                'id_listmenu' => $id,
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
             DB::commit();
             return ResponseHelper::success('Menu updated successfully.', NULL, 200);
@@ -253,6 +271,7 @@ class MenuController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_menu_user');
+            $menuUser = DB::table('menu_user')->where('id_menu_user', $id)->first();
             $request->validate([
                 'id_menu_user' => 'required|exists:menu_user,id_menu_user',
                 'id_position' => 'required|exists:positions,id_position',
@@ -289,6 +308,25 @@ class MenuController extends Controller
                     'updated_by' => $request->user()->id_user,
                     'updated_at' => now(),
                 ]);
+            $changes = [];
+            foreach ($request->only(['id_position', 'id_division', 'id_listmenu', 'status', 'can_create', 'can_read', 'can_update', 'can_delete', 'can_approve', 'can_reject', 'can_print', 'can_export', 'can_import']) as $key => $value) {
+                if ($menuUser->$key !== $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $menuUser->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+            if (!empty($changes)) {
+                DB::table('log_menu_user')->insert([
+                    'id_menu_user' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             DB::commit();
             return ResponseHelper::success('Menu user updated successfully.', NULL, 200);

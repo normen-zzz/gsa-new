@@ -36,8 +36,6 @@ class PositionController extends Controller
             ->paginate($limit);
 
         return ResponseHelper::success('Positions retrieved successfully.', $positions, 200);
-
-       
     }
 
     public function getPositionById($id)
@@ -47,7 +45,7 @@ class PositionController extends Controller
             ->first();
 
         if (!$position) {
-           return ResponseHelper::success('Position not found.', NULL, 404);
+            return ResponseHelper::success('Position not found.', NULL, 404);
         }
 
         return ResponseHelper::success('Position retrieved successfully.', $position, 200);
@@ -75,7 +73,7 @@ class PositionController extends Controller
             DB::rollBack();
             return ResponseHelper::error($th);
             //throw $th;
-        } 
+        }
     }
 
     public function updatePosition(Request $request)
@@ -88,6 +86,11 @@ class PositionController extends Controller
                 'description' => 'nullable|string|max:500',
                 'status' => 'required|boolean'
             ]);
+            // Check if the position exists
+            $check = DB::table('positions')->where('id_position', $request->input('id_position'))->first();
+            if (!$check) {
+                return ResponseHelper::success('Position not found.', NULL, 404);
+            }
 
             $position = DB::table('positions')
                 ->where('id_position', $request->input('id_position'))
@@ -97,18 +100,36 @@ class PositionController extends Controller
                     'status' => $request->input('status', true),
                     'updated_at' => now()
                 ]);
+            $changes = [];
+            foreach ($request->all() as $key => $value) {
+                if ($check->$key != $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $check->$key,
+                        'new' => $value
+                    ];
+                }
+            }
+            
 
             if (!$position) {
                 DB::commit(); // Still commit as no error occurred, just no changes
                 return ResponseHelper::success('No changes made to the position.', NULL, 200);
             } else {
+                DB::table('log_position')->insert([
+                    'id_position' => $request->input('id_position'),
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id_user,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
                 DB::commit();
                 return ResponseHelper::success('Position updated successfully.', NULL, 200);
             }
         } catch (Exception $e) {
             DB::rollBack();
-           return ResponseHelper::error($e);
-            
+            return ResponseHelper::error($e);
         }
     }
 }

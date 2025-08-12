@@ -49,6 +49,13 @@ return new class extends Migration
             $table->boolean('status')->default(true);
             $table->timestamps();
         });
+        Schema::create('log_position', function (Blueprint $table) {
+            $table->id('id_logposition');
+            $table->integer('id_position')->unsigned();
+            $table->json('action');
+            $table->integer('id_user')->unsigned();
+            $table->timestamps();
+        });
 
         Schema::create('divisions', function (Blueprint $table) {
             $table->integer('id_division')->autoIncrement();
@@ -56,6 +63,13 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('have_role')->default(false);
             $table->boolean('status')->default(true);
+            $table->timestamps();
+        });
+        Schema::create('log_division', function (Blueprint $table) {
+            $table->id('id_logdivision');
+            $table->integer('id_division')->unsigned();
+            $table->json('action');
+            $table->integer('id_user')->unsigned();
             $table->timestamps();
         });
 
@@ -67,6 +81,7 @@ return new class extends Migration
             $table->boolean('status')->default(true);
             $table->timestamps();
         });
+
 
         Schema::create('permissions', function (Blueprint $table) {
             $table->id('id_permission');
@@ -86,6 +101,13 @@ return new class extends Migration
             $table->timestamps();
             $table->boolean('status')->default(true);
         });
+        Schema::create('log_permission', function (Blueprint $table) {
+            $table->id('id_logpermission');
+            $table->integer('id_permission')->unsigned();
+            $table->json('action');
+            $table->integer('id_user')->unsigned();
+            $table->timestamps();
+        });
 
         Schema::create('list_menu', function (Blueprint $table) {
             $table->integer('id_listmenu')->autoIncrement();
@@ -98,6 +120,13 @@ return new class extends Migration
             $table->integer('created_by')->unsigned()->nullable();
             $table->integer('updated_by')->unsigned()->nullable();
             $table->softDeletes();
+        });
+        Schema::create('log_listmenu', function (Blueprint $table) {
+            $table->id('id_loglistmenu');
+            $table->integer('id_listmenu')->unsigned();
+            $table->json('action');
+            $table->integer('id_user')->unsigned();
+            $table->timestamps();
         });
 
         Schema::create('menu_user', function (Blueprint $table) {
@@ -119,6 +148,13 @@ return new class extends Migration
             $table->boolean('status')->default(true);
             $table->integer('created_by')->unsigned()->nullable();
             $table->integer('updated_by')->unsigned()->nullable();
+        });
+        Schema::create('log_menu_user', function (Blueprint $table) {
+            $table->id('id_logmenuuser');
+            $table->integer('id_menu_user')->unsigned();
+            $table->json('action');
+            $table->integer('id_user')->unsigned();
+            $table->timestamps();
         });
 
         

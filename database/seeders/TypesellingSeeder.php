@@ -14,22 +14,33 @@ class TypesellingSeeder extends Seeder
     public function run(): void
     {
         DB::table('typeselling')->insert([
-            [
-                'initials' => 'TS1',
-                'name' => 'Type Selling 1',
-                'description' => 'Description for Type Selling 1',
-                'created_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'initials' => 'TS2',
-                'name' => 'Type Selling 2',
-                'description' => 'Description for Type Selling 2',
-                'created_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+          [
+            'initials' => 'CG',
+            'name' => 'Cargo',
+            'description' => 'Cargo Selling Type',
+            'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1
+          ],
+          [
+            'initials' => 'DG',
+            'name' => 'Domestic',
+            'description' => 'Domestic Selling Type',
+            'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1
+          ],
+          [
+            'initials' => 'IG',
+            'name' => 'International',
+            'description' => 'International Selling Type',
+            'status' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'created_by' => 1
+          ]
         ]);
     }
 }

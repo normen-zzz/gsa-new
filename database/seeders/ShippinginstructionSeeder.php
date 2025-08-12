@@ -29,9 +29,9 @@ class ShippinginstructionSeeder extends Seeder
             'pieces' => 10,
             'dimensions' => json_encode(
                 [
-                    ['pieces'=> 2,'length' => 50, 'width' => 30, 'height' => 20, 'weight' => 100],
-                    ['pieces'=> 1,'length' => 60, 'width' => 30, 'height' => 20, 'weight' => 100],
-                    ['pieces'=> 1,'length' => 70, 'width' => 30, 'height' => 20, 'weight' => 100],
+                    ['pieces'=> 2.00,'length' => 50.00, 'width' => 30.00, 'height' => 20.00, 'weight' => 100.00],
+                    ['pieces'=> 1.00,'length' => 60.00, 'width' => 30.00, 'height' => 20.00, 'weight' => 100.00],
+                    ['pieces'=> 1.00,'length' => 70.00, 'width' => 30.00, 'height' => 20.00, 'weight' => 100.00],
                 ]
             ),
             'special_instructions' => 'Handle with care',

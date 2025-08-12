@@ -22,6 +22,7 @@ use App\Http\Controllers\master\PermissionController;
 use App\Http\Controllers\master\TypesellingController;
 use App\Http\Controllers\master\WeightbracketController;
 use App\Http\Controllers\flow\ShippingInstructionController;
+use App\Http\Controllers\master\FlowApprovalController;
 
 
 Route::get('/user', function (Request $request) {
@@ -32,7 +33,7 @@ Route::get('/user', function (Request $request) {
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
 
 
@@ -117,7 +118,7 @@ Route::get('/getTypecostById', [TypecostController::class, 'getTypecostById'])->
 Route::post('/createTypecost', [TypecostController::class, 'createTypecost'])->middleware('auth:api');
 Route::put('/updateTypecost', [TypecostController::class, 'updateTypecost'])->middleware('auth:api');
 // Route::put('/deleteTypecost', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
-Route::put('/deleteTypecost/{id}', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
+Route::put('/deleteTypecost', [TypecostController::class, 'deleteTypecost'])->middleware('auth:api');
 Route::put('/restoreTypecost', [TypecostController::class, 'restoreTypecost'])->middleware('auth:api');
 
 //master cost
@@ -143,7 +144,7 @@ Route::put('/deleteWeightBracketCost', [WeightbracketController::class, 'deleteW
 Route::put('/restoreWeightBracketCost', [WeightbracketController::class, 'restoreWeightBracketCost'])->middleware('auth:api');
 
 //master weight bracket selling
-Route::get('/getWeightBracketSelling', [WeightbracketController::class, 'getWeightBracketSelling'])->middleware('auth:api');
+Route::get('/getWeightBracketSelling', [WeightbracketController::class, 'getWeightBracketsSelling'])->middleware('auth:api');
 Route::post('/createWeightBracketSelling', [WeightbracketController::class, 'createWeightBracketSelling'])->middleware('auth:api');
 Route::put('/updateWeightBracketSelling', [WeightbracketController::class, 'updateWeightBracketSelling'])->middleware('auth:api');
 Route::put('/deleteWeightBracketSelling', [WeightbracketController::class, 'deleteWeightBracketSelling'])->middleware('auth:api');
@@ -156,6 +157,16 @@ Route::post('/createRoute', [RuteController::class, 'createRoute'])->middleware(
 Route::put('/updateRoute', [RuteController::class, 'updateRoute'])->middleware('auth:api');
 Route::put('/deleteRoute', [RuteController::class, 'deleteRoute'])->middleware('auth:api');
 Route::put('/restoreRoute', [RuteController::class, 'restoreRoute'])->middleware('auth:api');
+
+
+Route::get('/getFlowApprovalSalesOrder', [FlowApprovalController::class, 'getFlowApprovalSalesOrder'])->middleware('auth:api');
+Route::post('/createFlowApprovalSalesOrder', [FlowApprovalController::class, 'createFlowApprovalSalesOrder'])->middleware('auth:api');
+Route::put('/updateFlowApprovalSalesOrder', [FlowApprovalController::class, 'updateFlowApprovalSalesOrder'])->middleware('auth:api');
+Route::put('/deleteFlowApprovalSalesOrder', [FlowApprovalController::class, 'deleteFlowApprovalSalesOrder'])->middleware('auth:api');
+
+
+
+
 
 //shipping instruction
 Route::get('/getShippingInstruction', [ShippingInstructionController::class, 'getShippingInstructions'])->middleware('auth:api');

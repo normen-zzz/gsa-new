@@ -23,6 +23,14 @@ return new class extends Migration
             $table->integer('updated_by')->unsigned()->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
         });
+
+        Schema::create('log_typecost', function (Blueprint $table) {
+            $table->id('id_logtypecost');
+            $table->unsignedBigInteger('id_typecost');
+            $table->json('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
+        });
     }
 
     /**

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Helpers\ResponseHelper;
-use Illuminate\Support\Facades\Auth;    
+use Illuminate\Support\Facades\Auth;
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -55,19 +55,18 @@ class WeightbracketController extends Controller
             ]);
 
             DB::commit();
-            return ResponseHelper::success($weightBracket, 'Weight bracket created successfully.');
+            return ResponseHelper::success('Weight bracket created successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
         }
-        
     }
 
     public function updateWeightBracketCost(Request $request)
     {
         DB::beginTransaction();
         try {
-            
+            $weightBracket = DB::table('weight_bracket_costs')->where('id_weight_bracket_cost', $request->input('id_weight_bracket_cost'))->first();
             $request->validate([
                 'id_weight_bracket_cost' => 'required|integer|exists:weight_bracket_costs,id_weight_bracket_cost',
                 'min_weight' => 'required|numeric|min:0',
@@ -91,12 +90,31 @@ class WeightbracketController extends Controller
                     'updated_by' => $request->user()->id, // Assuming the user is authenticated
                     'updated_at' => now(),
                 ]);
-                if (!$updateWeightBracket) {
-                    throw new Exception('Failed to update weight bracket.');
+            if (!$updateWeightBracket) {
+                throw new Exception('Failed to update weight bracket.');
+            }
+            $changes = [];
+            foreach ($request->all() as $key => $value) {
+                if ($weightBracket->$key !== $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $weightBracket->$key,
+                        'new' => $value,
+                    ];
                 }
+            }
+            if (!empty($changes)) {
+                DB::table('log_weight_bracket_costs')->insert([
+                    'id_weight_bracket_cost' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id, // Assuming the user is authenticated
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             DB::commit();
-            return ResponseHelper::success('Weight bracket updated successfully.',null, 200);
+            return ResponseHelper::success('Weight bracket updated successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -116,7 +134,23 @@ class WeightbracketController extends Controller
                 ->where('id_weight_bracket_cost', $id)
                 ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']);
 
+            $changes = [
+                'type' => 'delete',
+                'old' => [
+                    'status' => 'active',
+                ],
+                'new' => [
+                    'status' => 'inactive',
+                ],
+            ];
             if ($deleted) {
+                DB::table('log_weight_bracket_costs')->insert([
+                    'id_weight_bracket_cost' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
                 DB::commit();
                 return ResponseHelper::success('Weight bracket deleted successfully.', null, 200);
             } else {
@@ -128,7 +162,7 @@ class WeightbracketController extends Controller
         }
     }
 
-     public function restoreWeightBracketCost(Request $request)
+    public function restoreWeightBracketCost(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -141,8 +175,24 @@ class WeightbracketController extends Controller
                 ->where('id_weight_bracket_cost', $id)
                 ->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'active']);
 
+            $changes = [
+                'type' => 'restore',
+                'old' => [
+                    'status' => 'inactive',
+                ],
+                'new' => [
+                    'status' => 'active',
+                ],
+            ];
+            DB::table('log_weight_bracket_costs')->insert([
+                'id_weight_bracket_cost' => $id,
+                'action' => json_encode($changes),
+                'id_user' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             DB::commit();
-            return ResponseHelper::success('Weight bracket restored successfully.',null, 200);
+            return ResponseHelper::success('Weight bracket restored successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -171,7 +221,7 @@ class WeightbracketController extends Controller
         }
     }
 
-    
+
     public function getWeightBracketsSelling(Request $request)
     {
         $limit = $request->input('limit', 10);
@@ -189,7 +239,7 @@ class WeightbracketController extends Controller
 
         $brackets = DB::table('weight_bracket_selling')
             ->select($select)
-            ->join('users', 'weight_bracket_selling.created_by', '=', 'users.id')
+            ->join('users', 'weight_bracket_selling.created_by', '=', 'users.id_user')
             ->when($search, function ($query) use ($search) {
                 return $query->where('weight_bracket_selling.min_weight', 'like', '%' . $search . '%');
             })
@@ -199,12 +249,13 @@ class WeightbracketController extends Controller
         return ResponseHelper::success('Weight brackets retrieved successfully.', $brackets, 200);
     }
 
-    
+
     public function updateWeightBracketSelling(Request $request)
     {
         DB::beginTransaction();
         try {
             $id = $request->input('id_weight_bracket_selling'); // Assuming the ID is passed in the route
+            $weightBracket = DB::table('weight_bracket_selling')->where('id_weight_bracket_selling', $id)->first();
             $request->validate([
                 'id_weight_bracket_selling' => 'required|integer|exists:weight_bracket_selling,id_weight_bracket_selling',
                 'min_weight' => 'required|numeric|min:0',
@@ -226,16 +277,35 @@ class WeightbracketController extends Controller
                     'updated_by' => Auth::id(),
                     'updated_at' => now(),
                 ]);
+            $changes = [];
+            foreach ($request->all() as $key => $value) {
+                if ($weightBracket->$key !== $value) {
+                    $changes[$key] = [
+                        'type' => 'update',
+                        'old' => $weightBracket->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+            if (!empty($changes)) {
+                DB::table('log_weight_bracket_selling')->insert([
+                    'id_weight_bracket_selling' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             DB::commit();
-            return ResponseHelper::success('Weight bracket updated successfully.',null, 200);
+            return ResponseHelper::success('Weight bracket updated successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
         }
     }
 
-    
+
 
     public function deleteWeightBracketSelling(Request $request)
     {
@@ -250,15 +320,35 @@ class WeightbracketController extends Controller
                 ->where('id_weight_bracket_selling', $id)
                 ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']);
 
+            $changes = [
+                'type' => 'delete',
+                'old' => [
+                    'status' => 'active',
+                ],
+                'new' => [
+                    'status' => 'inactive',
+                ],
+            ];
+            if ($deleteWeightBracket) {
+                DB::table('log_weight_bracket_selling')->insert([
+                    'id_weight_bracket_selling' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                throw new Exception('Failed to delete weight bracket.');
+            }
             DB::commit();
-            return ResponseHelper::success('Weight bracket deleted successfully.',null, 200);
+            return ResponseHelper::success('Weight bracket deleted successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
         }
     }
 
-   
+
     public function restoreWeightBracketSelling(Request $request)
     {
         DB::beginTransaction();
@@ -272,8 +362,24 @@ class WeightbracketController extends Controller
                 ->where('id_weight_bracket_selling', $id)
                 ->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'active']);
 
+            $changes = [
+                'type' => 'restore',
+                'old' => [
+                    'status' => 'inactive',
+                ],
+                'new' => [
+                    'status' => 'active',
+                ],
+            ];
+            DB::table('log_weight_bracket_selling')->insert([
+                'id_weight_bracket_selling' => $id,
+                'action' => json_encode($changes),
+                'id_user' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
             DB::commit();
-            return ResponseHelper::success('Weight bracket restored successfully.',null, 200);
+            return ResponseHelper::success('Weight bracket restored successfully.', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

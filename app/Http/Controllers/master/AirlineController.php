@@ -80,6 +80,7 @@ class AirlineController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_airline');
+            $airline = DB::table('airlines')->where('id_airline', $id)->first();
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|max:10|unique:airlines,code,' . $id . ',id_airline',
@@ -95,7 +96,26 @@ class AirlineController extends Controller
                     'updated_at' => now(),
                 ]);
 
+                $changes = [];
+            foreach ($data as $key => $value) {
+                if ($airline->$key !== $value) {
+                    $changes[$key] = [
+                        'old' => $airline->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
+
             if ($updateAirline) {
+                if (!empty($changes)) {
+                    DB::table('log_airline')->insert([
+                        'id_airline' => $id,
+                        'action' => json_encode($changes),
+                        'id_user' => $request->user()->id_user,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
                 DB::commit();
                 return ResponseHelper::success('Airline updated successfully.', NULL, 200);
             } else {

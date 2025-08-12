@@ -16,12 +16,21 @@ return new class extends Migration
             $table->integer('id_weight_bracket_selling')->unsigned();
             $table->integer('id_typeselling')->unsigned();
             $table->integer('id_route')->unsigned();
+            $table->decimal('selling_value', 10, 2)->nullable()->comment('Value in Indonesian Rupiah (IDR)');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable()->unsigned();
             $table->integer('updated_by')->unsigned()->nullable();  
             $table->enum('status', ['active', 'inactive'])->default('active');
+        });
+
+        Schema::create('log_selling', function (Blueprint $table) {
+            $table->id('id_logselling');
+            $table->unsignedBigInteger('id_selling');
+            $table->json('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
         });
     }
 

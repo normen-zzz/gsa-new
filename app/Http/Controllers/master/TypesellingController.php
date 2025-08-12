@@ -42,7 +42,7 @@ class TypesellingController extends Controller
         return ResponseHelper::success('Type sellings retrieved successfully.', $typesellings, 200);
     }
 
-    
+
 
     public function createTypeselling(Request $request)
     {
@@ -62,7 +62,7 @@ class TypesellingController extends Controller
             $insertId = DB::table('typeselling')->insertGetId($data);
 
             DB::commit();
-            return ResponseHelper::success('Type selling created successfully.',null, 201);
+            return ResponseHelper::success('Type selling created successfully.', null, 201);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -74,6 +74,7 @@ class TypesellingController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_typeselling'); // Assuming the ID is passed in the route
+            $typeselling = DB::table('typeselling')->where('id_typeselling', $id)->first();
             $request->validate([
                 'initials' => 'sometimes|required|string|unique:typeselling,initials,' . $id . ',id_typeselling',
                 'name' => 'sometimes|required|string|max:255|unique:typeselling,name,' . $id . ',id_typeselling',
@@ -84,9 +85,28 @@ class TypesellingController extends Controller
             $data['updated_at'] = now();
             $data['updated_by'] = $request->user()->id; // Assuming updated_by is the ID of the authenticated user
 
+            $changes = [];
+            foreach ($data as $key => $value) {
+                if ($typeselling->$key !== $value) {
+                    $changes[$key] = [
+                        'old' => $typeselling->$key,
+                        'new' => $value,
+                    ];
+                }
+            }
             DB::table('typeselling')
                 ->where('id_typeselling', $id)
                 ->update($data);
+
+            if (!empty($changes)) {
+                DB::table('log_typeselling')->insert([
+                    'id_typeselling' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => $request->user()->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             DB::commit();
             return ResponseHelper::success('Type selling updated successfully.', NULL, 200);
@@ -101,11 +121,28 @@ class TypesellingController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_typeselling'); // Assuming the ID is passed in the request
+            $typeselling = DB::table('typeselling')->where('id_typeselling', $id)->first();
             $deleted = DB::table('typeselling')
                 ->where('id_typeselling', $id)
                 ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']);
 
+            $changes = [
+                'type' => 'delete',
+                'old' => [
+                    'status' => $typeselling->status,
+                ],
+                'new' => [
+                    'status' => 'inactive',
+                ],
+            ];
             if ($deleted) {
+                DB::table('log_typeselling')->insert([
+                    'id_typeselling' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
                 DB::commit();
                 return ResponseHelper::success('Type selling deleted successfully.', NULL, 200);
             } else {
@@ -122,11 +159,30 @@ class TypesellingController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_typeselling'); // Assuming the ID is passed in the request
+            $check = DB::table('typeselling')
+                ->where('id_typeselling', $id)
+                ->first();
             $restored = DB::table('typeselling')
                 ->where('id_typeselling', $id)
                 ->update(['deleted_at' => null, 'deleted_by' => null, 'status' => 'active']);
 
+            $changes = [
+                'type' => 'restore',
+                'old' => [
+                    'status' => $check->status,
+                ],
+                'new' => [
+                    'status' => 'active',
+                ],
+            ];
             if ($restored) {
+                DB::table('log_typeselling')->insert([
+                    'id_typeselling' => $id,
+                    'action' => json_encode($changes),
+                    'id_user' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
                 DB::commit();
                 return ResponseHelper::success('Type selling restored successfully.', NULL, 200);
             } else {

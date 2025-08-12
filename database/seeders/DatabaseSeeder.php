@@ -16,63 +16,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-       
+
 
         $this->call([
-            DivisionSeeder::class,
-            PositionSeeder::class,
-            PermissionSeeder::class,
             AirlineSeeder::class,
             AirportSeeder::class,
-            ShippinginstructionSeeder::class,
+            CountrySeeder::class,
             CustomerSeeder::class,
+            DivisionSeeder::class,
+            FlowapprovalSeeder::class,
             MenuSeeder::class,
             MenusSuperAdmin::class,
+            PermissionSeeder::class,
+            PositionSeeder::class,
+            RouteSeeder::class,
+            ShippinginstructionSeeder::class,
             TypecostSeeder::class, // Uncomment if you want to seed typecost
             TypesellingSeeder::class, // Uncomment if you want to seed typeselling
+            UserSeeder::class,
+
         ]);
         // CREATE JOBS
-
-        // Create a default user
-        User::factory()->create([
-            'name' => 'admin',
-            'email' => 'admin@transtama.com',
-            'password' => bcrypt('admin123'),
-            'id_position' => 1,
-            'id_division' => 1,
-            'id_role' => 1,
-            'photo' => null,
-            'phone' => '12345678',
-            'status' => true
-        ]);
-
-        User::factory()->create([
-            'name' => 'sales',
-            'email' => 'sales@transtama.com',
-            'password' => bcrypt('admin123'),
-            'id_position' => 4,
-            'id_division' => 5,
-            'id_role' => 1,
-            'photo' => null,
-            'phone' => '12345678',
-            'status' => true
-        ]);
-
-        User::factory()->create([
-            'name' => 'cs',
-            'email' => 'cs@transtama.com',
-            'password' => bcrypt('admin123'),
-            'id_position' => 4,
-            'id_division' => 3,
-            'id_role' => 1,
-            'photo' => null,
-            'phone' => '12345678',
-            'status' => true
-        ]);
-
-
-        
-        
 
         DB::table('roles')->insert([
             'name' => 'Super Admin',
@@ -82,22 +46,5 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
-        DB::table('countries')->insert([
-            'name_country' => 'Indonesia',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-            'created_by' => 1, // Assuming the admin user has ID 1
-        ]);
-        
-
-       
-
-       
-
-        
     }
-
-
 }

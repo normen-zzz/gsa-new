@@ -24,6 +24,13 @@ return new class extends Migration
             //status
             $table->enum('status', ['active', 'inactive'])->default('active');
         });
+        Schema::create('log_routes', function (Blueprint $table) {
+            $table->id('id_logroute');
+            $table->unsignedBigInteger('id_route');
+            $table->json('action');
+            $table->unsignedBigInteger('id_user');
+            $table->timestamps();
+        });
     }
 
     /**

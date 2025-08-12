@@ -13,15 +13,88 @@ return new class extends Migration
     {
         Schema::create('salesorder', function (Blueprint $table) {
             $table->id('id_salesorder');
-            $table->unsignedBigInteger('id_job')->nullable();
             $table->unsignedBigInteger('id_shippinginstruction')->nullable();
+            $table->unsignedBigInteger('id_job')->nullable();
             $table->unsignedBigInteger('id_awb')->nullable();
-            $table->date('date')->nullable();
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
-            $table->timestamps();           
+            $table->timestamps();
+            $table->enum('status', [
+                'so_created_by_sales',
+                'so_approved_by_manager',
+                'so_rejected_by_manager',
+                'so_approved_by_cs',
+                'so_rejected_by_cs',
+                'so_approved_by_manager_cs',
+                'so_rejected_by_manager_cs',
+                'so_approved_by_finance',
+                'so_rejected_by_finance',
+                'so_approved_by_manager_finance',
+                'so_rejected_by_manager_finance',
+                'so_approved_by_director',
+                'so_rejected_by_director',
+                'so_deleted'
+            ])->default('so_created_by_sales');
+        });
+
+        Schema::create('attachments_salesorder', function (Blueprint $table) {
+            $table->id('id_attachment_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
+            $table->string('file_name');
+            $table->text('url');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable();
+        });
+
+        Schema::create('selling_salesorder', function (Blueprint $table) {
+            $table->id('id_selling_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
+            $table->unsignedBigInteger('id_typeselling');
+            $table->decimal('selling_value', 10, 2)->comment('Selling value in the sales order in rupiah');
+            $table->text('description')->nullable();
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
+        Schema::create('flowapproval_salesorder', function (Blueprint $table) {
+            $table->id('id_flowapproval_salesorder');
+            $table->unsignedBigInteger('request_position');
+            $table->unsignedBigInteger('request_division');
+            $table->unsignedBigInteger('approval_position');
+            $table->unsignedBigInteger('approval_division');
+            //urutan
+            $table->integer('step_no');
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->integer('next_step')->nullable(); //no step
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
+        Schema::create('approval_salesorder', function (Blueprint $table) {
+            $table->id('id_approval_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
+            $table->unsignedBigInteger('approval_position');
+            $table->unsignedBigInteger('approval_division');
+            $table->integer('step_no');
+            $table->integer('next_step')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('remarks')->nullable();
+            $table->datetime('approved_at')->nullable();
+            $table->integer('approved_by')->nullable();
+            $table->timestamps();
+            $table->integer('created_by')->unsigned();
+        });
+
+        Schema::create('log_salesorder', function (Blueprint $table) {
+            $table->id('id_log_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
+            $table->json('action');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
         });
     }
 
