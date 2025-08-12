@@ -70,6 +70,7 @@ class CostController extends Controller
                 'cost.id_typecost',
                 'typecost.name as type_cost_name',
                 'cost.id_route',
+                'cost.cost_value',
                 'airlines.name as airline_name',
                 'pol.name_airport as pol_name',
                 'pod.name_airport as pod_name',
