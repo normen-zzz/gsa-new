@@ -235,6 +235,7 @@ class WeightbracketController extends Controller
             'weight_bracket_selling.created_by',
             'weight_bracket_selling.updated_by',
             'users.name as created_by_name'
+            
         ];
 
         $brackets = DB::table('weight_bracket_selling')
