@@ -43,7 +43,8 @@ return new class extends Migration
             $table->id('id_attachment_salesorder');
             $table->unsignedBigInteger('id_salesorder');
             $table->string('file_name');
-            $table->text('url');
+            $table->string('url');
+            $table->string('public_id');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
             $table->softDeletes();

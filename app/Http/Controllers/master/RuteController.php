@@ -39,10 +39,10 @@ class RuteController extends Controller
             ->leftJoin('airports as pod', 'routes.pod', '=', 'pod.id_airport')
             ->leftJoin('users as created_by', 'routes.created_by', '=', 'created_by.id_user')
             ->when($search, function ($query) use ($search) {
-                $query->where('routes.name', 'like', '%' . $search . '%')
-                    ->orWhere('airlines.name', 'like', '%' . $search . '%')
-                    ->orWhere('pol.name', 'like', '%' . $search . '%')
-                    ->orWhere('pod.name', 'like', '%' . $search . '%');
+                $query->
+                    where('airlines.name', 'like', '%' . $search . '%')
+                    ->orWhere('pol.name_airport', 'like', '%' . $search . '%')
+                    ->orWhere('pod.name_airport', 'like', '%' . $search . '%');
                 return $query;
             })
             ->orderBy('routes.id_route', 'asc')
