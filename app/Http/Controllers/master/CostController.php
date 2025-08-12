@@ -59,9 +59,9 @@ class CostController extends Controller
             ->join('weight_bracket_costs', 'cost.id_weight_bracket_cost', '=', 'weight_bracket_costs.id_weight_bracket_cost')
             ->join('typecost', 'cost.id_typecost', '=', 'typecost.id_typecost')
             ->join('routes', 'cost.id_route', '=', 'routes.id_route')
-            ->join('airlines', 'routes.id_airline', '=', 'airlines.id_airline')
-            ->join('airports as pol', 'routes.pol', '=', 'airports.id_airport')
-            ->join('airports as pod', 'routes.pod', '=', 'airports.id_airport')
+            ->join('airlines', 'routes.airline', '=', 'airlines.id_airline')
+            ->join('airports as pol', 'routes.pol', '=', 'pol.id_airport')
+            ->join('airports as pod', 'routes.pod', '=', 'pod.id_airport')
             ->join('users', 'cost.created_by', '=', 'users.id_user')
             ->select(
                 'cost.id_cost',
@@ -71,8 +71,8 @@ class CostController extends Controller
                 'typecost.name as type_cost_name',
                 'cost.id_route',
                 'airlines.name as airline_name',
-                'pol.name as pol_name',
-                'pod.name as pod_name',
+                'pol.name_airport as pol_name',
+                'pod.name_airport as pod_name',
                 'users.name as created_by'
             )->when($searchkey, function ($query) use ($searchkey) {
                 return $query->where('weight_bracket_costs.min_weight', 'like', '%' . $searchkey . '%')
