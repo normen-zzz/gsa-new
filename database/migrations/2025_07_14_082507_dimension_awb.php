@@ -26,6 +26,14 @@ return new class extends Migration
             $table->timestamps();
             $table->boolean('is_taken')->default(false);
             $table->integer('updated_by')->unsigned()->nullable();
+            $table->enum('status_flight', ['pending', 'on_board', 'delivered'])->default('pending');
+        });
+
+        Schema::create('statusflight_dimensionawb', function (Blueprint $table) {
+            $table->id('id_statusflight');
+            $table->unsignedBigInteger('id_dimensionawb');
+            $table->enum('status', ['pending', 'on_board', 'delivered'])->default('pending');
+            $table->timestamps();
         });
     }
 

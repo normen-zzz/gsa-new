@@ -87,6 +87,7 @@ return new class extends Migration
             $table->id('id_permission');
             $table->integer('id_position');
             $table->integer('id_division')->nullable();
+            $table->integer('id_role')->nullable();
            
             $table->string('path');
             $table->boolean('can_read')->default(false)->comment('Can read the resource 0 = No, 1 = Yes');

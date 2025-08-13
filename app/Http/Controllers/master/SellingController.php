@@ -74,13 +74,21 @@ class SellingController extends Controller
                 'airlines.name as airline_name',
                 'pol.name_airport as pol_name',
                 'pod.name_airport as pod_name',
-                'users.name as created_by'
+                'selling.selling_value',
+                'selling.created_at',
+                'selling.updated_at',
+                'selling.deleted_at',
+                'selling.created_by',
+               'users.name as created_by_name',
+                'selling.updated_by',
+                'selling.deleted_by',
+               
             )->when($searchkey, function ($query) use ($searchkey) {
                 return $query->where('weight_bracket_selling.min_weight', 'like', '%' . $searchkey . '%')
                     ->orWhere('typeselling.name', 'like', '%' . $searchkey . '%')
                     ->orWhere('airlines.name', 'like', '%' . $searchkey . '%')
-                    ->orWhere('pol.name', 'like', '%' . $searchkey . '%')
-                    ->orWhere('pod.name', 'like', '%' . $searchkey . '%')
+                    ->orWhere('pol.name_airport', 'like', '%' . $searchkey . '%')
+                    ->orWhere('pod.name_airport', 'like', '%' . $searchkey . '%')
                     ->orWhere('users.name', 'like', '%' . $searchkey . '%');
             });
         $sellings = $query->paginate($limit);

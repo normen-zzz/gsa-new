@@ -25,7 +25,11 @@ class TypecostController extends Controller
             'typecost.created_at',
             'users.name as created_by_name',
             'typecost.updated_at',
-            'typecost.status'
+            'typecost.status',
+            'typecost.deleted_at',
+            'typecost.created_by',
+            'typecost.updated_by',
+            'typecost.deleted_by'
 
 
         ];
@@ -52,7 +56,11 @@ class TypecostController extends Controller
             'typecost.created_at',
             'users.name as created_by_name',
             'typecost.updated_at',
-            'typecost.status'
+            'typecost.status',
+            'typecost.deleted_at',
+            'typecost.created_by',
+            'typecost.updated_by',
+            'typecost.deleted_by'
         ];
         $typecost = DB::table('typecost')
             ->select($select)
@@ -102,6 +110,7 @@ class TypecostController extends Controller
                 'initials' => 'sometimes|required|string|max:10|unique:typecost,initials,' . $id . ',id_typecost',
                 'name' => 'sometimes|required|string|max:255|unique:typecost,name,' . $id . ',id_typecost',
                 'description' => 'nullable|string|max:500',
+                'status' => 'nullable|in:active,inactive',
             ]);
             $typecost = DB::table('typecost')
                 ->where('id_typecost', $id)
@@ -110,6 +119,7 @@ class TypecostController extends Controller
             $data = $request->only(['initials', 'name', 'description']);
             $data['updated_by'] = $request->user()->id_user;
             $data['updated_at'] = now();
+            $data['status'] = $request->input('status', 'active');
 
             $changes = [];
             foreach ($data as $key => $value) {

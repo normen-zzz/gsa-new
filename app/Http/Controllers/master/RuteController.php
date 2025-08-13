@@ -188,6 +188,10 @@ class RuteController extends Controller
         DB::beginTransaction();
         try {
             $id = $request->input('id_route'); // Assuming the ID is passed in the request
+            $route = DB::table('routes')->where('id_route', $id)->first();
+            if (!$route) {
+                throw new Exception('Route not found.');
+            }
             $deleted = DB::table('routes')
                 ->where('id_route', $id)
                 ->update(['deleted_at' => now(), 'deleted_by' => Auth::id(), 'status' => 'inactive']); // Assuming deleted_by is always 1 for this example

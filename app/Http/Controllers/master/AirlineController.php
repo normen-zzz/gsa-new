@@ -26,7 +26,7 @@ class AirlineController extends Controller
 
         $airlines = $query->paginate($limit);
 
-        return ResponseHelper::success('Airlines retrieved successfully.', $airlines->items(), 200);
+        return ResponseHelper::success('Airlines retrieved successfully.', $airlines, 200);
     }
 
     public function getAirlineById($id)

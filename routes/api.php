@@ -106,7 +106,7 @@ Route::put('/updateAirline', [AirlineController::class, 'updateAirline'])->middl
 
 //master type selling
 Route::get('/getTypeselling', [TypesellingController::class, 'getTypeselling'])->middleware('auth:api');
-Route::get('/getTypesellingById/{id}', [TypesellingController::class, 'getTypesellingById'])->middleware('auth:api');
+Route::get('/getTypesellingById', [TypesellingController::class, 'getTypesellingById'])->middleware('auth:api');
 Route::post('/createTypeselling', [TypesellingController::class, 'createTypeselling'])->middleware('auth:api');
 Route::put('/updateTypeselling', [TypesellingController::class, 'updateTypeselling'])->middleware('auth:api');
 Route::put('/deleteTypeselling', [TypesellingController::class, 'deleteTypeselling'])->middleware('auth:api');

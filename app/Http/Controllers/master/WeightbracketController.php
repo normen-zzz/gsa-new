@@ -87,7 +87,7 @@ class WeightbracketController extends Controller
                 ->where('id_weight_bracket_cost', $id)
                 ->update([
                     'min_weight' => $request->min_weight,
-                    'updated_by' => $request->user()->id, // Assuming the user is authenticated
+                    'updated_by' => Auth::id(), // Assuming the user is authenticated
                     'updated_at' => now(),
                 ]);
             if (!$updateWeightBracket) {
@@ -107,7 +107,7 @@ class WeightbracketController extends Controller
                 DB::table('log_weight_bracket_costs')->insert([
                     'id_weight_bracket_cost' => $id,
                     'action' => json_encode($changes),
-                    'id_user' => $request->user()->id, // Assuming the user is authenticated
+                    'id_user' => Auth::id(), // Assuming the user is authenticated
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -235,7 +235,7 @@ class WeightbracketController extends Controller
             'weight_bracket_selling.created_by',
             'weight_bracket_selling.updated_by',
             'users.name as created_by_name'
-            
+
         ];
 
         $brackets = DB::table('weight_bracket_selling')

@@ -74,7 +74,13 @@ class CostController extends Controller
                 'airlines.name as airline_name',
                 'pol.name_airport as pol_name',
                 'pod.name_airport as pod_name',
-                'users.name as created_by'
+                'users.name as created_by',
+                'cost.created_at',
+                'cost.updated_at',
+                'cost.deleted_at',
+                'cost.created_by',
+                'cost.updated_by',
+                'cost.deleted_by'
             )->when($searchkey, function ($query) use ($searchkey) {
                 return $query->where('weight_bracket_costs.min_weight', 'like', '%' . $searchkey . '%')
                     ->orWhere('typecost.name', 'like', '%' . $searchkey . '%')

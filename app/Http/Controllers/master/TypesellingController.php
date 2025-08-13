@@ -42,6 +42,34 @@ class TypesellingController extends Controller
         return ResponseHelper::success('Type sellings retrieved successfully.', $typesellings, 200);
     }
 
+    public function getTypesellingById(Request $request)
+    {
+        $id = $request->input('id_typeselling');
+        $select = [
+            'typeselling.id_typeselling',
+            'typeselling.initials',
+            'typeselling.name',
+            'typeselling.description',
+            'typeselling.created_at',
+            'typeselling.updated_at',
+            'typeselling.deleted_at',
+            'typeselling.created_by',
+            'typeselling.updated_by',
+            'users.name as created_by_name'
+        ];
+        $typeselling = DB::table('typeselling')
+            ->select($select)
+            ->join('users', 'typeselling.created_by', '=', 'users.id_user')
+            ->where('id_typeselling', $id)
+            ->first();
+
+        if (!$typeselling) {
+            return ResponseHelper::success('Type selling not found.', null, 200);
+        }
+
+        return ResponseHelper::success('Type selling retrieved successfully.', $typeselling, 200);
+    }
+
 
 
     public function createTypeselling(Request $request)
@@ -89,6 +117,7 @@ class TypesellingController extends Controller
             foreach ($data as $key => $value) {
                 if ($typeselling->$key !== $value) {
                     $changes[$key] = [
+                        'type' => 'update',
                         'old' => $typeselling->$key,
                         'new' => $value,
                     ];
@@ -102,7 +131,7 @@ class TypesellingController extends Controller
                 DB::table('log_typeselling')->insert([
                     'id_typeselling' => $id,
                     'action' => json_encode($changes),
-                    'id_user' => $request->user()->id,
+                    'id_user' => Auth::id(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
