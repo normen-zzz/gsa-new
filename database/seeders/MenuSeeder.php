@@ -29,6 +29,23 @@ class MenuSeeder extends Seeder
                         "url" => "/dashboard/master/master-customer"
                     ],
                     [
+                        "title" => "Routes",
+                        "url" => "/dashboard/master/master-routes"
+                    ],
+                    [
+                        "title" => "Weight Brackets",
+                        "items" => [
+                            [
+                                "title" => "Bracket Cost",
+                                "url" => "/dashboard/master/weight-brackets/weight-brackets-cost"
+                            ],
+                            [
+                                "title" => "Bracket Selling",
+                                "url" => "/dashboard/master/weight-brackets/weight-brackets-selling"
+                            ]
+                        ]
+                    ],
+                    [
                         "title" => "Cost",
                         "items" => [
                             [
@@ -38,6 +55,19 @@ class MenuSeeder extends Seeder
                             [
                                 "title" => "List Cost",
                                 "url" => "/dashboard/master/master-cost/master-list-cost"
+                            ]
+                        ]
+                    ],
+                    [
+                        "title" => "Selling",
+                        "items" => [
+                            [
+                                "title" => "Selling Type",
+                                "url" => "/dashboard/master/master-selling/master-selling-type"
+                            ],
+                            [
+                                "title" => "List Selling",
+                                "url" => "/dashboard/master/master-selling/master-selling"
                             ]
                         ]
                     ],
@@ -124,77 +154,3 @@ class MenuSeeder extends Seeder
         }
     }
 }
-
-
-//  // Level 1 Menu
-//  $dashboardId = DB::table('list_menu')->insertGetId([
-//     'name' => 'Dashboard',
-//     'icon' => 'fas fa-home',
-//     'path' => '/dashboard',
-//     'parent_id' => null,
-//     'status' => true,
-//     'created_by' => 1,
-//     'updated_by' => 1,
-//     'created_at' => now(),
-//     'updated_at' => now(),
-// ]);
-
-// $managementId = DB::table('list_menu')->insertGetId([
-//     'name' => 'User Management',
-//     'icon' => 'fas fa-users',
-//     'path' => null,
-//     'parent_id' => null,
-   
-//     'status' => true,
-//     'created_by' => 1,
-//     'updated_by' => 1,
-//     'created_at' => now(),
-//     'updated_at' => now(),
-// ]);
-
-// // Level 2 Menu
-// $userId = DB::table('list_menu')->insertGetId([
-//     'name' => 'Users',
-//     'icon' => 'fas fa-user',
-//     'path' => '/users',
-//     'parent_id' => $managementId,
-  
-//     'status' => true,
-//     'created_by' => 1,
-//     'updated_by' => 1,
-//     'created_at' => now(),
-//     'updated_at' => now(),
-// ]);
-
-// // Level 3 Menu
-// DB::table('list_menu')->insert([
-//     'name' => 'Add User',
-//     'icon' => 'fas fa-user-plus',
-//     'path' => '/users/create',
-//     'parent_id' => $userId,
-//     'status' => true,
-//     'created_by' => 1,
-//     'updated_by' => 1,
-//     'created_at' => now(),
-//     'updated_at' => now(),
-// ]);
-
-
-
-// DB::table('menu_user')->insert([
-//     'id_position' => 1, // Assuming Super Admin has ID 1
-//     'id_division' => 1, // Assuming IT division has ID 1
-//     'id_listmenu' => $dashboardId,
-//     'can_create' => true,
-//     'can_read' => true,
-//     'can_update' => true,
-//     'can_delete' => true,
-//     'can_approve' => true,
-//     'can_reject' => true,
-//     'can_print' => true,
-//     'can_export' => true,
-//     'can_import' => true,
-//     'status' => true,
-//     'created_at' => now(),
-//     'updated_at' => now(),
-// ]);
