@@ -23,6 +23,7 @@ class CostController extends Controller
                 'id_typecost' => 'required|integer|exists:typecost,id_typecost',
                 'id_route' => 'required|integer|exists:routes,id_route',
                 'cost_value' => 'required|numeric|min:0',
+                'charge_by' => 'required|in:chargeable_weight,gross_weight,awb',
             ]);
 
             $checkCost = DB::table('cost')
@@ -38,6 +39,7 @@ class CostController extends Controller
                 'id_typecost' => $request->id_typecost,
                 'id_route' => $request->id_route,
                 'cost_value' => $request->cost_value,
+                'charge_by' => $request->charge_by,
                 'created_by' => Auth::id(), // Assuming the user ID is obtained from the authenticated user
                 'created_at' => now(),
 
@@ -71,6 +73,7 @@ class CostController extends Controller
                 'typecost.name as type_cost_name',
                 'cost.id_route',
                 'cost.cost_value',
+                'cost.charge_by',
                 'airlines.name as airline_name',
                 'pol.name_airport as pol_name',
                 'pod.name_airport as pod_name',
@@ -106,6 +109,7 @@ class CostController extends Controller
                 'id_typecost' => 'required|integer|exists:typecost,id_typecost',
                 'id_route' => 'required|integer|exists:routes,id_route',
                 'cost_value' => 'required|numeric|min:0',
+                'charge_by' => 'required|in:chargeable_weight,gross_weight,awb',
             ]);
 
             $checkCost = DB::table('cost')
@@ -126,6 +130,7 @@ class CostController extends Controller
                     'id_typecost' => $request->id_typecost,
                     'id_route' => $request->id_route,
                     'cost_value' => $request->cost_value,
+                    'charge_by' => $request->charge_by,
                     'updated_by' => $request->updated_by,
                     'updated_at' => now(),
                 ]);

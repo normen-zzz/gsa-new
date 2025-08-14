@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('id_typeselling')->unsigned();
             $table->integer('id_route')->unsigned();
             $table->decimal('selling_value', 10, 2)->nullable()->comment('Value in Indonesian Rupiah (IDR)');
+            $table->enum('charge_by', ['chargeable_weight', 'gross_weight','awb'])->default('chargeable_weight');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
             $table->softDeletes();

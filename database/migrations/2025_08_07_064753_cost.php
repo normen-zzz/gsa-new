@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('id_typecost')->unsigned();
             $table->integer('id_route')->unsigned();
             $table->decimal('cost_value', 15, 2)->nullable()->comment('Amount in USD');
+            $table->enum('charge_by', ['chargeable_weight', 'gross_weight', 'awb'])->default('chargeable_weight');
             $table->timestamps();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable()->unsigned();

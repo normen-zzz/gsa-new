@@ -24,6 +24,7 @@ class SellingController extends Controller
                 'id_typeselling' => 'required|integer|exists:typeselling,id_typeselling',
                 'id_route' => 'required|integer|exists:routes,id_route',
                 'selling_value' => 'required|numeric|min:0',
+                'charge_by' => 'required|in:chargeable_weight,gross_weight,awb',
             ]);
 
             $checkSelling = DB::table('selling')
@@ -40,6 +41,7 @@ class SellingController extends Controller
                 'id_typeselling' => $request->id_typeselling,
                 'id_route' => $request->id_route,
                 'selling_value' => $request->selling_value,
+                'charge_by' => $request->charge_by,
                 'created_by' => Auth::id(), // Assuming the user ID is obtained from the authenticated user
                 'created_at' => now(),
             ]);
@@ -75,6 +77,7 @@ class SellingController extends Controller
                 'pol.name_airport as pol_name',
                 'pod.name_airport as pod_name',
                 'selling.selling_value',
+                'selling.charge_by',
                 'selling.created_at',
                 'selling.updated_at',
                 'selling.deleted_at',
@@ -108,6 +111,7 @@ class SellingController extends Controller
                 'id_typeselling' => 'required|integer|exists:typeselling,id_typeselling',
                 'id_route' => 'required|integer|exists:routes,id_route',
                 'selling_value' => 'required|numeric|min:0',
+                'charge_by' => 'required|in:chargeable_weight,gross_weight,awb',
             ]);
 
             $checkSelling = DB::table('selling')
@@ -128,6 +132,7 @@ class SellingController extends Controller
                     'id_typeselling' => $request->id_typeselling,
                     'id_route' => $request->id_route,
                     'selling_value' => $request->selling_value,
+                    'charge_by' => $request->charge_by,
                     'updated_by' => Auth::id(), // Assuming the user ID is obtained from the authenticated user
                     'updated_at' => now(),
                 ]);
