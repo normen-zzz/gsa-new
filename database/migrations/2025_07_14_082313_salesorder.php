@@ -75,6 +75,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('log_flowapproval_salesorder', function (Blueprint $table) {
+            $table->id('id_log_flowapproval_salesorder');
+            $table->unsignedBigInteger('id_flowapproval_salesorder');
+            $table->json('action');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
         Schema::create('approval_salesorder', function (Blueprint $table) {
             $table->id('id_approval_salesorder');
             $table->unsignedBigInteger('id_salesorder');

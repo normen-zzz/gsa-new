@@ -494,11 +494,11 @@ class CustomerController extends Controller
             DB::commit();
 
             return ResponseHelper::success('Customer updated successfully.', NULL, 200);
-        } catch (Exception $th) {
+        } catch (Exception $e) {
             // Rollback transaction on error
             DB::rollback();
             // Return error response
-            return ResponseHelper::error($th);
+            return ResponseHelper::error($e);
         }
     }
 }
