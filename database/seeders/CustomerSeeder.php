@@ -79,54 +79,7 @@ class CustomerSeeder extends Seeder
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
             ],
-            [
-                'id_customer' => 2, // Assuming the DHL customer has ID 2
-                'data' => json_encode(
-                    [
-                        'pic' => 'Jane Smith',
-                        'email' => 'jane.smith@dhl.com',
-                        'address' => '456 DHL Avenue',
-                        'phone' => '987654321',
-                        'tax_id' => '0987654321',
-                    ]
-                ),
-                'is_primary' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'created_by' => 1, // Assuming the admin user has ID 1
-            ],
-            [
-                'id_customer' => 3, // Assuming the FedEx customer has ID 3
-                'data' => json_encode(
-                    [
-                        'pic' => 'Alice Johnson',
-                        'email' => 'alice.johnson@fedex.com',
-                        'address' => '789 FedEx Road',
-                        'phone' => '456789123',
-                        'tax_id' => '5678901234',
-                    ]
-                ),
-                'is_primary' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'created_by' => 1, // Assuming the admin user has ID 1
-            ],
-            [
-                'id_customer' => 4, // Assuming the TCS customer has ID 4
-                'data' => json_encode(
-                    [
-                        'pic' => 'Bob Brown',
-                        'email' => 'bob.brown@tcs.com',
-                        'address' => '321 TCS Lane',
-                        'phone' => '321654987',
-                        'tax_id' => '3216549870',
-                    ]
-                ),
-                'is_primary' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'created_by' => 1, // Assuming the admin user has ID 1
-            ]
+           
         );
     }
 }

@@ -61,12 +61,20 @@ class CustomerController extends Controller
                             'data_customer.' . $key . '.pic' => 'nullable|string|max:100',
                         ]);
 
+                        $detailDatacustomer = [
+                            'email' => $datacustomer['data_customer'][$key]['email'] ?? null,
+                            'phone' => $datacustomer['data_customer'][$key]['phone'] ?? null,
+                            'address' => $datacustomer['data_customer'][$key]['address'],
+                            'tax_id' => $datacustomer['data_customer'][$key]['tax_id'] ?? null,
+                            'pic' => $datacustomer['data_customer'][$key]['pic'],
+                        ];
+
                         // Prepare data for insertion
 
 
                         $dataCustomer = [
                             'id_customer' => $addCustomer,
-                            'data' => json_encode($datacustomer),
+                            'data' => json_encode($detailDatacustomer),
                             'is_primary' => isset($value['is_primary']) ? $value['is_primary'] : false,
                             'created_at' => now(),
                             'created_by' => $request->user()->id_user,
