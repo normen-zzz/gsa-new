@@ -166,36 +166,17 @@ class CustomerController extends Controller
             $dataCustomer = DB::table('data_customer')
                 ->select('id_datacustomer', 'data', 'is_primary')
                 ->where('id_customer', $customer->id_customer)
+                ->whereNull('deleted_at')
                 ->get();
 
             // Format data_customer according to your desired structure
-            $customer->data_customer = $dataCustomer->map(function ($item) {
-                $decodedData = json_decode($item->data, true);
-
-                // If decoded data is an array with nested structure, handle it
-                if (is_array($decodedData)) {
-                    // Check if it's wrapped in another array or has a nested structure
-                    if (isset($decodedData[0]) && is_array($decodedData[0])) {
-                        $actualData = $decodedData[0];
-                    } else if (isset($decodedData['data_customer']) && is_array($decodedData['data_customer'])) {
-                        $actualData = $decodedData['data_customer'][0] ?? $decodedData['data_customer'];
-                    } else {
-                        $actualData = $decodedData;
-                    }
-                } else {
-                    $actualData = [];
-                }
-
+            $customer->data_customer = $dataCustomer->map(function ($data) {
                 return [
-                    'id_datacustomer' => $item->id_datacustomer,
-                    'email' => $actualData['email'] ?? null,
-                    'phone' => $actualData['phone'] ?? null,
-                    'address' => $actualData['address'] ?? null,
-                    'tax_id' => $actualData['tax_id'] ?? null,
-                    'pic' => $actualData['pic'] ?? null,
-                    'is_primary' => $item->is_primary,
+                    'id_datacustomer' => $data->id_datacustomer,
+                    'data'  => json_decode($data->data),
+                    'is_primary' => $data->is_primary,
                 ];
-            })->toArray();
+            })->values()->toArray();
 
             return ResponseHelper::success('Customer retrieved successfully.', $customer, 200);
         } else {
