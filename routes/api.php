@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\flow\JobController;
+use App\Http\Controllers\flow\salesorder\SalesorderController;
 use App\Http\Controllers\master\CostController;
 use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
@@ -25,9 +26,8 @@ use App\Http\Controllers\flow\ShippingInstructionController;
 use App\Http\Controllers\master\FlowApprovalController;
 
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+
+
 
 
 // Authentication routes
@@ -199,4 +199,6 @@ Route::put('/deleteDimensionhawb', [JobController::class, 'deleteDimensionHawb']
 Route::post('/addDimensionHawb', [JobController::class, 'addDimensionHawb'])->middleware('auth:api');
 
 
-
+//salesorder
+Route::post('/createSalesorder', [SalesorderController::class, 'createSalesorder'])->middleware('auth:api');
+Route::get('/getSalesorder', [SalesorderController::class, 'getSalesorder'])->middleware('auth:api');

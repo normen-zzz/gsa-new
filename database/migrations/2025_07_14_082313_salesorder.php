@@ -56,7 +56,16 @@ return new class extends Migration
             $table->unsignedBigInteger('id_salesorder');
             $table->unsignedBigInteger('id_typeselling');
             $table->decimal('selling_value', 10, 2)->comment('Selling value in the sales order in rupiah');
+            $table->enum('charge_by', ['chargeable_weight', 'gross_weight', 'awb']);
             $table->text('description')->nullable();
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
+         Schema::create('log_salesorder', function (Blueprint $table) {
+            $table->id('id_log_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
+            $table->json('action');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
         });
@@ -98,13 +107,7 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
         });
 
-        Schema::create('log_salesorder', function (Blueprint $table) {
-            $table->id('id_log_salesorder');
-            $table->unsignedBigInteger('id_salesorder');
-            $table->json('action');
-            $table->integer('created_by')->unsigned();
-            $table->timestamps();
-        });
+       
     }
 
     /**
