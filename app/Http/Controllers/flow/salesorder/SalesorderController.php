@@ -23,8 +23,6 @@ class SalesorderController extends Controller
             // Logic to create a sales order
             // Validate the request data
             $request->validate([
-                'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
-                'id_job' => 'required|integer|exists:job,id_job',
                 'id_awb' => 'required|integer|exists:awb,id_awb',
                 'remarks' => 'nullable|string|max:255',
                 'attachments' => 'required|array',
@@ -36,9 +34,13 @@ class SalesorderController extends Controller
                 'selling.*.description' => 'nullable|string|max:255'
             ]);
 
+            $awb = DB::table('awb')->where('id_awb', $request->id_awb)->first();
+            $id_job = $awb->id_job ?? null;
+            $id_shippinginstruction = $awb->id_shippinginstruction ?? null;
+
             $dataSalesorder = [
-                'id_shippinginstruction' => $request->id_shippinginstruction,
-                'id_job' => $request->id_job,
+                'id_shippinginstruction' => $id_shippinginstruction,
+                'id_job' => $id_job,
                 'id_awb' => $request->id_awb,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
@@ -133,6 +135,9 @@ class SalesorderController extends Controller
             'a.id_shippinginstruction',
             'a.id_job',
             'a.id_awb',
+            'c.agent',
+            'cu.name_customer AS agent_name',
+            'c.consignee',
             'a.remarks',
             'a.created_at',
             'a.created_by',
@@ -145,36 +150,387 @@ class SalesorderController extends Controller
 
 
         $salesorders = DB::table('salesorder AS a')
-        ->select($select)
+            ->select($select)
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('users AS d', 'a.deleted_by', '=', 'd.id_user')
+            ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
+            ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
             ->when($searchKey, function ($query, $searchKey) {
-                $query->where('a.name', 'like', "%{$searchKey}%");
+                $query->where('cu.name_customer', 'like', "%{$searchKey}%");
             })
             ->paginate($limit);
 
-            $salesorders->getCollection()->transform(function ($item) {
-               $attachment = DB::table('attachments_salesorder')
-                    ->where('id_salesorder', $item->id_salesorder)
-                    ->get();
-                $selling = DB::table('selling_salesorder')
-                    ->where('id_salesorder', $item->id_salesorder)
-                    ->join('typeselling AS ts', 'selling_salesorder.id_typeselling', '=', 'ts.id_typeselling')
-                    ->select('selling_salesorder.*', 'ts.name AS typeselling_name')
-                    ->get();
+        $salesorders->getCollection()->transform(function ($item) {
+            $selectAttachments = [
+                'attachments_salesorder.id_attachment_salesorder',
+                'attachments_salesorder.id_salesorder',
+                'attachments_salesorder.file_name',
+                'attachments_salesorder.url',
+                'attachments_salesorder.public_id',
+                'attachments_salesorder.created_by',
+                'created_by.name AS created_by_name',
+                'attachments_salesorder.created_at',
+                'attachments_salesorder.deleted_at',
+                'deleted_by.name AS deleted_by_name'
 
-                    $approval_salesorder = DB::table('approval_salesorder')
-                        ->where('id_salesorder', $item->id_salesorder)
-                        ->get();
-                $item->attachments = $attachment;
-                $item->selling = $selling;
-                $item->approval = $approval_salesorder;
-                return $item;
-            });
+            ];
 
-            
-            
+            $attachments = DB::table('attachments_salesorder')
+                ->leftJoin('users AS created_by', 'attachments_salesorder.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users AS deleted_by', 'attachments_salesorder.deleted_by', '=', 'deleted_by.id_user')
+                ->where('id_salesorder', $item->id_salesorder)
+                ->select($selectAttachments)
+                ->get();
 
+            $selectSelling = [
+                'selling_salesorder.id_selling_salesorder',
+                'selling_salesorder.id_salesorder',
+                'selling_salesorder.id_typeselling',
+                'ts.name AS typeselling_name',
+                'selling_salesorder.selling_value',
+                'selling_salesorder.charge_by',
+                'selling_salesorder.description',
+                'selling_salesorder.created_by',
+                'created_by.name AS created_by_name',
+                'selling_salesorder.created_at'
+            ];
+
+            $selling = DB::table('selling_salesorder')
+                ->where('id_salesorder', $item->id_salesorder)
+                ->join('typeselling AS ts', 'selling_salesorder.id_typeselling', '=', 'ts.id_typeselling')
+                ->leftJoin('users AS created_by', 'selling_salesorder.created_by', '=', 'created_by.id_user')
+                ->select($selectSelling)
+                ->get();
+
+            $selectApproval = [
+                'approval_salesorder.id_approval_salesorder',
+                'approval_salesorder.id_salesorder',
+                'approval_salesorder.approval_position',
+                'approval_position.name AS approval_position_name',
+                'approval_salesorder.approval_division',
+                'approval_division.name AS approval_division_name',
+                'approval_salesorder.step_no',
+                'approval_salesorder.next_step',
+                'approval_salesorder.created_by',
+                'created_by.name AS created_by_name',
+                'approval_salesorder.approved_by',
+                'approved_by.name AS approved_by_name',
+                'approval_salesorder.status',
+
+            ];
+
+            $approval_salesorder = DB::table('approval_salesorder')
+                ->select($selectApproval)
+                ->leftJoin('users AS approval_position', 'approval_salesorder.approval_position', '=', 'approval_position.id_user')
+                ->leftJoin('users AS approval_division', 'approval_salesorder.approval_division', '=', 'approval_division.id_user')
+                ->leftJoin('users AS approved_by', 'approval_salesorder.approved_by', '=', 'approved_by.id_user')
+                ->leftJoin('users AS created_by', 'approval_salesorder.created_by', '=', 'created_by.id_user')
+                ->where('id_salesorder', $item->id_salesorder)
+                ->get();
+            $item->attachments_salesorder = $attachments;
+            $item->selling_salesorder = $selling;
+            $item->approval_salesorder = $approval_salesorder;
+            return $item;
+        });
         return ResponseHelper::success('Sales orders retrieved successfully', $salesorders);
+    }
+
+    public function getSalesorderById(Request $request)
+    {
+        $id = $request->input('id_salesorder');
+
+        $select = [
+            'a.id_salesorder',
+            'a.id_shippinginstruction',
+            'a.id_job',
+            'a.id_awb',
+            'c.agent',
+            'cu.name_customer AS agent_name',
+            'c.consignee',
+            'a.remarks',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'd.name AS deleted_by_name',
+            'a.status'
+        ];
+
+        $salesorder = DB::table('salesorder AS a')
+            ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->leftJoin('users AS d', 'a.deleted_by', '=', 'd.id_user')
+            ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
+            ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
+            ->select($select)
+            ->where('id_salesorder', $id)
+            ->first();
+
+        if (!$salesorder) {
+            return ResponseHelper::success('Sales order not found', null, 404);
+        }
+
+        $selectAttachments = [
+            'attachments_salesorder.id_attachment_salesorder',
+            'attachments_salesorder.id_salesorder',
+            'attachments_salesorder.file_name',
+            'attachments_salesorder.url',
+            'attachments_salesorder.public_id',
+            'attachments_salesorder.created_by',
+            'created_by.name AS created_by_name',
+            'attachments_salesorder.created_at',
+            'attachments_salesorder.deleted_at',
+            'deleted_by.name AS deleted_by_name'
+
+        ];
+
+        $attachments = DB::table('attachments_salesorder')
+            ->leftJoin('users AS created_by', 'attachments_salesorder.created_by', '=', 'created_by.id_user')
+            ->leftJoin('users AS deleted_by', 'attachments_salesorder.deleted_by', '=', 'deleted_by.id_user')
+            ->where('id_salesorder', $id)
+            ->select($selectAttachments)
+            ->get();
+
+        $selectSelling = [
+            'selling_salesorder.id_selling_salesorder',
+            'selling_salesorder.id_salesorder',
+            'selling_salesorder.id_typeselling',
+            'ts.name AS typeselling_name',
+            'selling_salesorder.selling_value',
+            'selling_salesorder.charge_by',
+            'selling_salesorder.description',
+            'selling_salesorder.created_by',
+            'created_by.name AS created_by_name',
+            'selling_salesorder.created_at'
+        ];
+
+        $selling = DB::table('selling_salesorder')
+            ->where('id_salesorder', $id)
+            ->join('typeselling AS ts', 'selling_salesorder.id_typeselling', '=', 'ts.id_typeselling')
+            ->leftJoin('users AS created_by', 'selling_salesorder.created_by', '=', 'created_by.id_user')
+            ->select($selectSelling)
+            ->get();
+
+        $selectApproval = [
+            'approval_salesorder.id_approval_salesorder',
+            'approval_salesorder.id_salesorder',
+            'approval_salesorder.approval_position',
+            'approval_position.name AS approval_position_name',
+            'approval_salesorder.approval_division',
+            'approval_division.name AS approval_division_name',
+            'approval_salesorder.step_no',
+            'approval_salesorder.next_step',
+            'approval_salesorder.created_by',
+            'created_by.name AS created_by_name',
+            'approval_salesorder.approved_by',
+            'approved_by.name AS approved_by_name',
+            'approval_salesorder.status',
+
+        ];
+
+        $approval_salesorder = DB::table('approval_salesorder')
+            ->select($selectApproval)
+            ->leftJoin('users AS approval_position', 'approval_salesorder.approval_position', '=', 'approval_position.id_user')
+            ->leftJoin('users AS approval_division', 'approval_salesorder.approval_division', '=', 'approval_division.id_user')
+            ->leftJoin('users AS approved_by', 'approval_salesorder.approved_by', '=', 'approved_by.id_user')
+            ->leftJoin('users AS created_by', 'approval_salesorder.created_by', '=', 'created_by.id_user')
+            ->where('id_salesorder', $id)
+            ->get();
+
+        $salesorder->attachments_salesorder = $attachments;
+        $salesorder->selling_salesorder = $selling;
+        $salesorder->approval_salesorder = $approval_salesorder;
+
+        return ResponseHelper::success('Sales order retrieved successfully', $salesorder, 200);
+    }
+
+    public function deleteAttachmentSalesorder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_attachment_salesorder' => 'required|integer|exists:attachments_salesorder,id_attachment_salesorder',
+            ]);
+
+            $id_attachment_salesorder = $request->id_attachment_salesorder;
+
+            $attachment = DB::table('attachments_salesorder')->where('id_attachment_salesorder', $id_attachment_salesorder)->first();
+
+            $delete = DB::table('attachments_salesorder')->where('id_attachment_salesorder', $id_attachment_salesorder)->delete();
+            if ($delete) {
+                $deleteOnCloudinary = Cloudinary::uploadApi()->destroy($attachment->public_id);
+                if (!$deleteOnCloudinary) {
+                    throw new Exception('Failed to delete attachment from Cloudinary');
+                }
+            }
+
+
+            DB::commit();
+            return ResponseHelper::success('Attachment deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function updateSalesorder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_salesorder' => 'required|integer|exists:salesorder,id_salesorder',
+                'selling' => 'nullable|array',
+                'selling.*.id_selling_salesorder' => 'nullable|integer|exists:selling_salesorder,id_selling_salesorder',
+                'selling.*.id_typeselling' => 'required|integer|exists:typeselling,id_typeselling',
+                'selling.*.selling_value' => 'required|numeric',
+                'selling.*.charge_by' => 'required|string',
+                'selling.*.description' => 'nullable|string',
+                'attachments' => 'nullable|array',
+                'attachments.*.image' => 'required|string',
+            ]);
+
+            if ($request->has('selling')) {
+                foreach ($request->selling as $selling) {
+                    if ($selling['id_selling_salesorder']) {
+                        // Update existing selling record
+                        DB::table('selling_salesorder')
+                            ->where('id_selling_salesorder', $selling['id_selling_salesorder'])
+                            ->update([
+                                'id_typeselling' => $selling['id_typeselling'],
+                                'selling_value' => $selling['selling_value'],
+                                'charge_by' => $selling['charge_by'],
+                                'description' => $selling['description'] ?? null,
+                                'updated_by' => Auth::id(),
+                                'updated_at' => now(),
+                            ]);
+                    } else {
+                        // Create new selling record
+                        DB::table('selling_salesorder')->insert([
+                            'id_salesorder' => $request->id_salesorder,
+                            'id_typeselling' => $selling['id_typeselling'],
+                            'selling_value' => $selling['selling_value'],
+                            'charge_by' => $selling['charge_by'],
+                            'description' => $selling['description'] ?? null,
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            if ($request->has('attachments')) {
+                foreach ($request->attachments as $attachment) {
+
+                    $uploadToCloudinary = Cloudinary::uploadApi()->upload($attachment['image'], [
+                        'folder' => 'salesorders',
+                    ]);
+                    $file_name = time() . '_' . $request->id_salesorder;
+                    $insert = DB::table('attachments_salesorder')->insert([
+                        'id_salesorder' => $request->id_salesorder,
+                        'file_name' => $file_name,
+                        'url' => $uploadToCloudinary['secure_url'],
+                        'public_id' => $uploadToCloudinary['public_id'],
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ]);
+
+                    if (!$insert) {
+                        $destroyOnCloudinary = Cloudinary::uploadApi()->destroy($uploadToCloudinary['public_id']);
+                        throw new Exception('Failed to insert attachment');
+                    }
+                }
+            }
+            DB::commit();
+            return ResponseHelper::success('Sales order updated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteSalesorder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_salesorder' => 'required|integer|exists:salesorder,id_salesorder',
+            ]);
+
+            $update = DB::table('salesorder')
+                ->where('id_salesorder', $request->id_salesorder)
+                ->update([
+                    'deleted_by' => Auth::id(),
+                    'deleted_at' => now(),
+                    'status' => 'so_deleted'
+                ]);
+            DB::commit();
+            return ResponseHelper::success('Sales order deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function activateSalesorder(Request $request)
+    {
+
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_salesorder' => 'required|integer|exists:salesorder,id_salesorder',
+            ]);
+
+           
+
+            $update = DB::table('salesorder')
+                ->where('id_salesorder', $request->id_salesorder)
+                ->update([
+                    'deleted_by' => null,
+                    'deleted_at' => null,
+                    'status' => 'so_created_by_sales'
+                ]);
+            DB::commit();
+            return ResponseHelper::success('Sales order activated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function approveSalesorder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_approval_salesorder' => 'required|integer|exists:approval_salesorder,id_approval_salesorder',
+                'id_salesorder' => 'required|integer|exists:salesorder,id_salesorder',
+                'status' => 'required|in:approved,rejected'
+            ]);
+
+            $user = DB::table('users')
+            ->join('positions', 'users.id_position', '=', 'positions.id_position')
+            ->join('divisions', 'users.id_division', '=', 'divisions.id_division')
+            ->where('id_user', Auth::id())->first();
+
+            $update = DB::table('approval_salesorder')
+                ->where('id_approval_salesorder', $request->id_approval_salesorder)
+                ->where('approval_position', $user->id_position)
+                ->where('approval_division', $user->id_division)
+                ->update([
+                    'status' => $request->status,
+                    'approved_by' => Auth::id(),
+                    'updated_at' => now(),
+                ]);
+
+            if (!$update) {
+                throw new Exception('Failed to update approval status');
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Sales order approved successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
     }
 }

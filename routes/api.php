@@ -202,3 +202,9 @@ Route::post('/addDimensionHawb', [JobController::class, 'addDimensionHawb'])->mi
 //salesorder
 Route::post('/createSalesorder', [SalesorderController::class, 'createSalesorder'])->middleware('auth:api');
 Route::get('/getSalesorder', [SalesorderController::class, 'getSalesorder'])->middleware('auth:api');
+Route::get('/getSalesorderById', [SalesorderController::class, 'getSalesorderById'])->middleware('auth:api');
+Route::put('/deleteAttachmentSalesorder', [SalesorderController::class, 'deleteAttachmentSalesorder'])->middleware('auth:api');
+Route::put('/updateSalesorder', [SalesorderController::class, 'updateSalesorder'])->middleware('auth:api');
+Route::put('/deleteSalesorder', [SalesorderController::class, 'deleteSalesorder'])->middleware('auth:api');
+Route::put('/activateSalesorder', [SalesorderController::class, 'activateSalesorder'])->middleware('auth:api');
+Route::put('/approveSalesorder', [SalesorderController::class, 'approveSalesorder'])->middleware('auth:api');
