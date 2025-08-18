@@ -459,6 +459,43 @@ class ShippingInstructionController extends Controller
                 ->where('id_job', $job->id_job)
                 ->first();
             if ($awb) {
+                $awb->agent_data = json_decode($awb->agent_data, true);
+                $route = DB::table('routes')
+                    ->where('airline', $awb->airline)
+                    ->where('pol', $awb->pol)
+                    ->where('pod', $awb->pod)
+                    ->first();
+                if (!$route) {
+                    throw new Exception('Route not found');
+                } else {
+                    $getWeightBrackets = DB::table('weight_bracket_selling')
+                        ->where('min_weight', '<=', $awb->chargeable_weight)
+                        ->orderBy('min_weight', 'desc')
+                        ->first();
+                        
+                    $selectSelling = [
+                        'selling.id_selling',
+                        'selling.id_weight_bracket_selling',
+                        'weight_bracket_selling.min_weight',
+                        'selling.id_typeselling',
+                        'typeselling.initials as typeselling_initials',
+                        'typeselling.name as typeselling_name',
+                        'selling.id_route',
+                        'selling.selling_value',
+                        'selling.charge_by'
+                    ];
+                    $getSelling = DB::table('selling')
+                    ->select($selectSelling)
+                    ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
+                    ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
+                    
+                        ->where('id_route', $route->id_route)
+                        ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
+                        ->get();
+                    if ($getSelling) {
+                        $instruction->selling_data = $getSelling;
+                    }
+                }
                 $instruction->awb_data = $awb;
                 $awb_data = $instruction->awb_data;
                 $dimensions_awb = DB::table('dimension_awb')
@@ -513,7 +550,7 @@ class ShippingInstructionController extends Controller
                             ->get();
                         return $hawb;
                     });
-                } else{
+                } else {
                     $awb_data->hawb_data = [];
                 }
             }
