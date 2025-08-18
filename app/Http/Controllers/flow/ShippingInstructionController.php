@@ -193,6 +193,7 @@ class ShippingInstructionController extends Controller
                     'updated_by.name as updated_by_name',
                     'awb.created_at',
                     'awb.updated_at',
+                    'awb.status'
                 ];
                 $awb = DB::table('awb')
                     ->select($selectAwb)
@@ -444,6 +445,7 @@ class ShippingInstructionController extends Controller
                 'updated_by.name as updated_by_name',
                 'awb.created_at',
                 'awb.updated_at',
+                'awb.status'
             ];
             $awb = DB::table('awb')
                 ->select($selectAwb)

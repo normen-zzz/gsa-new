@@ -206,6 +206,7 @@ class JobModel extends Model
                     'updated_by.name as updated_by_name',
                     'awb.created_at',
                     'awb.updated_at',
+                    'awb.status'
                     ]
                 )
                 
@@ -419,6 +420,7 @@ class JobModel extends Model
                 'updated_by.name as updated_by_name',
                 'awb.created_at',
                 'awb.updated_at',
+                'awb.status'
             ];
 
             $awb = DB::table('awb')

@@ -36,7 +36,7 @@ class SalesorderController extends Controller
 
             $awb = DB::table('awb')->where('id_awb', $request->id_awb)->first();
             $id_job = $awb->id_job ?? null;
-            $id_shippinginstruction = $awb->id_shippinginstruction ?? null;
+            $id_shippinginstruction = DB::table('job')->where('id_job', $id_job)->value('id_shippinginstruction');
 
             $dataSalesorder = [
                 'id_shippinginstruction' => $id_shippinginstruction,
@@ -118,7 +118,7 @@ class SalesorderController extends Controller
 
 
             DB::commit();
-            return ResponseHelper::success('hehe', null, 201);
+            return ResponseHelper::success('Sales order created successfully', null, 201);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -181,6 +181,8 @@ class SalesorderController extends Controller
                 ->where('id_salesorder', $item->id_salesorder)
                 ->select($selectAttachments)
                 ->get();
+
+               
 
             $selectSelling = [
                 'selling_salesorder.id_selling_salesorder',
