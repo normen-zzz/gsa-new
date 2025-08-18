@@ -78,8 +78,17 @@ class MenuSeeder extends Seeder
                                 "title" => "Country",
                                 "url" => "/dashboard/master/master-negara"
                             ]
+                            ]
+                        ],
+                        [
+                            "title" => "Approval Flow",
+                            "items" => [
+                                [
+                                    "title" => "Sales Order Flow",
+                                    "url" => "/dashboard/master/master-approval/sales-order"
+                                ]
+                            ]
                         ]
-                    ]
                 ]
             ],
             [
