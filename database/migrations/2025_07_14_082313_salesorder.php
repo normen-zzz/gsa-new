@@ -116,5 +116,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('salesorder');
+        Schema::dropIfExists('attachments_salesorder');
+        Schema::dropIfExists('selling_salesorder');
+        Schema::dropIfExists('log_salesorder');
+        Schema::dropIfExists('flowapproval_salesorder');
+        Schema::dropIfExists('log_flowapproval_salesorder');
+        Schema::dropIfExists('approval_salesorder');
     }
 };

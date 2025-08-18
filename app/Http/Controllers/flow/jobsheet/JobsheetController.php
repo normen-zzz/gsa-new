@@ -1,0 +1,379 @@
+<?php
+
+namespace App\Http\Controllers\flow\jobsheet;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Exception;
+use App\Helpers\ResponseHelper; 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
+
+date_default_timezone_set('Asia/Jakarta');
+class JobsheetController extends Controller
+{
+    public function createJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            // Logic to create a jobsheet
+            // Validate the request data
+            $request->validate([
+                'id_awb' => 'required|integer|exists:awb,id_awb',
+                'remarks' => 'nullable|string|max:255',
+                'attachments' => 'required|array',
+                'attachments.*.image' => 'nullable|string',
+                'cost' => 'required|array',
+                'cost.*.id_typecost' => 'required|integer|exists:typecost,id_typecost',
+                'cost.*.cost_value' => 'required|numeric|min:0',
+                'cost.*.charge_by' => 'nullable|in:chargeable_weight,gross_weight,awb',
+                'cost.*.description' => 'nullable|string|max:255'
+            ]);
+
+            $awb = DB::table('awb')->where('id_awb', $request->id_awb)->first();
+            $id_job = $awb->id_job ?? null;
+            $id_shippinginstruction = DB::table('job')->where('id_job', $id_job)->value('id_shippinginstruction');
+
+            $dataJobsheet = [
+                'id_shippinginstruction' => $id_shippinginstruction,
+                'id_job' => $id_job,
+                'id_awb' => $request->id_awb,
+                'remarks' => $request->remarks,
+                'created_by' => Auth::id(),
+                'status' => 'js_created_by_cs'
+            ];
+            $insertJobsheet = DB::table('jobsheet')->insertGetId($dataJobsheet);
+            if ($insertJobsheet) {
+                if (isset($request->attachments) && is_array($request->attachments)) {
+                    foreach ($request->attachments as $attachment) {
+                        $file_name = time() . '_' . $insertJobsheet;
+                        $imageData = $attachment['image'] ?? null;
+                        if (!$imageData) {
+                            throw new Exception('Image data is required for attachments');
+                        }
+                        $cloudinaryImage = Cloudinary::uploadApi()->upload($imageData, [
+                            'folder' => 'jobsheets',
+                        ]);
+                        $url = $cloudinaryImage['secure_url'] ?? null;
+                        $publicId = $cloudinaryImage['public_id'] ?? null;
+
+                        $attachments = [
+                            'id_jobsheet' => $insertJobsheet, // Will be set after jobsheet creation
+                            'file_name' => $file_name,
+                            'url' => $url,
+                            'public_id' => $publicId,
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ];
+                        DB::table('attachments_jobsheet')->insert($attachments);
+                    }
+                } else {
+                    throw new Exception('Invalid attachments format');
+                }
+                $cost = $request->cost;
+                foreach ($cost as $item) {
+                    $dataCost = [
+                        'id_jobsheet' => $insertJobsheet,
+                        'id_typecost' => $item['id_typecost'],
+                        'cost_value' => $item['cost_value'],
+                        'charge_by' => $item['charge_by'],
+                        'description' => $item['description'] ?? null,
+                        'created_by' => Auth::id(),
+                    ];
+                    DB::table('cost_jobsheet')->insert($dataCost);
+                }
+            } else {
+                throw new Exception('Failed to create jobsheet');
+            }
+            $id_position = Auth::user()->id_position;
+            $id_division = Auth::user()->id_division;
+            if (!$id_position || !$id_division) {
+                throw new Exception('Invalid user position or division');
+            }
+            $flow_approval = DB::table('flowapproval_salesorder')
+                ->where(['request_position' => $id_position, 'request_division' => $id_division])
+                ->orderBy('step_no', 'asc')
+                ->get();
+            if ($flow_approval->isEmpty()) {
+                throw new Exception('No flow approval found for the user position and division');
+            } else {
+                foreach ($flow_approval as $approval) {
+                    $approval = [
+                        'id_jobsheet' => $insertJobsheet,
+                        'approval_position' => $approval->approval_position,
+                        'approval_division' => $approval->approval_division,
+                        'step_no' => $approval->step_no,
+                        'next_step' => $approval->next_step,
+                        'status' => 'pending',
+                        'created_by' => Auth::id(),
+                    ];
+                    DB::table('approval_jobsheet')->insert($approval);
+                }
+            }
+
+
+
+            DB::commit();
+            return ResponseHelper::success('Jobsheet created successfully', null, 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function getJobsheet(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $searchKey = $request->input('searchKey', '');
+
+        $select = [
+            'a.id_jobsheet',
+            'a.id_salesorder',
+            'a.id_shippinginstruction',
+            'a.id_job',
+            'a.id_awb',
+            'c.agent',
+            'cu.name_customer AS agent_name',
+            'c.consignee',
+            'a.remarks',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'd.name AS deleted_by_name',
+            'a.status'
+        ];
+
+
+        $jobsheets = DB::table('jobsheet AS a')
+            ->select($select)
+            ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->leftJoin('users AS d', 'a.deleted_by', '=', 'd.id_user')
+            ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
+            ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
+            ->leftJoin('salesorder AS so', 'a.id_salesorder', '=', 'so.id_salesorder')
+            ->when($searchKey, function ($query, $searchKey) {
+                $query->where('cu.name_customer', 'like', "%{$searchKey}%");
+            })
+            ->paginate($limit);
+
+        $jobsheets->getCollection()->transform(function ($item) {
+
+            $selectAttachments = [
+                'attachments_salesorder.id_attachment_salesorder',
+                'attachments_jobsheet.id_jobsheet',
+                'attachments_jobsheet.file_name',
+                'attachments_jobsheet.url',
+                'attachments_jobsheet.public_id',
+                'attachments_jobsheet.created_by',
+                'created_by.name AS created_by_name',
+                'attachments_jobsheet.created_at',
+                'attachments_jobsheet.deleted_at',
+                'deleted_by.name AS deleted_by_name'
+
+            ];
+
+            $attachments = DB::table('attachments_jobsheet')
+                ->leftJoin('users AS created_by', 'attachments_jobsheet.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users AS deleted_by', 'attachments_jobsheet.deleted_by', '=', 'deleted_by.id_user')
+                ->where('id_jobsheet', $item->id_jobsheet)
+                ->select($selectAttachments)
+                ->get();
+
+               
+
+            $selectCost = [
+                'cost_jobsheet.id_cost_jobsheet',
+                'cost_jobsheet.id_jobsheet',
+                'cost_jobsheet.id_typecost',
+                'ts.name AS typecost_name',
+                'cost_jobsheet.cost_value',
+                'selling_salesorder.charge_by',
+                'selling_salesorder.description',
+                'selling_salesorder.created_by',
+                'created_by.name AS created_by_name',
+                'selling_salesorder.created_at'
+            ];
+
+            $cost = DB::table('cost_jobsheet')
+                ->where('id_jobsheet', $item->id_jobsheet)
+                ->join('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
+                ->leftJoin('users AS created_by', 'cost_jobsheet.created_by', '=', 'created_by.id_user')
+                ->select($selectCost)
+                ->get();
+
+            $selectApproval = [
+                'approval_jobsheet.id_approval_jobsheet',
+                'approval_jobsheet.id_jobsheet',
+                'approval_jobsheet.approval_position',
+                'approval_position.name AS approval_position_name',
+                'approval_jobsheet.approval_division',
+                'approval_division.name AS approval_division_name',
+                'approval_jobsheet.step_no',
+                'approval_jobsheet.next_step',
+                'approval_jobsheet.created_by',
+                'created_by.name AS created_by_name',
+                'approval_jobsheet.approved_by',
+                'approved_by.name AS approved_by_name',
+                'approval_jobsheet.status',
+
+            ];
+
+            $approval_jobsheet = DB::table('approval_jobsheet')
+                ->select($selectApproval)
+                ->leftJoin('users AS approval_position', 'approval_jobsheet.approval_position', '=', 'approval_position.id_user')
+                ->leftJoin('users AS approval_division', 'approval_jobsheet.approval_division', '=', 'approval_division.id_user')
+                ->leftJoin('users AS approved_by', 'approval_jobsheet.approved_by', '=', 'approved_by.id_user')
+                ->leftJoin('users AS created_by', 'approval_jobsheet.created_by', '=', 'created_by.id_user')
+                ->where('id_jobsheet', $item->id_jobsheet)
+                ->get();
+                
+            $item->attachments_jobsheet = $attachments;
+            $item->cost_jobsheet = $cost;
+            $item->approval_jobsheet = $approval_jobsheet;
+           
+        });
+        return ResponseHelper::success('Jobsheets retrieved successfully', $jobsheets);
+    }
+
+    public function getJobsheetById(Request $request){
+        $id = $request->input('id');
+        $select = [
+            'a.id_jobsheet',
+            'a.id_salesorder',
+            'a.id_shippinginstruction',
+            'a.id_job',
+            'a.id_awb',
+            'c.agent',
+            'cu.name_customer AS agent_name',
+            'c.consignee',
+            'a.remarks',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'd.name AS deleted_by_name',
+            'a.status'
+        ];
+
+
+        $jobsheet = DB::table('jobsheet AS a')
+            ->select($select)
+            ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->leftJoin('users AS d', 'a.deleted_by', '=', 'd.id_user')
+            ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
+            ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
+            ->leftJoin('salesorder AS so', 'a.id_salesorder', '=', 'so.id_salesorder')
+            ->where('a.id_jobsheet', $id)
+            ->first();
+
+       
+
+            $selectAttachments = [
+                'attachments_salesorder.id_attachment_salesorder',
+                'attachments_jobsheet.id_jobsheet',
+                'attachments_jobsheet.file_name',
+                'attachments_jobsheet.url',
+                'attachments_jobsheet.public_id',
+                'attachments_jobsheet.created_by',
+                'created_by.name AS created_by_name',
+                'attachments_jobsheet.created_at',
+                'attachments_jobsheet.deleted_at',
+                'deleted_by.name AS deleted_by_name'
+
+            ];
+
+            $attachments = DB::table('attachments_jobsheet')
+                ->leftJoin('users AS created_by', 'attachments_jobsheet.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users AS deleted_by', 'attachments_jobsheet.deleted_by', '=', 'deleted_by.id_user')
+                ->where('id_jobsheet', $jobsheet->id_jobsheet)
+                ->select($selectAttachments)
+                ->get();
+
+               
+
+            $selectCost = [
+                'cost_jobsheet.id_cost_jobsheet',
+                'cost_jobsheet.id_jobsheet',
+                'cost_jobsheet.id_typecost',
+                'ts.name AS typecost_name',
+                'cost_jobsheet.cost_value',
+                'selling_salesorder.charge_by',
+                'selling_salesorder.description',
+                'selling_salesorder.created_by',
+                'created_by.name AS created_by_name',
+                'selling_salesorder.created_at'
+            ];
+
+            $cost = DB::table('cost_jobsheet')
+                ->where('id_jobsheet', $jobsheet->id_jobsheet)
+                ->join('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
+                ->leftJoin('users AS created_by', 'cost_jobsheet.created_by', '=', 'created_by.id_user')
+                ->select($selectCost)
+                ->get();
+
+            $selectApproval = [
+                'approval_jobsheet.id_approval_jobsheet',
+                'approval_jobsheet.id_jobsheet',
+                'approval_jobsheet.approval_position',
+                'approval_position.name AS approval_position_name',
+                'approval_jobsheet.approval_division',
+                'approval_division.name AS approval_division_name',
+                'approval_jobsheet.step_no',
+                'approval_jobsheet.next_step',
+                'approval_jobsheet.created_by',
+                'created_by.name AS created_by_name',
+                'approval_jobsheet.approved_by',
+                'approved_by.name AS approved_by_name',
+                'approval_jobsheet.status',
+
+            ];
+
+            $approval_jobsheet = DB::table('approval_jobsheet')
+                ->select($selectApproval)
+                ->leftJoin('users AS approval_position', 'approval_jobsheet.approval_position', '=', 'approval_position.id_user')
+                ->leftJoin('users AS approval_division', 'approval_jobsheet.approval_division', '=', 'approval_division.id_user')
+                ->leftJoin('users AS approved_by', 'approval_jobsheet.approved_by', '=', 'approved_by.id_user')
+                ->leftJoin('users AS created_by', 'approval_jobsheet.created_by', '=', 'created_by.id_user')
+                ->where('id_jobsheet', $jobsheet->id_jobsheet)
+                ->get();
+                
+            $jobsheet->attachments_jobsheet = $attachments;
+            $jobsheet->cost_jobsheet = $cost;
+            $jobsheet->approval_jobsheet = $approval_jobsheet;
+
+        return ResponseHelper::success('Jobsheet retrieved successfully', $jobsheet);
+    }
+
+    public function deleteAttachmentJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_attachment_jobsheet' => 'required|integer|exists:attachments_jobsheet,id_attachment_jobsheet',
+            ]);
+
+            $id_attachment_jobsheet = $request->id_attachment_jobsheet;
+
+            $attachment = DB::table('attachments_jobsheet')->where('id_attachment_jobsheet', $id_attachment_jobsheet)->first();
+
+            $delete = DB::table('attachments_jobsheet')->where('id_attachment_jobsheet', $id_attachment_jobsheet)->delete();
+            if ($delete) {
+                $deleteOnCloudinary = Cloudinary::uploadApi()->destroy($attachment->public_id);
+                if (!$deleteOnCloudinary) {
+                    throw new Exception('Failed to delete attachment from Cloudinary');
+                }
+            }
+            DB::commit();
+            return ResponseHelper::success('Attachment deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+}

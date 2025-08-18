@@ -207,4 +207,4 @@ Route::put('/deleteAttachmentSalesorder', [SalesorderController::class, 'deleteA
 Route::put('/updateSalesorder', [SalesorderController::class, 'updateSalesorder'])->middleware('auth:api');
 Route::put('/deleteSalesorder', [SalesorderController::class, 'deleteSalesorder'])->middleware('auth:api');
 Route::put('/activateSalesorder', [SalesorderController::class, 'activateSalesorder'])->middleware('auth:api');
-Route::put('/approveSalesorder', [SalesorderController::class, 'approveSalesorder'])->middleware('auth:api');
+Route::put('/actionSalesorder', [SalesorderController::class, 'actionSalesorder'])->middleware('auth:api');
