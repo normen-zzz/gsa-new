@@ -5,7 +5,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\flow\JobController;
-use App\Http\Controllers\flow\salesorder\SalesorderController;
 use App\Http\Controllers\master\CostController;
 use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
@@ -21,9 +20,11 @@ use App\Http\Controllers\master\PositionController;
 use App\Http\Controllers\master\TypecostController;
 use App\Http\Controllers\master\PermissionController;
 use App\Http\Controllers\master\TypesellingController;
-use App\Http\Controllers\master\WeightbracketController;
-use App\Http\Controllers\flow\ShippingInstructionController;
 use App\Http\Controllers\master\FlowApprovalController;
+use App\Http\Controllers\master\WeightbracketController;
+use App\Http\Controllers\flow\jobsheet\JobsheetController;
+use App\Http\Controllers\flow\ShippingInstructionController;
+use App\Http\Controllers\flow\salesorder\SalesorderController;
 
 
 
@@ -208,3 +209,13 @@ Route::put('/updateSalesorder', [SalesorderController::class, 'updateSalesorder'
 Route::put('/deleteSalesorder', [SalesorderController::class, 'deleteSalesorder'])->middleware('auth:api');
 Route::put('/activateSalesorder', [SalesorderController::class, 'activateSalesorder'])->middleware('auth:api');
 Route::put('/actionSalesorder', [SalesorderController::class, 'actionSalesorder'])->middleware('auth:api');
+
+//jobsheet
+Route::post('/createJobsheet', [JobsheetController::class, 'createJobsheet'])->middleware('auth:api');
+Route::get('/getJobsheet', [JobsheetController::class, 'getJobsheet'])->middleware('auth:api');
+Route::get('/getJobsheetById', [JobsheetController::class, 'getJobsheetById'])->middleware('auth:api');
+Route::put('/deleteAttachmentJobsheet', [JobsheetController::class, 'deleteAttachmentJobsheet'])->middleware('auth:api');
+Route::put('/updateJobsheet', [JobsheetController::class, 'updateJobsheet'])->middleware('auth:api');
+Route::put('/deleteJobsheet', [JobsheetController::class, 'deleteJobsheet'])->middleware('auth:api');
+Route::put('/activateJobsheet', [JobsheetController::class, 'activateJobsheet'])->middleware('auth:api');
+Route::put('/actionJobsheet', [JobsheetController::class, 'actionJobsheet'])->middleware('auth:api');

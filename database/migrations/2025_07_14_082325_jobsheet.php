@@ -36,16 +36,7 @@ return new class extends Migration
             ])->default('js_created_by_cs');
         });
 
-        Schema::create('cost_jobsheet', function (Blueprint $table) {
-            $table->id('id_cost_jobsheet');
-            $table->unsignedBigInteger('id_jobsheet');
-            $table->unsignedBigInteger('id_typecost');
-            $table->decimal('cost_value', 10, 2)->comment('Cost value in the jobsheet in dollar');
-            $table->enum('charge_by', ['chargeable_weight', 'gross_weight', 'awb']);
-            $table->text('description')->nullable();
-            $table->integer('created_by')->unsigned();
-            $table->timestamps();
-        });
+        
 
         Schema::create('attachments_jobsheet', function (Blueprint $table) {
             $table->id('id_attachment_jobsheet');
@@ -70,17 +61,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('attachments_jobsheet', function (Blueprint $table) {
-            $table->id('id_attachment_jobsheet');
-            $table->unsignedBigInteger('id_jobsheet');
-            $table->string('file_name');
-            $table->string('url');
-            $table->string('public_id');
-            $table->integer('created_by')->unsigned();
-            $table->timestamps();
-            $table->softDeletes();
-            $table->integer('deleted_by')->nullable();
-        });
+        
 
          Schema::create('log_jobsheet', function (Blueprint $table) {
             $table->id('id_log_jobsheet');
