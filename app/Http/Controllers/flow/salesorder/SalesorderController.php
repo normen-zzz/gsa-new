@@ -359,7 +359,7 @@ class SalesorderController extends Controller
             $attachment = DB::table('attachments_salesorder')->where('id_attachment_salesorder', $id_attachment_salesorder)->first();
 
             $update = DB::table('attachments_salesorder')->where('id_attachment_salesorder', $id_attachment_salesorder)
-            ->update(['deleted_at' => now(), 'deleted_by' => Auth::id()]);
+                ->update(['deleted_at' => now(), 'deleted_by' => Auth::id()]);
             if ($update) {
                 $deleteOnCloudinary = Cloudinary::uploadApi()->destroy($attachment->public_id);
                 if (!$deleteOnCloudinary) {
@@ -402,15 +402,15 @@ class SalesorderController extends Controller
                 'attachments.*.image' => 'required|string',
             ]);
 
-            $changesSelling = [];
-            $changesAttachments = [];
+            $changesSelling = NULL;
+            $changesAttachments = NULL;
 
             if ($request->has('selling')) {
                 foreach ($request->selling as $selling) {
-                    if ($selling['id_selling_salesorder']) {
+                    if (isset($selling['id_selling_salesorder']) && $selling['id_selling_salesorder'] != null) {
                         $sellingData = DB::table('selling_salesorder')->where('id_selling_salesorder', $selling['id_selling_salesorder'])->first();
                         // Update existing selling record
-                        DB::table('selling_salesorder')
+                        $updateSelling =  DB::table('selling_salesorder')
                             ->where('id_selling_salesorder', $selling['id_selling_salesorder'])
                             ->update([
                                 'id_typeselling' => $selling['id_typeselling'],
@@ -420,38 +420,40 @@ class SalesorderController extends Controller
                                 'updated_by' => Auth::id(),
                                 'updated_at' => now(),
                             ]);
+                        if (!$updateSelling) {
+                            throw new Exception('Failed to update selling record');
+                        }
 
-                            $changesSelling[] = [
-                                'id_selling_salesorder' => $selling['id_selling_salesorder'],
-                                'old' => $sellingData,
-                                'new' => [
-                                    'id_typeselling' => $selling['id_typeselling'],
-                                    'selling_value' => $selling['selling_value'],
-                                    'charge_by' => $selling['charge_by'],
-                                    'description' => $selling['description'] ?? null,
-                                    'updated_by' => Auth::id(),
-                                    'updated_at' => now(),
-                                ]
-                            ];
-
+                        $changesSelling[] = [
+                            'id_selling_salesorder' => $selling['id_selling_salesorder'],
+                            'old' => $sellingData,
+                            'new' => [
+                                'id_typeselling' => $selling['id_typeselling'],
+                                'selling_value' => $selling['selling_value'],
+                                'charge_by' => $selling['charge_by'],
+                                'description' => $selling['description'] ?? null,
+                                'updated_by' => Auth::id(),
+                                'updated_at' => now(),
+                            ]
+                        ];
                     } else {
                         // Create new selling record
-                        DB::table('selling_salesorder')->insert([
-                            'id_salesorder' => $request->id_salesorder,
-                            'id_typeselling' => $selling['id_typeselling'],
-                            'selling_value' => $selling['selling_value'],
-                            'charge_by' => $selling['charge_by'],
+                        $insertSelling = DB::table('selling_salesorder')->insertGetId([
+                            'id_salesorder' => $request->id_salesorder ?? null,
+                            'id_typeselling' => $selling['id_typeselling'] ?? null,
+                            'selling_value' => $selling['selling_value'] ?? null,
+                            'charge_by' => $selling['charge_by'] ?? null,
                             'description' => $selling['description'] ?? null,
                             'created_by' => Auth::id(),
                             'created_at' => now(),
                         ]);
                         $changesSelling[] = [
-                            'id_selling_salesorder' => $selling['id_selling_salesorder'],
+                            'id_selling_salesorder' => $insertSelling ?? null,
                             'old' => null,
                             'new' => [
-                                'id_typeselling' => $selling['id_typeselling'],
-                                'selling_value' => $selling['selling_value'],
-                                'charge_by' => $selling['charge_by'],
+                                'id_typeselling' => $selling['id_typeselling'] ?? null,
+                                'selling_value' => $selling['selling_value'] ?? null,
+                                'charge_by' => $selling['charge_by'] ?? null,
                                 'description' => $selling['description'] ?? null,
                                 'created_by' => Auth::id(),
                                 'created_at' => now(),
@@ -459,17 +461,19 @@ class SalesorderController extends Controller
                         ];
                     }
                 }
-
             }
 
             if ($request->has('attachments')) {
                 foreach ($request->attachments as $attachment) {
-
-                    $uploadToCloudinary = Cloudinary::uploadApi()->upload($attachment['image'], [
+                    $imageData = $attachment['image'];
+                    $uploadToCloudinary = Cloudinary::uploadApi()->upload($imageData, [
                         'folder' => 'salesorders',
                     ]);
+                    if (!$uploadToCloudinary) {
+                        throw new Exception('Failed to upload attachment to Cloudinary');
+                    }
                     $file_name = time() . '_' . $request->id_salesorder;
-                    $insert = DB::table('attachments_salesorder')->insert([
+                    $insert = DB::table('attachments_salesorder')->insertGetId([
                         'id_salesorder' => $request->id_salesorder,
                         'file_name' => $file_name,
                         'url' => $uploadToCloudinary['secure_url'],
@@ -481,30 +485,32 @@ class SalesorderController extends Controller
                     if (!$insert) {
                         $destroyOnCloudinary = Cloudinary::uploadApi()->destroy($uploadToCloudinary['public_id']);
                         throw new Exception('Failed to insert attachment');
+                    } else {
+                        $changesAttachments[] = [
+                            'id_attachment_salesorder' => $insert,
+                            'old' => null,
+                            'new' => [
+                                'file_name' => $file_name,
+                                'url' => $uploadToCloudinary['secure_url'],
+                                'public_id' => $uploadToCloudinary['public_id'],
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ]
+                        ];
                     }
                 }
-                $changesAttachments[] = [
-                    'id_attachment_salesorder' => $attachment['id_attachment_salesorder'],
-                    'old' => null,
-                    'new' => [
-                        'id_salesorder' => $request->id_salesorder,
-                        'file_name' => $file_name,
-                        'url' => $uploadToCloudinary['secure_url'],
-                        'public_id' => $uploadToCloudinary['public_id'],
-                        'created_by' => Auth::id(),
-                        'created_at' => now(),
-                    ]
-                ];
             }
+
+
             $log = [
                 'id_salesorder' => $request->id_salesorder,
-                'action' => [
+                'action' => json_encode([
                     'type' => 'update',
                     'data' => [
                         'selling' => $changesSelling,
                         'attachments' => $changesAttachments
                     ]
-                ],
+                ]),
                 'created_by' => Auth::id(),
                 'created_at' => now(),
             ];
@@ -532,21 +538,21 @@ class SalesorderController extends Controller
                     'deleted_at' => now(),
                     'status' => 'so_deleted'
                 ]);
-                if ($update) {
-                    $log = [
-                        'id_salesorder' => $request->id_salesorder,
-                        'action' => [
-                            'type' => 'delete',
-                            'data' => [
-                                'deleted_by' => Auth::id(),
-                                'deleted_at' => now()
-                            ]
+            if ($update) {
+                $log = [
+                    'id_salesorder' => $request->id_salesorder,
+                    'action' => [
+                        'type' => 'delete',
+                        'data' => [
+                            'deleted_by' => Auth::id(),
+                            'deleted_at' => now()
                         ]
-                    ];
-                    DB::table('log_salesorder')->insert($log);
-                } else{
-                    throw new Exception('Failed to delete sales order');
-                }
+                    ]
+                ];
+                DB::table('log_salesorder')->insert($log);
+            } else {
+                throw new Exception('Failed to delete sales order');
+            }
             DB::commit();
             return ResponseHelper::success('Sales order deleted successfully', null, 200);
         } catch (Exception $e) {
@@ -573,19 +579,19 @@ class SalesorderController extends Controller
                     'deleted_at' => null,
                     'status' => 'so_created_by_sales'
                 ]);
-                if ($update) {
-                    $log = [
-                        'id_salesorder' => $request->id_salesorder,
-                        'action' => [
-                            'type' => 'activate',
-                            'data' => [
-                                'activated_by' => Auth::id(),
-                                'activated_at' => now()
-                            ]
+            if ($update) {
+                $log = [
+                    'id_salesorder' => $request->id_salesorder,
+                    'action' => [
+                        'type' => 'activate',
+                        'data' => [
+                            'activated_by' => Auth::id(),
+                            'activated_at' => now()
                         ]
-                    ];
-                    DB::table('log_salesorder')->insert($log);
-                }
+                    ]
+                ];
+                DB::table('log_salesorder')->insert($log);
+            }
             DB::commit();
             return ResponseHelper::success('Sales order activated successfully', null, 200);
         } catch (Exception $e) {
@@ -623,7 +629,7 @@ class SalesorderController extends Controller
 
                     if (!$update) {
                         throw new Exception('Failed to update approval status because');
-                    } else{
+                    } else {
                         $log = [
                             'id_salesorder' => $request->id_salesorder,
                             'action' => [
@@ -637,7 +643,7 @@ class SalesorderController extends Controller
                         ];
                         DB::table('log_salesorder')->insert($log);
                     }
-                } else{
+                } else {
                     throw new Exception('You are not authorized to update this approval status');
                 }
             }

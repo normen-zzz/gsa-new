@@ -21,6 +21,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
+            $table->integer('updated_by')->nullable();
             $table->enum('status', [
                 'so_created_by_sales',
                 'so_approved_by_manager',
@@ -59,6 +60,7 @@ return new class extends Migration
             $table->enum('charge_by', ['chargeable_weight', 'gross_weight', 'awb']);
             $table->text('description')->nullable();
             $table->integer('created_by')->unsigned();
+            $table->integer('updated_by')->nullable();
             $table->timestamps();
         });
 
