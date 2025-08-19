@@ -70,7 +70,24 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('flowapproval_salesorder', function (Blueprint $table) {
+       
+
+        Schema::create('approval_salesorder', function (Blueprint $table) {
+            $table->id('id_approval_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
+            $table->unsignedBigInteger('approval_position');
+            $table->unsignedBigInteger('approval_division');
+            $table->integer('step_no');
+            $table->integer('next_step')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('remarks')->nullable();
+            $table->datetime('approved_at')->nullable();
+            $table->integer('approved_by')->nullable();
+            $table->timestamps();
+            $table->integer('created_by')->unsigned();
+        });
+
+         Schema::create('flowapproval_salesorder', function (Blueprint $table) {
             $table->id('id_flowapproval_salesorder');
             $table->unsignedBigInteger('request_position');
             $table->unsignedBigInteger('request_division');
@@ -90,21 +107,6 @@ return new class extends Migration
             $table->json('action');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
-        });
-
-        Schema::create('approval_salesorder', function (Blueprint $table) {
-            $table->id('id_approval_salesorder');
-            $table->unsignedBigInteger('id_salesorder');
-            $table->unsignedBigInteger('approval_position');
-            $table->unsignedBigInteger('approval_division');
-            $table->integer('step_no');
-            $table->integer('next_step')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('remarks')->nullable();
-            $table->datetime('approved_at')->nullable();
-            $table->integer('approved_by')->nullable();
-            $table->timestamps();
-            $table->integer('created_by')->unsigned();
         });
 
        

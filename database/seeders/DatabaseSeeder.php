@@ -6,6 +6,7 @@ use App\Models\master\CustomerModel;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Contracts\Queue\Job;
 use PHPOpenSourceSaver\JWTAuth\Claims\Custom;
 use Illuminate\Support\Facades\DB;
 
@@ -21,15 +22,19 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AirlineSeeder::class,
             AirportSeeder::class,
+            AwbSeeder::class,
             CountrySeeder::class,
             CustomerSeeder::class,
             DivisionSeeder::class,
             FlowapprovalSeeder::class,
+            JobSeeder::class,
+            JobsheetSeeder::class,
             MenuSeeder::class,
             MenusSuperAdmin::class,
             PermissionSeeder::class,
             PositionSeeder::class,
             RouteSeeder::class,
+            SalesorderSeeder::class,
             ShippinginstructionSeeder::class,
             TypecostSeeder::class, // Uncomment if you want to seed typecost
             TypesellingSeeder::class, // Uncomment if you want to seed typeselling

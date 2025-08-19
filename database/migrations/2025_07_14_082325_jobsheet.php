@@ -71,6 +71,23 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        
+
+         Schema::create('approval_jobsheet', function (Blueprint $table) {
+            $table->id('id_approval_jobsheet');
+            $table->unsignedBigInteger('id_jobsheet');
+            $table->unsignedBigInteger('approval_position');
+            $table->unsignedBigInteger('approval_division');
+            $table->integer('step_no');
+            $table->integer('next_step')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('remarks')->nullable();
+            $table->datetime('approved_at')->nullable();
+            $table->integer('approved_by')->nullable();
+            $table->timestamps();
+            $table->integer('created_by')->unsigned();
+        });
+
         Schema::create('flowapproval_jobsheet', function (Blueprint $table) {
             $table->id('id_flowapproval_jobsheet');
             $table->unsignedBigInteger('request_position');
@@ -91,21 +108,6 @@ return new class extends Migration
             $table->json('action');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
-        });
-
-         Schema::create('approval_jobsheet', function (Blueprint $table) {
-            $table->id('id_approval_jobsheet');
-            $table->unsignedBigInteger('id_jobsheet');
-            $table->unsignedBigInteger('approval_position');
-            $table->unsignedBigInteger('approval_division');
-            $table->integer('step_no');
-            $table->integer('next_step')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('remarks')->nullable();
-            $table->datetime('approved_at')->nullable();
-            $table->integer('approved_by')->nullable();
-            $table->timestamps();
-            $table->integer('created_by')->unsigned();
         });
 
     }

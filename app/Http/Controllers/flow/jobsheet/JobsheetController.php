@@ -42,6 +42,7 @@ class JobsheetController extends Controller
                 'id_shippinginstruction' => $id_shippinginstruction,
                 'id_job' => $id_job,
                 'id_awb' => $awb->id_awb,
+                'id_salesorder' => $request->id_salesorder,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
                 'status' => 'js_created_by_cs'
@@ -165,7 +166,7 @@ class JobsheetController extends Controller
         $jobsheets->getCollection()->transform(function ($item) {
 
             $selectAttachments = [
-                'attachments_salesorder.id_attachment_salesorder',
+                'attachments_jobsheet.id_attachment_jobsheet',
                 'attachments_jobsheet.id_jobsheet',
                 'attachments_jobsheet.file_name',
                 'attachments_jobsheet.url',
@@ -193,16 +194,16 @@ class JobsheetController extends Controller
                 'cost_jobsheet.id_typecost',
                 'ts.name AS typecost_name',
                 'cost_jobsheet.cost_value',
-                'selling_salesorder.charge_by',
-                'selling_salesorder.description',
-                'selling_salesorder.created_by',
+                'cost_jobsheet.charge_by',
+                'cost_jobsheet.description',
+                'cost_jobsheet.created_by',
                 'created_by.name AS created_by_name',
-                'selling_salesorder.created_at'
+                'cost_jobsheet.created_at'
             ];
 
             $cost = DB::table('cost_jobsheet')
                 ->where('id_jobsheet', $item->id_jobsheet)
-                ->join('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
+                ->leftJoin('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
                 ->leftJoin('users AS created_by', 'cost_jobsheet.created_by', '=', 'created_by.id_user')
                 ->select($selectCost)
                 ->get();
@@ -236,13 +237,14 @@ class JobsheetController extends Controller
             $item->attachments_jobsheet = $attachments;
             $item->cost_jobsheet = $cost;
             $item->approval_jobsheet = $approval_jobsheet;
+            return $item;
         });
         return ResponseHelper::success('Jobsheets retrieved successfully', $jobsheets);
     }
 
     public function getJobsheetById(Request $request)
     {
-        $id = $request->input('id');
+        $id = $request->input('id_jobsheet');
         $select = [
             'a.id_jobsheet',
             'a.id_salesorder',
@@ -276,7 +278,7 @@ class JobsheetController extends Controller
 
 
         $selectAttachments = [
-            'attachments_salesorder.id_attachment_salesorder',
+            'attachments_jobsheet.id_attachment_jobsheet',
             'attachments_jobsheet.id_jobsheet',
             'attachments_jobsheet.file_name',
             'attachments_jobsheet.url',
@@ -304,11 +306,11 @@ class JobsheetController extends Controller
             'cost_jobsheet.id_typecost',
             'ts.name AS typecost_name',
             'cost_jobsheet.cost_value',
-            'selling_salesorder.charge_by',
-            'selling_salesorder.description',
-            'selling_salesorder.created_by',
+            'cost_jobsheet.charge_by',
+            'cost_jobsheet.description',
+            'cost_jobsheet.created_by',
             'created_by.name AS created_by_name',
-            'selling_salesorder.created_at'
+            'cost_jobsheet.created_at'
         ];
 
         $cost = DB::table('cost_jobsheet')
