@@ -387,7 +387,7 @@ class JobsheetController extends Controller
             $request->validate([
                 'id_jobsheet' => 'required|integer|exists:jobsheet,id_jobsheet',
                 'cost' => 'nullable|array',
-                'cost.*.id_cost_jobsheet' => 'nullable|integer|exists:cost_salesorder,id_cost_salesorder',
+                'cost.*.id_cost_jobsheet' => 'nullable|integer|exists:cost_jobsheet,id_cost_jobsheet',
                 'cost.*.id_typecost' => 'required|integer|exists:typecost,id_typecost',
                 'cost.*.cost_value' => 'required|numeric',
                 'cost.*.charge_by' => 'required|string',
@@ -401,9 +401,8 @@ class JobsheetController extends Controller
 
             if ($request->has('cost')) {
                 foreach ($request->cost as $cost) {
-
-                    if ($cost['id_cost_jobsheet']) {
-                        $cost = DB::table('cost_jobsheet')->where('id_cost_jobsheet', $cost['id_cost_jobsheet'])->first();
+                    if ($cost['id_cost_jobsheet'] != null) {
+                        $existingCost = DB::table('cost_jobsheet')->where('id_cost_jobsheet', $cost['id_cost_jobsheet'])->first();
                         $update = DB::table('cost_jobsheet')
                             ->where('id_cost_jobsheet', $cost['id_cost_jobsheet'])
                             ->update([
@@ -418,7 +417,7 @@ class JobsheetController extends Controller
                         } else {
                             $changesCost[] = [
                                 'id_cost_jobsheet' => $cost['id_cost_jobsheet'],
-                                'old' => $cost,
+                                'old' => $existingCost,
                                 'new' => [
                                     'id_typecost' => $cost['id_typecost'],
                                     'cost_value' => $cost['cost_value'],
@@ -494,13 +493,13 @@ class JobsheetController extends Controller
 
             $log = [
                 'id_jobsheet' => $request->id_jobsheet,
-                'action' => [
+                'action' => json_encode([
                     'type' => 'update',
                     'data' => [
                         'cost' => $changesCost,
                         'attachments' => $changesAttachments
                     ]
-                ],
+                ]),
                 'created_by' => Auth::id(),
                 'created_at' => now(),
             ];

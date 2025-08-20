@@ -64,7 +64,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-         Schema::create('log_salesorder', function (Blueprint $table) {
+        Schema::create('log_salesorder', function (Blueprint $table) {
             $table->id('id_log_salesorder');
             $table->unsignedBigInteger('id_salesorder');
             $table->json('action');
@@ -72,7 +72,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-       
+
 
         Schema::create('approval_salesorder', function (Blueprint $table) {
             $table->id('id_approval_salesorder');
@@ -80,7 +80,6 @@ return new class extends Migration
             $table->unsignedBigInteger('approval_position');
             $table->unsignedBigInteger('approval_division');
             $table->integer('step_no');
-            $table->integer('next_step')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('remarks')->nullable();
             $table->datetime('approved_at')->nullable();
@@ -89,16 +88,22 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
         });
 
-         Schema::create('flowapproval_salesorder', function (Blueprint $table) {
+        Schema::create('flowapproval_salesorder', function (Blueprint $table) {
             $table->id('id_flowapproval_salesorder');
             $table->unsignedBigInteger('request_position');
             $table->unsignedBigInteger('request_division');
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
+        Schema::create('detailflowapproval_salesorder', function (Blueprint $table) {
+            $table->id('id_detailflowapproval_salesorder');
+            $table->unsignedBigInteger('id_flowapproval_salesorder');
             $table->unsignedBigInteger('approval_position');
             $table->unsignedBigInteger('approval_division');
-            //urutan
-            $table->integer('step_no');
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->integer('next_step')->nullable(); //no step
+            $table->integer('step_no');
             $table->integer('created_by')->unsigned();
             $table->timestamps();
         });
@@ -110,8 +115,6 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
             $table->timestamps();
         });
-
-       
     }
 
     /**
