@@ -66,7 +66,6 @@ class SalesorderSeeder extends Seeder
             'approval_position' => 1,
             'approval_division' => 1,
             'step_no' => 1,
-            'next_step' => 2,
             'status' => 'pending',
             'remarks' => 'Menunggu persetujuan manager',
             'approved_at' => null,

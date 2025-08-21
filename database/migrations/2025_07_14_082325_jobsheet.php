@@ -58,6 +58,7 @@ return new class extends Migration
             $table->enum('charge_by', ['chargeable_weight', 'gross_weight', 'awb']);
             $table->text('description')->nullable();
             $table->integer('created_by')->unsigned();
+            $table->integer('updated_by')->nullable();
             $table->timestamps();
         });
 

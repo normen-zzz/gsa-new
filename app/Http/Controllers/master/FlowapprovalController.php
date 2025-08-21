@@ -19,32 +19,74 @@ class FlowapprovalController extends Controller
         try {
             // Validate the request data
             $request->validate([
-                'data' => 'required|array|min:1',
-                'data.*.request_position' => 'required|integer|exists:positions,id_position',
-                'data.*.request_division' => 'required|integer|exists:divisions,id_division',
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'data' => 'nullable|array',
                 'data.*.approval_position' => 'required|integer|exists:positions,id_position',
                 'data.*.approval_division' => 'required|integer|exists:divisions,id_division',
-                'data.*.step_no' => 'required|integer|min:1|unique:flowapproval_salesorder,step_no',
+                'data.*.step_no' => 'required|integer|min:1',
                 'data.*.status' => 'required|in:active,inactive',
-                'data.*.next_step' => 'nullable|integer',
             ]);
 
-            $insertData = [];
-            foreach ($request->data as $data) {
-                $insertData[] = [
-                    'request_position' => $data['request_position'],
-                    'request_division' => $data['request_division'],
-                    'approval_position' => $data['approval_position'],
-                    'approval_division' => $data['approval_division'],
-                    'step_no' => $data['step_no'],
-                    'status' => $data['status'],
-                    'next_step' => $data['next_step'] ?? null,
-                    'created_by' => Auth::id(),
-                    'created_at' => now(),
-                ];
+            // $checkRequestPosition = DB::table('positions')
+            //     ->where('id_position', $request->request_position)
+            //     ->exists();
+
+            // $checkRequestDivision = DB::table('divisions')
+            //     ->where('id_division', $request->request_division)
+            //     ->exists();
+
+            // if (!$checkRequestPosition) {
+            //     throw new Exception('Invalid request position');
+            // }
+            // if (!$checkRequestDivision) {
+            //     throw new Exception('Invalid request division');
+            // }
+
+            $flowApproval = [
+                'request_position' => $request->request_position,
+                'request_division' => $request->request_division,
+                'status' => 'active',
+                'created_by' => Auth::id(),
+                'created_at' => now()
+            ];
+            $insertFlowapproval = DB::table('flowapproval_salesorder')->insertGetId($flowApproval);
+            if ($insertFlowapproval) {
+                foreach ($request->data as $data) {
+                    // $checkApprovalPosition = DB::table('positions')
+                    //     ->where('id_position', $data['approval_position'])
+                    //     ->exists();
+
+                    // if (!$checkApprovalPosition) {
+                    //     throw new Exception('Invalid approval position');
+                    // }
+                    // $checkApprovalDivision = DB::table('divisions')
+                    //     ->where('id_division', $data['approval_division'])
+                    //     ->exists();
+
+                    // if (!$checkApprovalDivision) {
+                    //     throw new Exception('Invalid approval division');
+                    // }
+
+                    $dataDetailflowapproval = [
+                        'id_flowapproval_salesorder' => $insertFlowapproval,
+                        'approval_position' => $data['approval_position'],
+                        'approval_division' => $data['approval_division'],
+                        'step_no' => $data['step_no'],
+                        'status' => $data['status'],
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ];
+                    $insertDetailflowapproval =  DB::table('detailflowapproval_salesorder')->insert($dataDetailflowapproval);
+                    if (!$insertDetailflowapproval) {
+                        throw new Exception('Failed to insert detail flow approval');
+                    }
+                }
+            } else {
+                throw new Exception('Failed to insert flow approval');
             }
 
-            DB::table('flowapproval_salesorder')->insert($insertData);
+
             DB::commit();
             return ResponseHelper::success('Flow approval for sales order created successfully', null, 200);
         } catch (Exception $e) {
@@ -63,33 +105,48 @@ class FlowapprovalController extends Controller
             'c.name AS request_position_name',
             'a.request_division',
             'd.name AS request_division_name',
-            'a.approval_position',
-            'e.name AS approval_position_name',
-            'a.approval_division',
-            'f.name AS approval_division_name',
-            'a.step_no',
+
             'a.status',
-            'a.next_step',
             'a.created_at',
             'a.created_by',
             'b.name AS created_by_name'
-
         ];
 
-        $query = DB::table('flowapproval_salesorder AS a')
+        $flowApprovals = DB::table('flowapproval_salesorder AS a')
             ->select($select)
             ->join('users AS b', 'a.created_by', '=', 'b.id_user')
             ->join('positions AS c', 'a.request_position', '=', 'c.id_position')
             ->join('divisions AS d', 'a.request_division', '=', 'd.id_division')
-            ->join('positions AS e', 'a.approval_position', '=', 'e.id_position')
-            ->join('divisions AS f', 'a.approval_division', '=', 'f.id_division')
             ->where(function ($q) use ($search) {
                 $q->where('c.name', 'like', '%' . $search . '%')
                     ->orWhere('d.name', 'like', '%' . $search . '%');
             })
-            ->orderBy('a.step_no', 'asc');
+            ->paginate($limit);
 
-        $flowApprovals = $query->paginate($limit);
+        $flowApprovals->transform(function ($item) {
+            $selectDetailflowapproval = [
+                'a.id_detailflowapproval_salesorder',
+                'a.id_flowapproval_salesorder',
+                'a.approval_position',
+                'b.name AS approval_position_name',
+                'a.approval_division',
+                'c.name AS approval_division_name',
+                'a.step_no',
+                'a.status',
+                'a.created_at',
+                'd.name AS created_by_name',
+                'a.created_by'
+            ];
+            $detailFlowapproval = DB::table('detailflowapproval_salesorder AS a')
+                ->select($selectDetailflowapproval)
+                ->join('positions AS b', 'a.approval_position', '=', 'b.id_position')
+                ->join('divisions AS c', 'a.approval_division', '=', 'c.id_division')
+                ->join('users AS d', 'a.created_by', '=', 'd.id_user')
+                ->where('id_flowapproval_salesorder', $item->id_flowapproval_salesorder)
+                ->get();
+            $item->detail_flowapproval = $detailFlowapproval;
+            return $item;
+        });
 
         return ResponseHelper::success('Flow approvals for sales order retrieved successfully.', $flowApprovals, 200);
     }
@@ -104,44 +161,82 @@ class FlowapprovalController extends Controller
                 'id_flowapproval_salesorder' => 'required|integer|exists:flowapproval_salesorder,id_flowapproval_salesorder',
                 'request_position' => 'required|integer|exists:positions,id_position',
                 'request_division' => 'required|integer|exists:divisions,id_division',
-                'approval_position' => 'required|integer|exists:positions,id_position',
-                'approval_division' => 'required|integer|exists:divisions,id_division',
-                'step_no' => 'required|integer|min:1|unique:flowapproval_salesorder,step_no,' . $id . ',id_flowapproval_salesorder',
                 'status' => 'required|in:active,inactive',
-                'next_step' => 'nullable|integer',
+                'detail_flowapproval' => 'required|array',
+                'detail_flowapproval.*.id_detailflowapproval_salesorder' => 'nullable|integer|exists:detailflowapproval_salesorder,id_detailflowapproval_salesorder',
+                'detail_flowapproval.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'detail_flowapproval.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'detail_flowapproval.*.step_no' => 'required|integer|min:1|distinct',
+                'detail_flowapproval.*.status' => 'required|in:active,inactive',
             ]);
 
-            DB::table('flowapproval_salesorder')
+            $changesFlowapproval = [];
+            $changesDetailflowapproval = [];
+
+            $checkRequestPosition = DB::table('positions')
+                ->where('id_position', $request->request_position)
+                ->exists();
+                if (!$checkRequestPosition) {
+                    throw new Exception('Invalid request position');
+                }
+
+            $checkRequestDivision = DB::table('divisions')
+                ->where('id_division', $request->request_division)
+                ->exists();
+                if (!$checkRequestDivision) {
+                    throw new Exception('Invalid request division');
+                }
+
+            $updateFlowapproval = DB::table('flowapproval_salesorder')
                 ->where('id_flowapproval_salesorder', $id)
                 ->update([
                     'request_position' => $request->input('request_position'),
                     'request_division' => $request->input('request_division'),
-                    'approval_position' => $request->input('approval_position'),
-                    'approval_division' => $request->input('approval_division'),
-                    'step_no' => $request->input('step_no'),
                     'status' => $request->input('status'),
-                    'next_step' => $request->input('next_step'),
                     'updated_at' => now(),
                 ]);
-            $changes = [
-                'type' => 'updated',
-                'from' => $flowapproval_salesorder,
-                'to' => [
-                    'request_position' => $request->input('request_position'),
-                    'request_division' => $request->input('request_division'),
-                    'approval_position' => $request->input('approval_position'),
-                    'approval_division' => $request->input('approval_division'),
-                    'step_no' => $request->input('step_no'),
-                    'status' => $request->input('status'),
-                    'next_step' => $request->input('next_step'),
-                ]
-            ];
-            DB::table('log_flowapproval_salesorder')->insert([
-                'id_flowapproval_salesorder' => $id,
-                'action' => json_encode($changes),
-                'created_by' => Auth::id(),
-                'created_at' => now(),
-            ]);
+            
+
+
+            if ($request->has('detail_flowapproval')) {
+                foreach ($request->input('detail_flowapproval') as $detail) {
+                    if (isset($detail['id_detailflowapproval_salesorder']) || $detail['id_detailflowapproval_salesorder'] != NULL) {
+                        // Update existing detail
+                        $insertDetailflowapproval =  DB::table('detailflowapproval_salesorder')
+                            ->where('id_detailflowapproval_salesorder', $detail['id_detailflowapproval_salesorder'])
+                            ->update([
+                                'approval_position' => $detail['approval_position'],
+                                'approval_division' => $detail['approval_division'],
+                                'step_no' => $detail['step_no'],
+                                'status' => $detail['status'],
+                                'updated_at' => now(),
+                            ]);
+                        if ($insertDetailflowapproval) {
+                            // Log the update action
+                            DB::table('log_detailflowapproval_salesorder')->insert([
+                                'id_detailflowapproval_salesorder' => $detail['id_detailflowapproval_salesorder'],
+                                'action' => json_encode([
+                                    'type' => 'updated',
+                                    'data' => $detail
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ]);
+                        }
+                    } else {
+                        // Insert new detail
+                        DB::table('detailflowapproval_salesorder')->insert([
+                            'id_flowapproval_salesorder' => $id,
+                            'approval_position' => $detail['approval_position'],
+                            'approval_division' => $detail['approval_division'],
+                            'step_no' => $detail['step_no'],
+                            'status' => $detail['status'],
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
             return ResponseHelper::success('Flow approval for sales order updated successfully', null, 200);
@@ -162,10 +257,13 @@ class FlowapprovalController extends Controller
 
             DB::table('flowapproval_salesorder')
                 ->where('id_flowapproval_salesorder', $id)
-                ->delete();
+                ->update([
+                    'status' => 'inactive',
+                    'updated_at' => now(),
+                ]);
 
             $changes = [
-                'type' => 'deleted',
+                'type' => 'deactivated',
             ];
             DB::table('log_flowapproval_salesorder')->insert([
                 'id_flowapproval_salesorder' => $id,
@@ -176,6 +274,41 @@ class FlowapprovalController extends Controller
 
             DB::commit();
             return ResponseHelper::success('Flow approval for sales order deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function activateFlowApprovalSalesOrder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_salesorder');
+            $request->validate([
+                'id_flowapproval_salesorder' => 'required|integer|exists:flowapproval_salesorder,id_flowapproval_salesorder',
+            ]);
+
+            DB::table('flowapproval_salesorder')
+                ->where('id_flowapproval_salesorder', $id)
+                ->update([
+                    'status' => 'active',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'activated',
+            ];
+
+            DB::table('log_flowapproval_salesorder')->insert([
+                'id_flowapproval_salesorder' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for sales order activated successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

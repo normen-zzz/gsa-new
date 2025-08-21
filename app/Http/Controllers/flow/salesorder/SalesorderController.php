@@ -107,7 +107,6 @@ class SalesorderController extends Controller
                         'approval_position' => $approval->approval_position,
                         'approval_division' => $approval->approval_division,
                         'step_no' => $approval->step_no,
-                        'next_step' => $approval->next_step,
                         'status' => 'pending',
                         'created_by' => Auth::id(),
                     ];
@@ -229,6 +228,11 @@ class SalesorderController extends Controller
                 ->leftJoin('users AS created_by', 'approval_salesorder.created_by', '=', 'created_by.id_user')
                 ->where('id_salesorder', $item->id_salesorder)
                 ->get();
+
+                $cost = DB::table('cost')
+                ->select()
+                ->where('id_salesorder', $item->id_salesorder)
+                ->get();
             $item->attachments_salesorder = $attachments;
             $item->selling_salesorder = $selling;
             $item->approval_salesorder = $approval_salesorder;
@@ -321,7 +325,6 @@ class SalesorderController extends Controller
             'approval_salesorder.approval_division',
             'approval_division.name AS approval_division_name',
             'approval_salesorder.step_no',
-            'approval_salesorder.next_step',
             'approval_salesorder.created_by',
             'created_by.name AS created_by_name',
             'approval_salesorder.approved_by',
@@ -339,6 +342,89 @@ class SalesorderController extends Controller
             ->where('id_salesorder', $id)
             ->get();
 
+            $selectAwb = [
+                'awb.id_awb',
+                'awb.id_job',
+                'awb.awb',
+                'awb.agent',
+                'agent.name_customer as agent_name',
+                'awb.data_agent as id_data_agent',
+                'data_agent.data as agent_data',
+                'awb.consignee',
+                'awb.airline',
+                'airline.name as airline_name',
+                'awb.etd',
+                'awb.eta',
+                'awb.pol',
+                'pol.name_airport as pol_name',
+                'awb.pod',
+                'pod.name_airport as pod_name',
+                'awb.commodity',
+                'awb.gross_weight',
+                'awb.chargeable_weight',
+                'awb.pieces',
+                'awb.special_instructions',
+                'awb.created_by',
+                'created_by.name as created_by_name',
+                'awb.updated_by',
+                'updated_by.name as updated_by_name',
+                'awb.created_at',
+                'awb.updated_at',
+                'awb.status'
+            ];
+            $awb = DB::table('awb')
+                ->select($selectAwb)
+                ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer AS data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
+                ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
+                ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
+                ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users AS updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines AS airline', 'awb.airline', '=', 'airline.id_airline')
+                ->where('id_awb', $salesorder->id_awb)
+                ->first();
+
+            $route = DB::table('routes')
+                    ->where('airline', $awb->airline)
+                    ->where('pol', $awb->pol)
+                    ->where('pod', $awb->pod)
+                    ->first();
+                if (!$route) {
+                    $getCost = [];
+                } else {
+                    $getWeightBrackets = DB::table('weight_bracket_costs')
+                        ->where('min_weight', '<=', $awb->chargeable_weight)
+                        ->orderBy('min_weight', 'desc')
+                        ->first();
+                        if (!$getWeightBrackets) {
+                            $getCost = [];
+                        } else {
+
+                       
+                        
+                    $selectCost = [
+                        'cost.id_cost',
+                        'cost.id_weight_bracket_cost',
+                        'weight_bracket_costs.min_weight',
+                        'cost.id_typecost',
+                        'typecost.initials as typecost_initials',
+                        'typecost.name as typecost_name',
+                        'cost.id_route',
+                        'cost.selling_value',
+                        'cost.charge_by'
+                    ];
+                    $getCost = DB::table('cost')
+                    ->select($selectCost)
+                    ->join('weight_bracket_costs', 'cost.id_weight_bracket_cost', '=', 'weight_bracket_costs.id_weight_bracket_cost')
+                    ->join('typecost', 'cost.id_typecost', '=', 'typecost.id_typecost')
+
+                        ->where('id_route', $route->id_route)
+                        ->where('cost.id_weight_bracket_cost', $getWeightBrackets->id_weight_bracket_cost)
+                        ->get();
+                }
+                   
+                }
+ $salesorder->data_cost = $getCost;
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;
         $salesorder->approval_salesorder = $approval_salesorder;
