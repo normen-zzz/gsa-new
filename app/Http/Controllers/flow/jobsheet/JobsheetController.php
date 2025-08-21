@@ -95,29 +95,27 @@ class JobsheetController extends Controller
             if (!$id_position || !$id_division) {
                 throw new Exception('Invalid user position or division');
             }
-            $flow_approval = DB::table('flowapproval_salesorder')
+            $flow_approval = DB::table('flowapproval_jobsheet')
                 ->where(['request_position' => $id_position, 'request_division' => $id_division])
-                ->orderBy('step_no', 'asc')
-                ->get();
-            if ($flow_approval->isEmpty()) {
+                ->first();
+            if (!$flow_approval) {
                 throw new Exception('No flow approval found for the user position and division');
             } else {
-                foreach ($flow_approval as $approval) {
+                $detailApproval = DB::table('detailflowapproval_jobsheet')
+                    ->where('id_flowapproval_jobsheet', $flow_approval->id_flowapproval_jobsheet)
+                    ->get();
+                foreach ($detailApproval as $approval) {
                     $approval = [
                         'id_jobsheet' => $insertJobsheet,
                         'approval_position' => $approval->approval_position,
                         'approval_division' => $approval->approval_division,
-                        'step_no' => $approval->step_no,
-                        'next_step' => $approval->next_step,
+                        'step_no' => $flow_approval->step_no,
                         'status' => 'pending',
                         'created_by' => Auth::id(),
                     ];
                     DB::table('approval_jobsheet')->insert($approval);
                 }
             }
-
-
-
             DB::commit();
             return ResponseHelper::success('Jobsheet created successfully', null, 201);
         } catch (Exception $e) {

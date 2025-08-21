@@ -211,7 +211,7 @@ class SalesorderController extends Controller
                 'approval_salesorder.approval_division',
                 'approval_division.name AS approval_division_name',
                 'approval_salesorder.step_no',
-                'approval_salesorder.next_step',
+                
                 'approval_salesorder.created_by',
                 'created_by.name AS created_by_name',
                 'approval_salesorder.approved_by',
@@ -229,10 +229,7 @@ class SalesorderController extends Controller
                 ->where('id_salesorder', $item->id_salesorder)
                 ->get();
 
-                $cost = DB::table('cost')
-                ->select()
-                ->where('id_salesorder', $item->id_salesorder)
-                ->get();
+               
             $item->attachments_salesorder = $attachments;
             $item->selling_salesorder = $selling;
             $item->approval_salesorder = $approval_salesorder;
