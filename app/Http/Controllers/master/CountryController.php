@@ -54,7 +54,8 @@ class CountryController extends Controller
             'countries.name_country',
             'countries.status',
             'countries.created_at',
-            'users.name as created_by'
+            'users.name as created_by',
+            'countries.deleted_at'
         ];
         $query = DB::table('countries')
             ->select($select)

@@ -19,7 +19,7 @@ class AirlineController extends Controller
         $search = $request->input('searchKey', '');
 
         $query = DB::table('airlines')
-            ->select('id_airline', 'name', 'code', 'status', 'created_at')
+            ->select('id_airline', 'name', 'code', 'status', 'created_at','deleted_at')
             ->where('name', 'like', '%' . $search . '%')
             ->orWhere('code', 'like', '%' . $search . '%')
             ->orderBy('id_airline', 'asc');

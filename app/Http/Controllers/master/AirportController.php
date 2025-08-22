@@ -52,7 +52,8 @@ class AirportController extends Controller
             'countries.name_country',
             'airports.status',
             'users.name as created_by',
-            'airports.created_at'
+            'airports.created_at',
+            'airports.deleted_at'
         ];
         $query = DB::table('airports')
             ->select($select)

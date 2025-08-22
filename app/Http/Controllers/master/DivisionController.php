@@ -24,11 +24,13 @@ class DivisionController extends Controller
             'divisions.description',
             'divisions.have_role',
             'divisions.status',
-            'divisions.created_at'
+            'divisions.created_at',
+            'divisions.deleted_at'
         ];
 
         $divisions = DB::table('divisions')
             ->select($select)
+            
             ->when($search, function ($query) use ($search) {
                 return $query->where('divisions.name', 'like', '%' . $search . '%');
             })

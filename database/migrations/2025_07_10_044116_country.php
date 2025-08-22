@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamps();
             $table->boolean('status')->default(true);
             $table->integer('created_by')->unsigned();
+            $table->softDeletes();
         });
 
         Schema::table('countries', function (Blueprint $table) {

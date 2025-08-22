@@ -24,7 +24,8 @@ class PositionController extends Controller
             'positions.name',
             'positions.description',
             'positions.status',
-            'positions.created_at'
+            'positions.created_at',
+            'positions.deleted_at'
         ];
 
         $positions = DB::table('positions')

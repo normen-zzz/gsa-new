@@ -48,6 +48,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
         Schema::create('log_position', function (Blueprint $table) {
             $table->id('id_logposition');
@@ -64,6 +65,7 @@ return new class extends Migration
             $table->boolean('have_role')->default(false);
             $table->boolean('status')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
         Schema::create('log_division', function (Blueprint $table) {
             $table->id('id_logdivision');
@@ -80,6 +82,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
 
 

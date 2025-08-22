@@ -159,12 +159,20 @@ Route::put('/updateRoute', [RuteController::class, 'updateRoute'])->middleware('
 Route::put('/deleteRoute', [RuteController::class, 'deleteRoute'])->middleware('auth:api');
 Route::put('/restoreRoute', [RuteController::class, 'restoreRoute'])->middleware('auth:api');
 
-
+//salesorder flow approval
 Route::get('/getFlowApprovalSalesOrder', [FlowApprovalController::class, 'getFlowApprovalSalesOrder'])->middleware('auth:api');
 Route::post('/createFlowApprovalSalesOrder', [FlowApprovalController::class, 'createFlowApprovalSalesOrder'])->middleware('auth:api');
 Route::put('/updateFlowApprovalSalesOrder', [FlowApprovalController::class, 'updateFlowApprovalSalesOrder'])->middleware('auth:api');
 Route::put('/deleteFlowApprovalSalesOrder', [FlowApprovalController::class, 'deleteFlowApprovalSalesOrder'])->middleware('auth:api');
+Route::put('/activateFlowApprovalSalesOrder', [FlowApprovalController::class, 'activateFlowApprovalSalesOrder'])->middleware('auth:api');
 
+
+//jobsheet flow approval
+Route::get('/getFlowApprovalJobsheet', [FlowApprovalController::class, 'getFlowApprovalJobsheet'])->middleware('auth:api');
+Route::post('/createFlowApprovalJobsheet', [FlowApprovalController::class, 'createFlowApprovalJobsheet'])->middleware('auth:api');
+Route::put('/updateFlowApprovalJobsheet', [FlowApprovalController::class, 'updateFlowApprovalJobsheet'])->middleware('auth:api');
+Route::put('/deleteFlowApprovalJobsheet', [FlowApprovalController::class, 'deleteFlowApprovalJobsheet'])->middleware('auth:api');
+Route::put('/activateFlowApprovalJobsheet', [FlowApprovalController::class, 'activateFlowApprovalJobsheet'])->middleware('auth:api');
 
 
 

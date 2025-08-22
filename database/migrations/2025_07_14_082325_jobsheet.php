@@ -92,8 +92,6 @@ return new class extends Migration
             $table->id('id_flowapproval_jobsheet');
             $table->unsignedBigInteger('request_position');
             $table->unsignedBigInteger('request_division');
-          
-            $table->integer('step_no');
             $table->enum('status', ['active', 'inactive'])->default('active');
            
             $table->integer('created_by')->unsigned();

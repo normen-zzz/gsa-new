@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamps();
             $table->boolean('status')->default(true);
             $table->unsignedBigInteger('created_by');
+            $table->softDeletes();
         });
 
         Schema::create('log_airport', function (Blueprint $table) {
