@@ -407,15 +407,19 @@ class SalesorderController extends Controller
                         'typecost.initials as typecost_initials',
                         'typecost.name as typecost_name',
                         'cost.id_route',
-                        'cost.selling_value',
+                        'pol.name_airport as pol_name',
+                        'pod.name_airport as pod_name',
+                        'cost.cost_value',
                         'cost.charge_by'
                     ];
                     $getCost = DB::table('cost')
                     ->select($selectCost)
                     ->join('weight_bracket_costs', 'cost.id_weight_bracket_cost', '=', 'weight_bracket_costs.id_weight_bracket_cost')
                     ->join('typecost', 'cost.id_typecost', '=', 'typecost.id_typecost')
-
-                        ->where('id_route', $route->id_route)
+                    ->join('routes', 'cost.id_route', '=', 'routes.id_route')
+                    ->join('airports as pol', 'routes.pol', '=', 'pol.id_airport')
+                    ->join('airports as pod', 'routes.pod', '=', 'pod.id_airport')
+                        ->where('cost.id_route', $route->id_route)
                         ->where('cost.id_weight_bracket_cost', $getWeightBrackets->id_weight_bracket_cost)
                         ->get();
                 }

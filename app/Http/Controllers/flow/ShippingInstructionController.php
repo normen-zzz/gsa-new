@@ -47,6 +47,7 @@ class ShippingInstructionController extends Controller
             'a.created_at',
             'a.updated_by',
             'g.name as updated_by_name',
+            'a.deleted_at'
 
 
 

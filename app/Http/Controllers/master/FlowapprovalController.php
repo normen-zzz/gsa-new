@@ -347,7 +347,7 @@ class FlowapprovalController extends Controller
                     
 
                     $dataDetailflowapproval = [
-                        'id_flowapproval_salesorder' => $insertFlowapproval,
+                        'id_flowapproval_jobsheet' => $insertFlowapproval,
                         'approval_position' => $data['approval_position'],
                         'approval_division' => $data['approval_division'],
                         'step_no' => $data['step_no'],
@@ -355,7 +355,7 @@ class FlowapprovalController extends Controller
                         'created_by' => Auth::id(),
                         'created_at' => now(),
                     ];
-                    $insertDetailflowapproval =  DB::table('detailflowapproval_salesorder')->insert($dataDetailflowapproval);
+                    $insertDetailflowapproval =  DB::table('detailflowapproval_jobsheet')->insert($dataDetailflowapproval);
                     if (!$insertDetailflowapproval) {
                         throw new Exception('Failed to insert detail flow approval');
                     }
@@ -366,7 +366,7 @@ class FlowapprovalController extends Controller
 
 
             DB::commit();
-            return ResponseHelper::success('Flow approval for sales order created successfully', null, 200);
+            return ResponseHelper::success('Flow approval for jobsheet created successfully', null, 200);
         } catch (Exception $e) {
             return ResponseHelper::error($e);
         }
@@ -503,12 +503,23 @@ class FlowapprovalController extends Controller
                         }
                     } else {
                         // Insert new detail
-                        DB::table('detailflowapproval_jobsheet')->insert([
+                        $insert= DB::table('detailflowapproval_jobsheet')->insert([
                             'id_flowapproval_jobsheet' => $id,
                             'approval_position' => $detail['approval_position'],
                             'approval_division' => $detail['approval_division'],
                             'step_no' => $detail['step_no'],
                             'status' => $detail['status'],
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                        $log = [
+                            'type' => 'insert',
+                            'old' => null,
+                            'new' => $insert
+                        ];
+                        DB::table('log_detailflowapproval_jobsheet')->insert([
+                            'id_detailflowapproval_jobsheet' => $insert,
+                            'action' => json_encode($log),
                             'created_by' => Auth::id(),
                             'created_at' => now(),
                         ]);
