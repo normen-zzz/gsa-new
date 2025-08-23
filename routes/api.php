@@ -174,6 +174,14 @@ Route::put('/updateFlowApprovalJobsheet', [FlowApprovalController::class, 'updat
 Route::put('/deleteFlowApprovalJobsheet', [FlowApprovalController::class, 'deleteFlowApprovalJobsheet'])->middleware('auth:api');
 Route::put('/activateFlowApprovalJobsheet', [FlowApprovalController::class, 'activateFlowApprovalJobsheet'])->middleware('auth:api');
 
+//invoice flow approval
+Route::get('/getFlowApprovalInvoice', [FlowApprovalController::class, 'getFlowApprovalInvoice'])->middleware('auth:api');
+Route::post('/createFlowApprovalInvoice', [FlowApprovalController::class, 'createFlowApprovalInvoice'])->middleware('auth:api');
+Route::put('/updateFlowApprovalInvoice', [FlowApprovalController::class, 'updateFlowApprovalInvoice'])->middleware('auth:api');
+Route::put('/deleteFlowApprovalInvoice', [FlowApprovalController::class, 'deleteFlowApprovalInvoice'])->middleware('auth:api');
+Route::put('/activateFlowApprovalInvoice', [FlowApprovalController::class, 'activateFlowApprovalInvoice'])->middleware('auth:api');
+
+
 
 
 
