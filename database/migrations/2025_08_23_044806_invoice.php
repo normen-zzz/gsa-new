@@ -34,9 +34,9 @@ return new class extends Migration
             ])->default('invoice_created');
         });
 
-         Schema::create('approval_salesorder', function (Blueprint $table) {
-            $table->id('id_approval_salesorder');
-            $table->unsignedBigInteger('id_salesorder');
+         Schema::create('approval_invoice', function (Blueprint $table) {
+            $table->id('id_approval_invoice');
+            $table->unsignedBigInteger('id_invoice');
             $table->unsignedBigInteger('approval_position');
             $table->unsignedBigInteger('approval_division');
             $table->integer('step_no');
