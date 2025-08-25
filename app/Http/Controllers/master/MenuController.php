@@ -17,16 +17,23 @@ class MenuController extends Controller
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
-        $listMenu = DB::table('list_menu')
+
+        $query = DB::table('list_menu')
             ->when($search, function ($query) use ($search) {
                 $query->where('name', 'like', '%' . $search . '%')
                     ->orWhere('path', 'like', '%' . $search . '%');
             })
-            ->orderBy('id_listmenu', 'asc')
-            ->paginate($limit);
+            ->orderBy('id_listmenu', 'asc');
+
+        if ($limit === 'all') {
+            $listMenu = $query->get(); // ambil semua
+        } else {
+            $listMenu = $query->paginate($limit);
+        }
 
         return ResponseHelper::success('List of menus retrieved successfully.', $listMenu, 200);
     }
+
 
     public function getListMenuById($id)
     {
@@ -146,6 +153,7 @@ class MenuController extends Controller
             'c.name AS division_name',
             'a.id_listmenu',
             'd.name AS menu_name',
+            "d.parent_id",
             'd.icon',
             'd.path',
             'a.status',

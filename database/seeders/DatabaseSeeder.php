@@ -39,6 +39,8 @@ class DatabaseSeeder extends Seeder
             TypecostSeeder::class, // Uncomment if you want to seed typecost
             TypesellingSeeder::class, // Uncomment if you want to seed typeselling
             UserSeeder::class,
+            BracketSeeder::class,
+            CostSellingSeeder::class
 
         ]);
         // CREATE JOBS
