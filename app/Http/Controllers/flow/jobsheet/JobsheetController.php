@@ -56,7 +56,12 @@ class JobsheetController extends Controller
                         if (!$imageData) {
                             throw new Exception('Image data is required for attachments');
                         }
-                        $cloudinaryImage = Cloudinary::uploadApi()->upload($imageData, [
+                        // create image from base64  
+                       $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
+                        $tempFile = sys_get_temp_dir() . '/' . uniqid() . '.jpg';
+                        file_put_contents($tempFile, $image);
+
+                        $cloudinaryImage = Cloudinary::uploadApi()->upload($tempFile, [
                             'folder' => 'jobsheets',
                         ]);
                         $url = $cloudinaryImage['secure_url'] ?? null;
@@ -71,6 +76,8 @@ class JobsheetController extends Controller
                             'created_at' => now(),
                         ];
                         DB::table('attachments_jobsheet')->insert($attachments);
+                        unlink($tempFile);
+
                     }
                 } else {
                     throw new Exception('Invalid attachments format');
