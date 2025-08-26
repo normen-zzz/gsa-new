@@ -214,7 +214,7 @@ class JobsheetController extends Controller
                 'approval_jobsheet.approval_division',
                 'approval_division.name AS approval_division_name',
                 'approval_jobsheet.step_no',
-                'approval_jobsheet.next_step',
+               
                 'approval_jobsheet.created_by',
                 'created_by.name AS created_by_name',
                 'approval_jobsheet.approved_by',
@@ -326,7 +326,7 @@ class JobsheetController extends Controller
             'approval_jobsheet.approval_division',
             'approval_division.name AS approval_division_name',
             'approval_jobsheet.step_no',
-            'approval_jobsheet.next_step',
+           
             'approval_jobsheet.created_by',
             'created_by.name AS created_by_name',
             'approval_jobsheet.approved_by',
