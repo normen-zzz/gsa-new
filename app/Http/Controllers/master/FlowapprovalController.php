@@ -202,6 +202,7 @@ class FlowapprovalController extends Controller
                 foreach ($request->input('detail_flowapproval') as $detail) {
                     if (isset($detail['id_detailflowapproval_salesorder']) || $detail['id_detailflowapproval_salesorder'] != NULL) {
                         // Update existing detail
+                        $detailFlowApproval = DB::table('detailflowapproval_salesorder')->where('id_detailflowapproval_salesorder', $detail['id_detailflowapproval_salesorder'])->first();
                         $insertDetailflowapproval =  DB::table('detailflowapproval_salesorder')
                             ->where('id_detailflowapproval_salesorder', $detail['id_detailflowapproval_salesorder'])
                             ->update([
@@ -213,11 +214,16 @@ class FlowapprovalController extends Controller
                             ]);
                         if ($insertDetailflowapproval) {
                             // Log the update action
-                            DB::table('log_detailflowapproval_salesorder')->insert([
-                                'id_detailflowapproval_salesorder' => $detail['id_detailflowapproval_salesorder'],
+                            DB::table('log_flowapproval_salesorder')->insert([
+                                'id_flowapproval_salesorder' => $detail['id_flowapproval_salesorder'],
                                 'action' => json_encode([
                                     'type' => 'updated',
-                                    'data' => $detail
+                                    
+                                    'data' => [
+                                        'id_detailflowapproval_salesorder' => $detail['id_detailflowapproval_salesorder'],
+                                        'from' => $detailFlowApproval,
+                                        'to' => $detail
+                                    ]
                                 ]),
                                 'created_by' => Auth::id(),
                                 'created_at' => now(),

@@ -96,9 +96,8 @@ class SalesorderController extends Controller
             }
             $flow_approval = DB::table('flowapproval_salesorder')
                 ->where(['request_position' => $id_position, 'request_division' => $id_division])
-              
                 ->get();
-            if ($flow_approval->isEmpty()) {
+            if (!$flow_approval) {
                 throw new Exception('No flow approval found for the user position and division');
             } else {
                 foreach ($flow_approval as $approval) {
