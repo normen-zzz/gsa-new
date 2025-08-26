@@ -109,7 +109,7 @@ class JobsheetController extends Controller
                         'id_jobsheet' => $insertJobsheet,
                         'approval_position' => $approval->approval_position,
                         'approval_division' => $approval->approval_division,
-                        'step_no' => $flow_approval->step_no,
+                        'step_no' => $approval->step_no,
                         'status' => 'pending',
                         'created_by' => Auth::id(),
                     ];
