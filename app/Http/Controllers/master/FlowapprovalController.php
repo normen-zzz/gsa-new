@@ -218,7 +218,6 @@ class FlowapprovalController extends Controller
                                 'id_flowapproval_salesorder' => $detail['id_flowapproval_salesorder'],
                                 'action' => json_encode([
                                     'type' => 'updated',
-                                    
                                     'data' => [
                                         'id_detailflowapproval_salesorder' => $detail['id_detailflowapproval_salesorder'],
                                         'from' => $detailFlowApproval,
