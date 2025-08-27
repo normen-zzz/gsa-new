@@ -35,7 +35,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
+      
 
         Schema::create('log_vendor', function (Blueprint $table) {
             $table->id('id_logvendor');
@@ -44,6 +44,7 @@ return new class extends Migration
             $table->integer('id_user')->unsigned();
             $table->timestamps();
         });
+
     }
 
     /**
