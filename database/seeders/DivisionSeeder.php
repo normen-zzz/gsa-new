@@ -15,6 +15,22 @@ class DivisionSeeder extends Seeder
     {
         DB::table('divisions')->insert([
             [
+                'name' => 'Director',
+                'description' => 'Director ',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'General Manager',
+                'description' => 'General Manager ',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'name' => 'IT',
                 'description' => 'Information Technology Division',
                 'status' => true,
@@ -41,6 +57,14 @@ class DivisionSeeder extends Seeder
             [
                 'name' => 'Account Management',
                 'description' => 'Account Management Division',
+                'status' => true,
+                'have_role' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Key Account',
+                'description' => 'Key Account Management Division',
                 'status' => true,
                 'have_role' => true,
                 'created_at' => now(),

@@ -86,6 +86,14 @@ class MenuSeeder extends Seeder
                                 [
                                     "title" => "Sales Order Flow",
                                     "url" => "/dashboard/master/master-approval/sales-order"
+                                ],
+                                [
+                                    "title" => "Jobsheet Flow",
+                                    "url" => "/dashboard/master/master-approval/jobsheet"
+                                ],
+                                [
+                                    "title" => "Invoice Flow",
+                                    "url" => "/dashboard/master/master-approval/invoice"
                                 ]
                             ]
                         ]

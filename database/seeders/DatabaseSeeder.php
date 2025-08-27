@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             RouteSeeder::class,
             SalesorderSeeder::class,
-            ShippinginstructionSeeder::class,
+            // ShippinginstructionSeeder::class,
             TypecostSeeder::class, // Uncomment if you want to seed typecost
             TypesellingSeeder::class, // Uncomment if you want to seed typeselling
             UserSeeder::class,
