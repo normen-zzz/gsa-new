@@ -31,7 +31,8 @@ class JobsheetController extends Controller
                 'cost.*.id_typecost' => 'required|integer|exists:typecost,id_typecost',
                 'cost.*.cost_value' => 'required|numeric|min:0',
                 'cost.*.charge_by' => 'nullable|in:chargeable_weight,gross_weight,awb',
-                'cost.*.description' => 'nullable|string|max:255'
+                'cost.*.description' => 'nullable|string|max:255',
+                'cost.*.id_vendor' => 'required|integer|exists:vendors,id_vendor'
             ]);
 
             $salesorder = DB::table('salesorder')->where('id_salesorder', $request->id_salesorder)->first();
@@ -90,6 +91,7 @@ class JobsheetController extends Controller
                         'cost_value' => $item['cost_value'],
                         'charge_by' => $item['charge_by'],
                         'description' => $item['description'] ?? null,
+                        'id_vendor' => $item['id_vendor'],
                         'created_by' => Auth::id(),
                     ];
                     DB::table('cost_jobsheet')->insert($dataCost);
@@ -205,6 +207,8 @@ class JobsheetController extends Controller
                 'cost_jobsheet.cost_value',
                 'cost_jobsheet.charge_by',
                 'cost_jobsheet.description',
+                'cost_jobsheet.id_vendor',
+                'v.name_vendor+ AS vendor_name',
                 'cost_jobsheet.created_by',
                 'created_by.name AS created_by_name',
                 'cost_jobsheet.created_at'
@@ -214,6 +218,7 @@ class JobsheetController extends Controller
                 ->where('id_jobsheet', $item->id_jobsheet)
                 ->leftJoin('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
                 ->leftJoin('users AS created_by', 'cost_jobsheet.created_by', '=', 'created_by.id_user')
+                ->leftJoin('vendors AS v', 'cost_jobsheet.id_vendor', '=', 'v.id_vendor')
                 ->select($selectCost)
                 ->get();
 
@@ -317,6 +322,8 @@ class JobsheetController extends Controller
             'cost_jobsheet.cost_value',
             'cost_jobsheet.charge_by',
             'cost_jobsheet.description',
+            'cost_jobsheet.id_vendor',
+            'v.name_vendor AS vendor_name',
             'cost_jobsheet.created_by',
             'created_by.name AS created_by_name',
             'cost_jobsheet.created_at'
@@ -326,6 +333,7 @@ class JobsheetController extends Controller
             ->where('id_jobsheet', $jobsheet->id_jobsheet)
             ->join('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
             ->leftJoin('users AS created_by', 'cost_jobsheet.created_by', '=', 'created_by.id_user')
+            ->leftJoin('vendors AS v', 'cost_jobsheet.id_vendor', '=', 'v.id_vendor')
             ->select($selectCost)
             ->get();
 
@@ -405,6 +413,7 @@ class JobsheetController extends Controller
                 'cost.*.cost_value' => 'required|numeric',
                 'cost.*.charge_by' => 'required|string',
                 'cost.*.description' => 'nullable|string',
+                'cost.*.id_vendor' => 'required|integer|exists:vendors,id_vendor',
                 'attachments' => 'nullable|array',
                 'attachments.*.image' => 'required|string',
             ]);
@@ -423,6 +432,7 @@ class JobsheetController extends Controller
                                 'cost_value' => $cost['cost_value'],
                                 'charge_by' => $cost['charge_by'],
                                 'description' => $cost['description'] ?? null,
+                                'id_vendor' => $cost['id_vendor'],
                                 'updated_by' => Auth::id(),
                             ]);
                         if (!$update) {
@@ -436,6 +446,7 @@ class JobsheetController extends Controller
                                     'cost_value' => $cost['cost_value'],
                                     'charge_by' => $cost['charge_by'],
                                     'description' => $cost['description'] ?? null,
+                                    'id_vendor' => $cost['id_vendor'],
                                     'updated_by' => Auth::id(),
                                 ]
                             ];
@@ -447,6 +458,7 @@ class JobsheetController extends Controller
                             'cost_value' => $cost['cost_value'],
                             'charge_by' => $cost['charge_by'],
                             'description' => $cost['description'] ?? null,
+                            'id_vendor' => $cost['id_vendor'],
                             'created_by' => Auth::id(),
                             'created_at' => now(),
                         ]);
@@ -461,6 +473,7 @@ class JobsheetController extends Controller
                                     'cost_value' => $cost['cost_value'],
                                     'charge_by' => $cost['charge_by'],
                                     'description' => $cost['description'] ?? null,
+                                    'id_vendor' => $cost['id_vendor'],
                                     'created_by' => Auth::id(),
                                     'created_at' => now(),
                                 ]
