@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -50,22 +52,33 @@ class SalesorderController extends Controller
             if ($insertSalesorder) {
                 if (isset($request->attachments) && is_array($request->attachments)) {
                     foreach ($request->attachments as $attachment) {
-                        $file_name = time() . '_' . $insertSalesorder;
-                        $imageData = $attachment['image'] ?? null;
-                        if (!$imageData) {
-                            throw new Exception('Image data is required for attachments');
-                        }
-                        $cloudinaryImage = Cloudinary::uploadApi()->upload($imageData, [
-                            'folder' => 'salesorders',
-                        ]);
-                        $url = $cloudinaryImage['secure_url'] ?? null;
-                        $publicId = $cloudinaryImage['public_id'] ?? null;
+                        // Generate a unique filename with timestamp
+                        $file_name = time() . '_' . $insertSalesorder . '.jpg';
+                        
+                        // Decode the base64 image
+                        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+                        
+                        // Save file to public storage
+                        $path = 'salesorders/' . $file_name;
+                        Storage::disk('public')->put($path, $image);
 
+                        // Ensure storage link exists
+                        if (!file_exists(public_path('storage'))) {
+                            throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                        }
+                        
+                        // Generate public URL that can be accessed directly
+                        $url = url('storage/' . $path);
+                        
+                        // Verify file was saved successfully
+                        if (!Storage::disk('public')->exists($path)) {
+                            throw new Exception('Failed to save attachment to storage');
+                        }
                         $attachments = [
-                            'id_salesorder' => $insertSalesorder, // Will be set after sales order creation
+                            'id_salesorder' => $insertSalesorder,
                             'file_name' => $file_name,
                             'url' => $url,
-                            'public_id' => $publicId,
+                            'public_id' => $path, // Store the path as public_id for future reference
                             'created_by' => Auth::id(),
                             'created_at' => now(),
                         ];
@@ -123,6 +136,10 @@ class SalesorderController extends Controller
             return ResponseHelper::success('Sales order created successfully', null, 201);
         } catch (Exception $e) {
             DB::rollBack();
+            // Remove image if exists
+            if (isset($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
             return ResponseHelper::error($e);
         }
     }
@@ -390,18 +407,16 @@ class SalesorderController extends Controller
             ->where('pod', $awb->pod)
             ->first();
         if (!$route) {
-            $getCost = [];
+            throw new Exception('Route not found');
         } else {
             $getWeightBrackets = DB::table('weight_bracket_costs')
                 ->where('min_weight', '<=', $awb->chargeable_weight)
                 ->orderBy('min_weight', 'desc')
                 ->first();
             if (!$getWeightBrackets) {
-                $getCost = [];
+                // $getCost = [];
+                 throw new Exception('Route not found');
             } else {
-
-
-
                 $selectCost = [
                     'cost.id_cost',
                     'cost.id_weight_bracket_cost',
@@ -427,6 +442,12 @@ class SalesorderController extends Controller
                     ->get();
             }
         }
+        if ($getCost == []) {
+            // $getCost = [];
+             throw new Exception('Route not found');
+        }
+        $salesorder->route = $route;
+        $salesorder->weight_bracket_cost = $getWeightBrackets;
         $salesorder->data_cost = $getCost;
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;
@@ -450,9 +471,9 @@ class SalesorderController extends Controller
             $update = DB::table('attachments_salesorder')->where('id_attachment_salesorder', $id_attachment_salesorder)
                 ->update(['deleted_at' => now(), 'deleted_by' => Auth::id()]);
             if ($update) {
-                $deleteOnCloudinary = Cloudinary::uploadApi()->destroy($attachment->public_id);
-                if (!$deleteOnCloudinary) {
-                    throw new Exception('Failed to delete attachment from Cloudinary');
+                // Delete file from storage using public_id (which is the path in this case)
+                if (Storage::disk('public')->exists($attachment->public_id)) {
+                    Storage::disk('public')->delete($attachment->public_id);
                 }
                 $log = [
                     'id_attachment_salesorder' => $id_attachment_salesorder,
@@ -554,25 +575,30 @@ class SalesorderController extends Controller
 
             if ($request->has('attachments')) {
                 foreach ($request->attachments as $attachment) {
-                    $imageData = $attachment['image'];
-                    $uploadToCloudinary = Cloudinary::uploadApi()->upload($imageData, [
-                        'folder' => 'salesorders',
-                    ]);
-                    if (!$uploadToCloudinary) {
-                        throw new Exception('Failed to upload attachment to Cloudinary');
-                    }
-                    $file_name = time() . '_' . $request->id_salesorder;
+                    //    upload ke local
+                     $file_name = time() . '_' . $request->id_salesorder . '.jpg';
+
+                        // Decode the base64 image
+                        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+                        
+                        // Save file to public storage
+                        $path = 'salesorders/' . $file_name;
+                        Storage::disk('public')->put($path, $image);
+                   
                     $insert = DB::table('attachments_salesorder')->insertGetId([
                         'id_salesorder' => $request->id_salesorder,
                         'file_name' => $file_name,
-                        'url' => $uploadToCloudinary['secure_url'],
-                        'public_id' => $uploadToCloudinary['public_id'],
+                        'url' => url('storage/' . $path),
+                        'public_id' => $path,
                         'created_by' => Auth::id(),
                         'created_at' => now(),
                     ]);
 
                     if (!$insert) {
-                        $destroyOnCloudinary = Cloudinary::uploadApi()->destroy($uploadToCloudinary['public_id']);
+                        // Delete file from storage
+                        if (Storage::disk('public')->exists($path)) {
+                            Storage::disk('public')->delete($path);
+                        }
                         throw new Exception('Failed to insert attachment');
                     } else {
                         $changesAttachments[] = [
@@ -580,8 +606,8 @@ class SalesorderController extends Controller
                             'old' => null,
                             'new' => [
                                 'file_name' => $file_name,
-                                'url' => $uploadToCloudinary['secure_url'],
-                                'public_id' => $uploadToCloudinary['public_id'],
+                                'url' => url('storage/' . $path),
+                                'public_id' => $path,
                                 'created_by' => Auth::id(),
                                 'created_at' => now(),
                             ]
@@ -628,6 +654,12 @@ class SalesorderController extends Controller
                     'status' => 'so_deleted'
                 ]);
             if ($update) {
+                $attachments = DB::table('attachments_salesorder')
+                    ->where('id_salesorder', $request->id_salesorder)
+                    ->get();
+
+               
+
                 $log = [
                     'id_salesorder' => $request->id_salesorder,
                     'action' => [

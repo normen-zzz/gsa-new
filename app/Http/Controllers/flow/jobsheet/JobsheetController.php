@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Helpers\ResponseHelper;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Storage;
 
 
 date_default_timezone_set('Asia/Jakarta');
@@ -52,32 +53,30 @@ class JobsheetController extends Controller
                 if (isset($request->attachments) && is_array($request->attachments)) {
                     foreach ($request->attachments as $attachment) {
                         $file_name = time() . '_' . $insertJobsheet;
-                        $imageData = $attachment['image'] ?? null;
-                        if (!$imageData) {
-                            throw new Exception('Image data is required for attachments');
-                        }
-                        // create image from base64  
-                       $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $imageData));
-                        $tempFile = sys_get_temp_dir() . '/' . uniqid() . '.jpg';
-                        file_put_contents($tempFile, $image);
+                        // Decode the base64 image
+                        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
 
-                        $cloudinaryImage = Cloudinary::uploadApi()->upload($tempFile, [
-                            'folder' => 'jobsheets',
-                        ]);
-                        $url = $cloudinaryImage['secure_url'] ?? null;
-                        $publicId = $cloudinaryImage['public_id'] ?? null;
+                        // Save file to public storage
+                        $path = 'salesorders/' . $file_name;
+                        Storage::disk('public')->put($path, $image);
+
+                        // Ensure storage link exists
+                        if (!file_exists(public_path('storage'))) {
+                            throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                        }
+
+                        // Generate public URL that can be accessed directly
+                        $url = url('storage/' . $path);
 
                         $attachments = [
                             'id_jobsheet' => $insertJobsheet, // Will be set after jobsheet creation
                             'file_name' => $file_name,
                             'url' => $url,
-                            'public_id' => $publicId,
+                            'public_id' => $path,
                             'created_by' => Auth::id(),
                             'created_at' => now(),
                         ];
                         DB::table('attachments_jobsheet')->insert($attachments);
-                        unlink($tempFile);
-
                     }
                 } else {
                     throw new Exception('Invalid attachments format');
@@ -127,6 +126,10 @@ class JobsheetController extends Controller
             return ResponseHelper::success('Jobsheet created successfully', null, 201);
         } catch (Exception $e) {
             DB::rollBack();
+            // Remove image if exists
+            if (isset($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
             return ResponseHelper::error($e);
         }
     }
@@ -221,7 +224,7 @@ class JobsheetController extends Controller
                 'approval_jobsheet.approval_division',
                 'approval_division.name AS approval_division_name',
                 'approval_jobsheet.step_no',
-               
+
                 'approval_jobsheet.created_by',
                 'created_by.name AS created_by_name',
                 'approval_jobsheet.approved_by',
@@ -333,7 +336,7 @@ class JobsheetController extends Controller
             'approval_jobsheet.approval_division',
             'approval_division.name AS approval_division_name',
             'approval_jobsheet.step_no',
-           
+
             'approval_jobsheet.created_by',
             'created_by.name AS created_by_name',
             'approval_jobsheet.approved_by',
@@ -372,10 +375,14 @@ class JobsheetController extends Controller
 
             $delete = DB::table('attachments_jobsheet')->where('id_attachment_jobsheet', $id_attachment_jobsheet)->delete();
             if ($delete) {
-                $deleteOnCloudinary = Cloudinary::uploadApi()->destroy($attachment->public_id);
-                if (!$deleteOnCloudinary) {
-                    throw new Exception('Failed to delete attachment from Cloudinary');
+                // Delete from Cloudinary
+                if ($attachment && isset($attachment->public_id)) {
+                    if (Storage::disk('public')->exists($attachment->public_id)) {
+                        Storage::disk('public')->delete($attachment->public_id);
+                    }
                 }
+            } else {
+                throw new Exception('Failed to delete attachment');
             }
             DB::commit();
             return ResponseHelper::success('Attachment deleted successfully', null, 200);
@@ -432,7 +439,7 @@ class JobsheetController extends Controller
                                 ]
                             ];
                         }
-                    } else{
+                    } else {
                         $insert = DB::table('cost_jobsheet')->insert([
                             'id_jobsheet' => $request->id_jobsheet,
                             'id_typecost' => $cost['id_typecost'],
@@ -464,29 +471,33 @@ class JobsheetController extends Controller
 
             if ($request->has('attachments')) {
                 foreach ($request->attachments as $attachment) {
-                    $uploadToCloudinary = Cloudinary::uploadApi()->upload($attachment['image'], [
-                        'folder' => 'jobsheets',
-                    ]);
-                    if (!$uploadToCloudinary) {
-                        throw new Exception('Failed to upload attachment to Cloudinary');
-                    } else {
-                        $url = $uploadToCloudinary['secure_url'] ?? null;
-                        $publicId = $uploadToCloudinary['public_id'] ?? null;
+                    $file_name = time() . '_' . $request->id_jobsheet;
+                    // Decode the base64 image
+                    $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
 
-                        $dataAttachment = [
-                            'id_jobsheet' => $request->id_jobsheet,
-                            'file_name' => time() . '_' . $request->id_jobsheet,
-                            'url' => $url,
-                            'public_id' => $publicId,
-                            'created_by' => Auth::id(),
-                            'created_at' => now()
-                        ];
-                        $insert = DB::table('attachments_jobsheet')->insert($dataAttachment);
+                    // Save file to public storage
+                    $path = 'salesorders/' . $file_name;
+                    Storage::disk('public')->put($path, $image);
 
-                        if (!$insert) {
-                            $deleteOnCloudinary = Cloudinary::uploadApi()->destroy($publicId);
-                            throw new Exception('Failed to insert attachment');
-                        }
+                    // Ensure storage link exists
+                    if (!file_exists(public_path('storage'))) {
+                        throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                    }
+
+                    // Generate public URL that can be accessed directly
+                    $url = url('storage/' . $path);
+
+                    $dataAttachment = [
+                        'id_jobsheet' => $request->id_jobsheet,
+                        'file_name' => $file_name,
+                        'url' => $url,
+                        'public_id' => $path,
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ];
+                    $publicId = DB::table('attachments_jobsheet')->insertGetId($dataAttachment);
+                    if (!$publicId) {
+                        throw new Exception('Failed to insert attachment');
                     }
                 }
                 $changesAttachments[] = [
@@ -514,6 +525,10 @@ class JobsheetController extends Controller
             return ResponseHelper::success('Jobsheet updated successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
+            // Remove image if exists
+            if (isset($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
             return ResponseHelper::error($e);
         }
     }
@@ -538,7 +553,7 @@ class JobsheetController extends Controller
                 ]);
             if (!$update) {
                 throw new Exception('Failed to delete jobsheet');
-            } else{
+            } else {
                 $log = [
                     'id_jobsheet' => $request->id_jobsheet,
                     'action' => [
@@ -578,19 +593,19 @@ class JobsheetController extends Controller
                     'deleted_at' => null,
                     'status' => 'js_created_by_cs'
                 ]);
-                if ($update) {
-                    $log = [
-                        'id_jobsheet' => $request->id_jobsheet,
-                        'action' => [
-                            'type' => 'activate',
-                            'data' => [
-                                'activated_by' => Auth::id(),
-                                'activated_at' => now()
-                            ]
+            if ($update) {
+                $log = [
+                    'id_jobsheet' => $request->id_jobsheet,
+                    'action' => [
+                        'type' => 'activate',
+                        'data' => [
+                            'activated_by' => Auth::id(),
+                            'activated_at' => now()
                         ]
-                    ];
-                    DB::table('log_jobsheet')->insert($log);
-                }
+                    ]
+                ];
+                DB::table('log_jobsheet')->insert($log);
+            }
             DB::commit();
             return ResponseHelper::success('Jobsheet activated successfully', null, 200);
         } catch (Exception $e) {
@@ -628,7 +643,7 @@ class JobsheetController extends Controller
 
                     if (!$update) {
                         throw new Exception('Failed to update approval status because');
-                    } else{
+                    } else {
                         $log = [
                             'id_jobsheet' => $request->id_jobsheet,
                             'action' => [
@@ -642,7 +657,7 @@ class JobsheetController extends Controller
                         ];
                         DB::table('log_jobsheet')->insert($log);
                     }
-                } else{
+                } else {
                     throw new Exception('You are not authorized to update this approval status');
                 }
             }

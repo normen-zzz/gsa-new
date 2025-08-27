@@ -13,9 +13,6 @@ return new class extends Migration
     {
         Schema::create('invoice', function (Blueprint $table) {
             $table->id('id_invoice');
-            $table->unsignedBigInteger('id_salesorder');
-            $table->unsignedBigInteger('id_jobsheet');
-            $table->unsignedBigInteger('id_awb');
             $table->unsignedBigInteger('agent');
             $table->unsignedBigInteger('data_agent');
             $table->string('invoice_number')->unique();
@@ -32,6 +29,17 @@ return new class extends Migration
                 'invoice_paid',
                 'invoice_cancelled'
             ])->default('invoice_created');
+        });
+
+        Schema::create('detail_invoice', function (Blueprint $table) {
+            $table->id('id_detail_invoice');
+            $table->unsignedBigInteger('id_invoice');
+             $table->unsignedBigInteger('id_salesorder');
+            $table->unsignedBigInteger('id_jobsheet');
+            $table->unsignedBigInteger('id_awb');
+            $table->timestamps();
+            
+
         });
 
          Schema::create('approval_invoice', function (Blueprint $table) {
