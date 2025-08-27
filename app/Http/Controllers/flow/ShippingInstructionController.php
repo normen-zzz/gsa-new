@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\NumberHelper;
 
 // date
 date_default_timezone_set('Asia/Jakarta');
@@ -605,8 +606,10 @@ class ShippingInstructionController extends Controller
         // date y-m-d H:i:s
         DB::beginTransaction();
         try {
+            $no_shippinginstruction = NumberHelper::generateShippingInstructionNumber();
             $instruction = DB::table('shippinginstruction')
                 ->insertGetId([
+                    'no_shippinginstruction' => $no_shippinginstruction,
                     'agent' => $data['agent'],
                     'data_agent' => $data['data_agent'],
                     'consignee' => $data['consignee'],
@@ -846,8 +849,9 @@ class ShippingInstructionController extends Controller
             }
 
 
-
+            $no_job = $shippingInstruction->no_shippinginstruction;
             $dataJob = [
+                'no_job' => $no_job,
                 'id_shippinginstruction' => $request->input('id_shippinginstruction'),
                 'awb' => $request->input('awb'),
                 'agent' => $request->input('agent'),

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('job', function (Blueprint $table) {
             $table->id('id_job');
             $table->unsignedBigInteger('id_shippinginstruction');
+            $table->string('no_job')->nullable()->unique();
             $table->string('awb');
             $table->unsignedBigInteger('agent');
             $table->unsignedBigInteger('data_agent');

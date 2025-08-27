@@ -38,12 +38,14 @@ class SalesorderController extends Controller
 
             $awb = DB::table('awb')->where('id_awb', $request->id_awb)->first();
             $id_job = $awb->id_job ?? null;
-            $id_shippinginstruction = DB::table('job')->where('id_job', $id_job)->value('id_shippinginstruction');
+            $job = DB::table('job')->where('id_job', $id_job)->first();
+            $id_shippinginstruction = $job->id_shippinginstruction ?? null;
 
             $dataSalesorder = [
                 'id_shippinginstruction' => $id_shippinginstruction,
                 'id_job' => $id_job,
                 'id_awb' => $request->id_awb,
+                'no_salesorder' => $job->no_job,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
                 'status' => 'so_created_by_sales'

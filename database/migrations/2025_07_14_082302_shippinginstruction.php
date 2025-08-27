@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('shippinginstruction', function (Blueprint $table) {
             $table->id('id_shippinginstruction');
+            $table->string('no_shippinginstruction')->nullable()->unique();
             $table->integer('agent')->unsigned();
             $table->integer('data_agent')->unsigned();
             $table->string('consignee');

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_job');
             $table->unsignedBigInteger('id_awb');
             $table->unsignedBigInteger('id_salesorder');
+            $table->string('no_jobsheet')->nullable()->unique();
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
