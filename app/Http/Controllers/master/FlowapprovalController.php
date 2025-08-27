@@ -518,12 +518,13 @@ class FlowapprovalController extends Controller
                             'created_at' => now(),
                         ]);
                         $log = [
+                            'id_detailflowapproval_jobsheet' => DB::getPdo()->lastInsertId(),
                             'type' => 'insert',
                             'old' => null,
                             'new' => $insert
                         ];
-                        DB::table('log_detailflowapproval_jobsheet')->insert([
-                            'id_detailflowapproval_jobsheet' => $insert,
+                        DB::table('log_flowapproval_jobsheet')->insert([
+                            'id_flowapproval_jobsheet' => $id,
                             'action' => json_encode($log),
                             'created_by' => Auth::id(),
                             'created_at' => now(),
@@ -807,12 +808,13 @@ class FlowapprovalController extends Controller
                             'created_at' => now(),
                         ]);
                         $log = [
+                            'id_detailflowapproval_invoice' => DB::getPdo()->lastInsertId(),
                             'type' => 'insert',
                             'old' => null,
                             'new' => $insert
                         ];
-                        DB::table('log_detailflowapproval_invoice')->insert([
-                            'id_detailflowapproval_invoice' => $insert,
+                        DB::table('log_flowapproval_invoice')->insert([
+                            'id_flowapproval_invoice' => $id,
                             'action' => json_encode($log),
                             'created_by' => Auth::id(),
                             'created_at' => now(),
