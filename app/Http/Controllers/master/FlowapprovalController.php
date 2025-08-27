@@ -496,9 +496,10 @@ class FlowapprovalController extends Controller
                             ]);
                         if ($insertDetailflowapproval) {
                             // Log the update action
-                            DB::table('log_detailflowapproval_jobsheet')->insert([
-                                'id_detailflowapproval_jobsheet' => $detail['id_detailflowapproval_jobsheet'],
+                            DB::table('log_flowapproval_jobsheet')->insert([
+                                'id_flowapproval_jobsheet' => $id,
                                 'action' => json_encode([
+                                    'id_detailflowapproval_jobsheet' => $detail['id_detailflowapproval_jobsheet'],
                                     'type' => 'updated',
                                     'data' => $detail
                                 ]),
@@ -786,9 +787,10 @@ class FlowapprovalController extends Controller
                             ]);
                         if ($insertDetailflowapproval) {
                             // Log the update action
-                            DB::table('log_detailflowapproval_invoice')->insert([
-                                'id_detailflowapproval_invoice' => $detail['id_detailflowapproval_invoice'],
+                            DB::table('log_flowapproval_invoice')->insert([
+                                'id_flowapproval_invoice' => $id,
                                 'action' => json_encode([
+                                    'id_detailflowapproval_invoice' => $detail['id_detailflowapproval_invoice'],
                                     'type' => 'updated',
                                     'data' => $detail
                                 ]),

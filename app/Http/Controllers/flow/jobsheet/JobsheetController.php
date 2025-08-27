@@ -38,12 +38,13 @@ class JobsheetController extends Controller
             $awb = DB::table('awb')->where('id_awb', $salesorder->id_awb)->first();
             $id_job = $awb->id_job ?? null;
             $id_shippinginstruction = DB::table('job')->where('id_job', $id_job)->value('id_shippinginstruction');
-
+            $no_jobsheet = $salesorder->no_salesorder;
             $dataJobsheet = [
                 'id_shippinginstruction' => $id_shippinginstruction,
                 'id_job' => $id_job,
                 'id_awb' => $awb->id_awb,
                 'id_salesorder' => $request->id_salesorder,
+                'no_jobsheet' => $no_jobsheet,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
                 'status' => 'js_created_by_cs'

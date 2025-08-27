@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_invoice');
             $table->unsignedBigInteger('agent');
             $table->unsignedBigInteger('data_agent');
-            $table->string('invoice_number')->unique();
+            $table->string('no_invoice')->nullable()->unique();
             $table->date('invoice_date');
             $table->date('due_date');
             $table->text('remarks')->nullable();

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_shippinginstruction')->nullable();
             $table->unsignedBigInteger('id_job')->nullable();
             $table->unsignedBigInteger('id_awb')->nullable();
+            $table->string('no_salesorder')->nullable()->unique();
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();

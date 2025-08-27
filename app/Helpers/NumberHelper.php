@@ -7,6 +7,56 @@ use Carbon\Carbon;
 
 class NumberHelper
 {
+
+     public static function generateShippingInstructionNumber()
+    {
+        $month = Carbon::now()->format('m');
+        $year = Carbon::now()->format('y');
+
+        // Ambil nomor terakhir bulan & tahun ini
+        $lastOrder = DB::table('shippinginstruction')
+            ->whereRaw('MONTH(created_at) = ?', [$month])
+            ->whereRaw('YEAR(created_at) = ?', [Carbon::now()->format('Y')])
+            ->orderBy('id_shippinginstruction', 'desc')
+            ->first();
+
+        if ($lastOrder && isset($lastOrder->no_shippinginstruction)) {
+            // Pecah nomor terakhir
+            $parts = explode('/', $lastOrder->no_shippinginstruction);
+            $lastNumber = intval(end($parts));
+            $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $nextNumber = "0001";
+        }
+
+        return "{$month}/{$year}/{$nextNumber}";
+    }
+
+     public static function generateJobNumber()
+    {
+        $month = Carbon::now()->format('m');
+        $year = Carbon::now()->format('y');
+
+        // Ambil nomor terakhir bulan & tahun ini
+        $lastOrder = DB::table('job')
+            ->whereRaw('MONTH(created_at) = ?', [$month])
+            ->whereRaw('YEAR(created_at) = ?', [Carbon::now()->format('Y')])
+            ->orderBy('id_job', 'desc')
+            ->first();
+
+        if ($lastOrder && isset($lastOrder->no_job)) {
+            // Pecah nomor terakhir
+            $parts = explode('/', $lastOrder->no_job);
+            $lastNumber = intval(end($parts));
+            $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $nextNumber = "0001";
+        }
+
+        return "{$month}/{$year}/{$nextNumber}";
+    }
+
+
     public static function generateSalesOrderNumber()
     {
         $month = Carbon::now()->format('m');
@@ -19,9 +69,9 @@ class NumberHelper
             ->orderBy('id_salesorder', 'desc')
             ->first();
 
-        if ($lastOrder && isset($lastOrder->sales_order_no)) {
+        if ($lastOrder && isset($lastOrder->no_salesorder)) {
             // Pecah nomor terakhir
-            $parts = explode('/', $lastOrder->sales_order_no);
+            $parts = explode('/', $lastOrder->no_salesorder);
             $lastNumber = intval(end($parts));
             $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
@@ -43,9 +93,9 @@ class NumberHelper
             ->orderBy('id_jobsheet', 'desc')
             ->first();
 
-        if ($lastOrder && isset($lastOrder->jobsheet_no)) {
+        if ($lastOrder && isset($lastOrder->no_jobsheet)) {
             // Pecah nomor terakhir
-            $parts = explode('/', $lastOrder->jobsheet_no);
+            $parts = explode('/', $lastOrder->no_jobsheet);
             $lastNumber = intval(end($parts));
             $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
@@ -65,8 +115,8 @@ class NumberHelper
             ->orderBy('id_invoice', 'desc')
             ->first();
 
-        if ($lastInvoice && isset($lastInvoice->invoice_no)) {
-            $lastNumber = intval(substr($lastInvoice->invoice_no, -5));
+        if ($lastInvoice && isset($lastInvoice->no_invoice)) {
+            $lastNumber = intval(substr($lastInvoice->no_invoice, -5));
             $nextNumber = str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
         } else {
             $nextNumber = "00001"; // reset tiap tahun
