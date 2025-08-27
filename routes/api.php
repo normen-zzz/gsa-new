@@ -10,6 +10,7 @@ use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
 use App\Http\Controllers\master\RuteController;
 use App\Http\Controllers\master\UsersController;
+use App\Http\Controllers\master\VendorController;
 use App\Http\Controllers\master\AirlineController;
 use App\Http\Controllers\master\AirportController;
 use App\Http\Controllers\master\CountryController;
@@ -158,6 +159,17 @@ Route::post('/createRoute', [RuteController::class, 'createRoute'])->middleware(
 Route::put('/updateRoute', [RuteController::class, 'updateRoute'])->middleware('auth:api');
 Route::put('/deleteRoute', [RuteController::class, 'deleteRoute'])->middleware('auth:api');
 Route::put('/restoreRoute', [RuteController::class, 'restoreRoute'])->middleware('auth:api');
+
+
+//master vendors
+Route::get('/getVendor', [VendorController::class, 'getVendor'])->middleware('auth:api');
+Route::get('/getVendorById/{id}', [VendorController::class, 'getVendorById'])->middleware('auth:api');
+Route::post('/createVendor', [VendorController::class, 'createVendor'])->middleware('auth:api');
+Route::put('/deactivateVendorById', [VendorController::class, 'deactiveVendor'])->middleware('auth:api');
+Route::put('/activateVendorById', [VendorController::class, 'activateVendor'])->middleware('auth:api');
+Route::put('/updateDetailVendor', [VendorController::class, 'updateDetailVendor'])->middleware('auth:api');
+Route::put('/updateVendor', [VendorController::class, 'updateVendor'])->middleware('auth:api');
+
 
 //salesorder flow approval
 Route::get('/getFlowApprovalSalesOrder', [FlowApprovalController::class, 'getFlowApprovalSalesOrder'])->middleware('auth:api');
