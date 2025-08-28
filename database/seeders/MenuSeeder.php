@@ -29,6 +29,10 @@ class MenuSeeder extends Seeder
                         "url" => "/dashboard/master/master-customer"
                     ],
                     [
+                        "title" => "Vendor",
+                        "url" => "/dashboard/master/master-vendor"
+                    ],
+                    [
                         "title" => "Routes",
                         "url" => "/dashboard/master/master-routes"
                     ],
@@ -139,6 +143,12 @@ class MenuSeeder extends Seeder
             //     "icon" => "Backpack",
             //     "isActive" => false
             // ],
+            [
+                "title" => "Invoice",
+                "url" => "/dashboard/invoices",
+                "icon" => "Receipt",
+                "isActive" => true
+            ],
             [
                 "title" => "Role Management",
                 "url" => "/dashboard/role-management",
