@@ -44,14 +44,14 @@ return new class extends Migration
 
           Schema::create('listothercharge_invoice', function (Blueprint $table) {
             $table->id('id_listothercharge_invoice');
-            $table->string('name')->unsigned();
+            $table->string('name');
             $table->decimal('amount', 15, 2)->nullable();
             $table->timestamps();
         });
 
         Schema::create('otherscharge_invoice', function (Blueprint $table) {
             $table->id('id_otherscharge_invoice');
-            $table->string('name')->unsigned();
+            $table->string('name');
             $table->decimal('amount', 15, 2)->nullable();
             $table->timestamps();
         });
