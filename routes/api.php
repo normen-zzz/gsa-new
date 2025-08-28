@@ -28,6 +28,7 @@ use App\Http\Controllers\master\WeightbracketController;
 use App\Http\Controllers\flow\jobsheet\JobsheetController;
 use App\Http\Controllers\flow\ShippingInstructionController;
 use App\Http\Controllers\flow\salesorder\SalesorderController;
+use App\Http\Controllers\master\OtherchargesinvoiceController;
 
 
 
@@ -180,6 +181,15 @@ Route::post('/createDataCompany', [DatacompanyController::class, 'createDatacomp
 Route::put('/updateDataCompany', [DatacompanyController::class, 'updateDatacompany'])->middleware('auth:api');
 Route::put('/deleteDataCompany', [DatacompanyController::class, 'deleteDatacompany'])->middleware('auth:api');
 Route::put('/activateDataCompany', [DatacompanyController::class, 'activateDatacompany'])->middleware('auth:api');
+
+//master other charge invoice
+Route::get('/getOtherchargesinvoice', [OtherchargesinvoiceController::class, 'getOtherchargesinvoice'])->middleware('auth:api');
+Route::get('/getOtherchargesinvoiceById', [OtherchargesinvoiceController::class, 'getOtherchargesinvoiceById'])->middleware('auth:api');
+Route::post('/createOtherchargesinvoice', [OtherchargesinvoiceController::class, 'createOtherchargesinvoice'])->middleware('auth:api');
+Route::put('/updateOtherchargesinvoice', [OtherchargesinvoiceController::class, 'updateOtherchargesinvoice'])->middleware('auth:api');
+Route::put('/deleteOtherchargesinvoice', [OtherchargesinvoiceController::class, 'deleteOtherchargesinvoice'])->middleware('auth:api');
+Route::put('/activateOtherchargesinvoice', [OtherchargesinvoiceController::class, 'activateOtherchargesinvoice'])->middleware('auth:api');
+
 
 //salesorder flow approval
 Route::get('/getFlowApprovalSalesOrder', [FlowApprovalController::class, 'getFlowApprovalSalesOrder'])->middleware('auth:api');

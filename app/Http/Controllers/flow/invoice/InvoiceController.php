@@ -247,4 +247,43 @@ class InvoiceController extends Controller
         return ResponseHelper::success('Invoice retrieved successfully', $invoice);
     }
 
+    public function updateInvoice(Request $request) {
+        $request->validate([
+            'id_invoice' => 'required|exists:invoice,id_invoice',
+            'agent' => 'required|exists:customers,id_customer',
+            'data_agent' => 'required|exists:data_customer,id_datacustomer',
+            'no_invoice' => 'required|string|max:255',
+            'invoice_date' => 'required|date',
+            'due_date' => 'required|date',
+            'remarks' => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $invoice = DB::table('invoice')
+                ->where('id_invoice', $request->input('id_invoice'))
+                ->update([
+                    'agent' => $request->input('agent'),
+                    'data_agent' => $request->input('data_agent'),
+                    'no_invoice' => $request->input('no_invoice'),
+                    'invoice_date' => $request->input('invoice_date'),
+                    'due_date' => $request->input('due_date'),
+                    'remarks' => $request->input('remarks'),
+                    'updated_at' => now(),
+                    'updated_by' => Auth::id(),
+                ]);
+
+            if (!$invoice) {
+                throw new Exception('Failed to update invoice');
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Invoice updated successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
 }
