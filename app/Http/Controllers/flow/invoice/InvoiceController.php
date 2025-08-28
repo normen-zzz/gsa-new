@@ -16,13 +16,16 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'agent' => 'required|exists:customer,id_customer',
+                'agent' => 'required|exists:customers,id_customer',
                 'data_agent' => 'required|exists:data_customer,id_datacustomer',
                 'due_date' => 'required|date',
                 'remarks' => 'nullable|string|max:255',
                 'id_datacompany' => 'required|exists:datacompany,id_datacompany',
                 'jobsheet' => 'nullable|array',
-                'jobsheet.*.id_jobsheet' => 'required|exists:jobsheets,id_jobsheet',
+                'jobsheet.*.id_jobsheet' => 'required|exists:jobsheet,id_jobsheet',
+                'others' => 'nullable|array',
+                'others.*.id_listothercharge_invoice' => 'required|exists:listothercharge_invoice,id_listothercharge_invoice',
+                'others.*.amount' => 'required|numeric|min:0',
             ]);
             $no_invoice = NumberHelper::generateInvoiceNumber();
             $invoice = [
@@ -42,7 +45,7 @@ class InvoiceController extends Controller
                 $awb = DB::table('awb')->where('id_awb', $jobsheet->id_awb)->first();
                 $insertDetailInvoice = DB::table('detail_invoice')->insert([
                     'id_invoice' => $insertInvoice,
-                    'id_jobsheet' => $jobsheet['id_jobsheet'],
+                    'id_jobsheet' => $jobsheet->id_jobsheet,
                     'id_salesorder' => $so->id_salesorder,
                     'id_awb' => $awb->id_awb,
                 ]);
@@ -50,6 +53,49 @@ class InvoiceController extends Controller
                     throw new Exception('Failed to insert detail invoice');
                 }
             }
+
+            $user = DB::table('users')->where('id_user', Auth::id())->first();
+            $approval = DB::table('flowapproval_invoice')->where(
+                [
+                    'request_position' => $user->id_position,
+                    'request_division' => $user->id_division,
+                ]
+            )->first();
+
+            $detailApproval = DB::table('detailflowapproval_invoice')
+                ->where('id_flowapproval_invoice', $approval->id_flowapproval_invoice)
+                ->get();
+
+            if ($detailApproval) {
+                foreach ($detailApproval as $app) {
+                    DB::table('approval_invoice')->insert([
+                        'id_invoice' => $insertInvoice,
+                        'approval_position' => $app->approval_position,
+                        'approval_division' => $app->approval_division,
+                        'step_no' => $app->step_no,
+                        'status' => 'pending',
+                        'created_at' => now(),
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            } else{
+                throw new Exception('No approval flow found');
+            }
+
+            $othersCharge = $request->input('others');
+            foreach ($othersCharge as $charge) {
+                $insertOthersCharge = DB::table('otherscharge_invoice')->insert([
+                    'id_invoice' => $insertInvoice,
+                    'id_listothercharge_invoice' => $charge['id_listothercharge_invoice'],
+                    'amount' => $charge['amount'],
+                ]);
+                if (!$insertOthersCharge) {
+                    throw new Exception('Failed to insert others charge');
+                }
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Invoice created successfully', ['id_invoice' => $insertInvoice]);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);
@@ -64,7 +110,7 @@ class InvoiceController extends Controller
         $select = [
             'a.id_invoice',
             'a.agent',
-            'e.name AS agent_name',
+            'e.name_customer AS agent_name',
             'a.data_agent',
             'f.pic',
             'f.email',
@@ -95,7 +141,7 @@ class InvoiceController extends Controller
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
             ->leftJoin('datacompany AS d', 'a.id_datacompany', '=', 'd.id_datacompany')
-            ->leftJoin('customer AS e', 'a.agent', '=', 'e.id_customer')
+            ->leftJoin('customers AS e', 'a.agent', '=', 'e.id_customer')
             ->leftJoin('data_customer AS f', 'a.data_agent', '=', 'f.id_datacustomer')
             ->where('a.deleted_at', null)
             ->where(function($query) use ($searchKey) {
@@ -104,6 +150,29 @@ class InvoiceController extends Controller
             })
             ->paginate($limit);
 
+           foreach ($invoices as $key => $value) {
+               $detailInvoice = DB::table('detail_invoice')
+                   ->where('id_invoice', $value->id_invoice)
+                   ->get();
+
+               $invoices[$key]->detail_invoice = $detailInvoice;
+
+               $approval = DB::table('approval_invoice')
+                   ->where('id_invoice', $value->id_invoice)
+                   ->get();
+
+               $invoices[$key]->approval_invoice = $approval;
+
+               $othersCharge = DB::table('otherscharge_invoice AS oci')
+                   ->select('oci.*', 'l.name AS charge_name', 'l.type AS charge_type')
+                   ->leftJoin('listothercharge_invoice AS l', 'oci.id_listothercharge_invoice', '=', 'l.id_listothercharge_invoice')
+                   ->where('oci.id_invoice', $value->id_invoice)
+                   ->get();
+
+               $invoices[$key]->others_charge = $othersCharge;
+           }
+
         return ResponseHelper::success('Invoices retrieved successfully', $invoices);
     }
+
 }
