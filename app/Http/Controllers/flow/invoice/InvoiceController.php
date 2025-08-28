@@ -175,4 +175,76 @@ class InvoiceController extends Controller
         return ResponseHelper::success('Invoices retrieved successfully', $invoices);
     }
 
+    public function getInvoiceById(Request $request) {
+        $request->validate([
+            'id_invoice' => 'required|exists:invoice,id_invoice',
+        ]);
+
+        $select = [
+            'a.id_invoice',
+            'a.agent',
+            'e.name_customer AS agent_name',
+            'a.data_agent',
+            'f.pic',
+            'f.email',
+            'f.phone',
+            'f.tax_id',
+            'f.address',
+            'a.no_invoice',
+            'a.invoice_date',
+            'a.due_date',
+            'a.remarks',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'c.name AS deleted_by_name',
+            'a.id_datacompany',
+            'd.name AS datacompany_name',
+            'd.account_number AS datacompany_account_number',
+            'd.bank AS datacompany_bank',
+            'd.branch AS datacompany_branch',
+            'd.swift AS datacompany_swift',
+            'a.status'
+        ];
+
+        $invoice = DB::table('invoice AS a')
+            ->select($select)
+            ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
+            ->leftJoin('datacompany AS d', 'a.id_datacompany', '=', 'd.id_datacompany')
+            ->leftJoin('customers AS e', 'a.agent', '=', 'e.id_customer')
+            ->leftJoin('data_customer AS f', 'a.data_agent', '=', 'f.id_datacustomer')
+            ->where('a.id_invoice', $request->input('id_invoice'))
+            ->where('a.deleted_at', null)
+            ->first();
+
+        if (!$invoice) {
+            return ResponseHelper::success('Invoice not found');
+        }
+
+        $detailInvoice = DB::table('detail_invoice')
+            ->where('id_invoice', $invoice->id_invoice)
+            ->get();
+
+        $invoice->detail_invoice = $detailInvoice;
+
+        $approval = DB::table('approval_invoice')
+            ->where('id_invoice', $invoice->id_invoice)
+            ->get();
+
+        $invoice->approval_invoice = $approval;
+
+        $othersCharge = DB::table('otherscharge_invoice AS oci')
+            ->select('oci.*', 'l.name AS charge_name', 'l.type AS charge_type')
+            ->leftJoin('listothercharge_invoice AS l', 'oci.id_listothercharge_invoice', '=', 'l.id_listothercharge_invoice')
+            ->where('oci.id_invoice', $invoice->id_invoice)
+            ->get();
+
+        $invoice->others_charge = $othersCharge;
+
+        return ResponseHelper::success('Invoice retrieved successfully', $invoice);
+    }
+
 }
