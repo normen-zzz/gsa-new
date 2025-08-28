@@ -55,6 +55,7 @@ return new class extends Migration
             $table->id('id_cost_jobsheet');
             $table->unsignedBigInteger('id_jobsheet');
             $table->unsignedBigInteger('id_typecost');
+            $table->integer('id_vendor')->unsigned();
             $table->decimal('cost_value', 10, 2)->comment('Cost value in the jobsheet in dollar');
             $table->enum('charge_by', ['chargeable_weight', 'gross_weight', 'awb']);
             $table->text('description')->nullable();

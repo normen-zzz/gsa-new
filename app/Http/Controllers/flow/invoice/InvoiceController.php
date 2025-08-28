@@ -24,7 +24,7 @@ class InvoiceController extends Controller
             $invoice = [
                 'agent' => $request->input('agent'),
                 'data_agent' => $request->input('data_agent'),
-                'invoice_number' => $no_invoice,
+                'no_invoice' => $no_invoice,
                 'invoice_date' => $request->input('invoice_date'),
                 'due_date' => $request->input('due_date'),
                 'remarks' => $request->input('remarks'),
@@ -35,12 +35,15 @@ class InvoiceController extends Controller
                 $jobsheet = DB::table('jobsheet')->where('id_jobsheet', $jobsheet['id_jobsheet'])->first();
                 $so = DB::table('salesorder')->where('id_salesorder', $jobsheet->id_salesorder)->first();
                 $awb = DB::table('awb')->where('id_awb', $jobsheet->id_awb)->first();
-                DB::table('detail_invoice')->insert([
+                $insertDetailInvoice = DB::table('detail_invoice')->insert([
                     'id_invoice' => $insertInvoice,
                     'id_jobsheet' => $jobsheet['id_jobsheet'],
                     'id_salesorder' => $so->id_salesorder,
                     'id_awb' => $awb->id_awb,
                 ]);
+                if (!$insertDetailInvoice) {
+                    throw new Exception('Failed to insert detail invoice');
+                }
             }
         } catch (Exception $e) {
             DB::rollBack();
