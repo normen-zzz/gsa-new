@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('invoice_date');
             $table->date('due_date');
             $table->text('remarks')->nullable();
+            $table->integer('id_datacompany')->unsigned();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();

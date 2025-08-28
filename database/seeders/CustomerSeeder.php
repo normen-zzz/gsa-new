@@ -65,21 +65,17 @@ class CustomerSeeder extends Seeder
         DB::table('data_customer')->insert(
             [
                 'id_customer' => 1, // Assuming the CEVA customer has ID 1
-                'data' => json_encode(
-                    [
-                        'pic' => 'John Doe',
-                        'email' => 'john.doe@ceva.com',
-                        'address' => '123 CEVA Street',
-                        'phone' => '123456789',
-                        'tax_id' => '1234567890',
-                    ]
-                ),
+                'pic' => 'John Doe',
+                'email' => 'john.doe@ceva.com',
+                'address' => '123 CEVA Street',
+                'phone' => '123456789',
+                'tax_id' => '1234567890',
                 'is_primary' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
             ],
-           
+
         );
     }
 }

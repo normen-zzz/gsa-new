@@ -20,6 +20,7 @@ use App\Http\Controllers\master\DivisionController;
 use App\Http\Controllers\master\PositionController;
 use App\Http\Controllers\master\TypecostController;
 use App\Http\Controllers\master\PermissionController;
+use App\Http\Controllers\master\DatacompanyController;
 use App\Http\Controllers\master\TypesellingController;
 use App\Http\Controllers\master\FlowApprovalController;
 use App\Http\Controllers\master\WeightbracketController;
@@ -170,6 +171,14 @@ Route::put('/activateVendorById', [VendorController::class, 'activateVendor'])->
 Route::put('/updateDetailVendor', [VendorController::class, 'updateDetailVendor'])->middleware('auth:api');
 Route::put('/updateVendor', [VendorController::class, 'updateVendor'])->middleware('auth:api');
 
+
+//Master Data Company
+Route::get('/getDataCompany', [DatacompanyController::class, 'getDatacompany'])->middleware('auth:api');
+Route::get('/getDataCompanyById', [DatacompanyController::class, 'getDatacompanyById'])->middleware('auth:api');
+Route::post('/createDataCompany', [DatacompanyController::class, 'createDatacompany'])->middleware('auth:api');
+Route::put('/updateDataCompany', [DatacompanyController::class, 'updateDatacompany'])->middleware('auth:api');
+Route::put('/deleteDataCompany', [DatacompanyController::class, 'deleteDatacompany'])->middleware('auth:api');
+Route::put('/activateDataCompany', [DatacompanyController::class, 'activateDatacompany'])->middleware('auth:api');
 
 //salesorder flow approval
 Route::get('/getFlowApprovalSalesOrder', [FlowApprovalController::class, 'getFlowApprovalSalesOrder'])->middleware('auth:api');

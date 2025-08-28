@@ -25,7 +25,7 @@ class SalesorderController extends Controller
             // Logic to create a sales order
             // Validate the request data
             $request->validate([
-                'id_awb' => 'required|integer|exists:awb,id_awb',
+                'id_shippinginstruction' => 'required|integer|exists:shipping_instructions,id_shippinginstruction',
                 'remarks' => 'nullable|string|max:255',
                 'attachments' => 'required|array',
                 'attachments.*.image' => 'nullable|string',
@@ -36,14 +36,11 @@ class SalesorderController extends Controller
                 'selling.*.description' => 'nullable|string|max:255'
             ]);
 
-            $awb = DB::table('awb')->where('id_awb', $request->id_awb)->first();
-            $id_job = $awb->id_job ?? null;
-            $job = DB::table('job')->where('id_job', $id_job)->first();
-            $id_shippinginstruction = $job->id_shippinginstruction ?? null;
+           $shippinginstruction = DB::table('shipping_instructions')->where('id_shippinginstruction', $request->id_shippinginstruction)->first();
 
             $dataSalesorder = [
-                'id_shippinginstruction' => $id_shippinginstruction,
-                'no_salesorder' => $job->no_job,
+                'id_shippinginstruction' => $request->id_shippinginstruction,
+                'no_salesorder' => $shippinginstruction->no_shippinginstruction,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
                 'status' => 'so_created_by_sales'

@@ -26,7 +26,11 @@ return new class extends Migration
         Schema::create('data_customer', function (Blueprint $table) {
             $table->id('id_datacustomer');
             $table->integer('id_customer')->unsigned();
-            $table->json('data')->nullable();
+            $table->string('pic')->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('tax_id')->nullable();
+             $table->string('address')->nullable();
             $table->boolean('is_primary')->default(false);
             $table->softDeletes();
             $table->integer('created_by')->unsigned();

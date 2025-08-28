@@ -19,10 +19,14 @@ return new class extends Migration
             $table->string('branch');
             $table->string('swift')->nullable();
             $table->timestamps();
+            $table->integer('created_by')->unsigned();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable();
         });
 
         Schema::create('log_datacompany', function (Blueprint $table) {
             $table->id('id_log_datacompany');
+            $table->integer('id_datacompany')->unsigned();
             $table->json('action');
             $table->timestamps();
             $table->integer('created_by')->nullable();
