@@ -107,7 +107,7 @@ class CustomerController extends Controller
 
         if ($customer) {
             $dataCustomer = DB::table('data_customer')
-                ->select('id_datacustomer', 'id_customer', 'data', 'is_primary')
+                ->select('*')
                 ->whereIn('id_customer', $customer->pluck('id_customer'))
                 ->get();
             $customer->transform(function ($item) use ($dataCustomer) {
@@ -115,7 +115,11 @@ class CustomerController extends Controller
                     ->map(function ($data) {
                         return [
                             'id_datacustomer' => $data->id_datacustomer,
-                            'data' => json_decode($data->data, true),
+                            'pic' => $data->pic,
+                            'email' => $data->email,
+                            'phone' => $data->phone,
+                            'tax_id' => $data->tax_id,
+                            'address' => $data->address,
                             'is_primary' => $data->is_primary,
                         ];
                     })
@@ -156,7 +160,7 @@ class CustomerController extends Controller
 
         if ($customer) {
             $dataCustomer = DB::table('data_customer')
-                ->select('id_datacustomer', 'data', 'is_primary')
+                ->select('*')
                 ->where('id_customer', $customer->id_customer)
                 ->whereNull('deleted_at')
                 ->get();
@@ -165,7 +169,11 @@ class CustomerController extends Controller
             $dataCustomer = $dataCustomer->map(function ($data) {
                 return [
                     'id_datacustomer' => $data->id_datacustomer,
-                    'data' => json_decode($data->data, true),
+                    'pic' => $data->pic,
+                    'email' => $data->email,
+                    'phone' => $data->phone,
+                    'tax_id' => $data->tax_id,
+                    'address' => $data->address,
                     'is_primary' => $data->is_primary,
                 ];
             });
