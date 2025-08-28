@@ -45,6 +45,7 @@ class JobsheetSeeder extends Seeder
             'cost_value' => 250.75,
             'charge_by' => 'chargeable_weight',
             'description' => 'Biaya handling berdasarkan chargeable weight',
+            'id_vendor' => 1,
             'created_by' => 1,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

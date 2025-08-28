@@ -43,8 +43,6 @@ class SalesorderController extends Controller
 
             $dataSalesorder = [
                 'id_shippinginstruction' => $id_shippinginstruction,
-                'id_job' => $id_job,
-                'id_awb' => $request->id_awb,
                 'no_salesorder' => $job->no_job,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
