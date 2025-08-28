@@ -27,6 +27,11 @@ class ShippingInstructionController extends Controller
             'c.name_customer as agent',
             'c.id_customer as id_agent',
             'a.data_agent as id_data_agent',
+            'd.pic as data_agent_pic',
+            'd.email as data_agent_email',
+            'd.phone as data_agent_phone',
+            'd.tax_id as data_agent_tax_id',
+            'd.address as data_agent_address',
             'a.consignee as consignee',
             'a.type',
             'a.eta',
@@ -82,12 +87,7 @@ class ShippingInstructionController extends Controller
                 $instruction->dimensions_shippinginstruction = [];
             }
 
-            $agentData = DB::table('data_customer')
-                ->where('id_customer', $instruction->id_agent)
-                ->where('id_datacustomer', $instruction->id_data_agent)
-                ->first();
-            $agentData->id_datacustomer = $agentData ? $agentData->id_datacustomer : null;
-            $instruction->agent_data = $agentData ? json_decode($agentData->data, true) : [];
+            
 
             $job = DB::table('job')
                 ->select([
@@ -96,7 +96,11 @@ class ShippingInstructionController extends Controller
                     'job.agent',
                     'agent.name_customer as agent_name',
                     'job.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
+                   'data_agent.pic as data_agent_pic',
+                   'data_agent.email as data_agent_email',
+                   'data_agent.phone as data_agent_phone',
+                   'data_agent.tax_id as data_agent_tax_id',
+                   'data_agent.address as data_agent_address',
                     'job.consignee',
                     'job.airline',
                     'airline.name as airline_name',
@@ -127,7 +131,6 @@ class ShippingInstructionController extends Controller
                 ->first();
 
             if ($job) {
-                $job->agent_data = json_decode($job->agent_data, true);
                 $instruction->job_data = $job;
                 $job_data = $instruction->job_data;
                 $data_flightjob = DB::table('flight_job')
@@ -174,7 +177,11 @@ class ShippingInstructionController extends Controller
                     'awb.agent',
                     'agent.name_customer as agent_name',
                     'awb.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
+                    'data_agent.pic as data_agent_pic',
+                    'data_agent.email as data_agent_email',
+                    'data_agent.phone as data_agent_phone',
+                    'data_agent.tax_id as data_agent_tax_id',
+                    'data_agent.address as data_agent_address',
                     'awb.consignee',
                     'awb.airline',
                     'airline.name as airline_name',
@@ -209,7 +216,6 @@ class ShippingInstructionController extends Controller
                     ->where('id_job', $job->id_job)
                     ->first();
                 if ($awb) {
-                    $awb->agent_data = json_decode($awb->agent_data, true);
                     $instruction->awb_data = $awb;
                     $awb_data = $instruction->awb_data;
                     $dimensions_awb = DB::table('dimension_awb')
@@ -336,7 +342,6 @@ class ShippingInstructionController extends Controller
             ->where('id_datacustomer', $instruction->id_data_agent)
             ->first();
 
-        $instruction->data_agent = $agentData ? json_decode($agentData->data, true) : [];
 
         $job = DB::table('job')
             ->select([
@@ -345,7 +350,11 @@ class ShippingInstructionController extends Controller
                 'job.agent',
                 'agent.name_customer as agent_name',
                 'job.data_agent as id_data_agent',
-                'data_agent.data as agent_data',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
                 'job.consignee',
                 'job.airline',
                 'airline.name as airline_name',
@@ -376,7 +385,6 @@ class ShippingInstructionController extends Controller
             ->first();
 
         if ($job) {
-            $job->agent_data = json_decode($job->agent_data, true);
             $instruction->job_data = $job;
             $job_data = $instruction->job_data;
             $data_flightjob = DB::table('flight_job')
@@ -426,7 +434,11 @@ class ShippingInstructionController extends Controller
                 'awb.agent',
                 'agent.name_customer as agent_name',
                 'awb.data_agent as id_data_agent',
-                'data_agent.data as agent_data',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
                 'awb.consignee',
                 'awb.airline',
                 'airline.name as airline_name',
@@ -461,7 +473,6 @@ class ShippingInstructionController extends Controller
                 ->where('id_job', $job->id_job)
                 ->first();
             if ($awb) {
-                $awb->agent_data = json_decode($awb->agent_data, true);
                 $route = DB::table('routes')
                     ->where('airline', $awb->airline)
                     ->where('pol', $awb->pol)
