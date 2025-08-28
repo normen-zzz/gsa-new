@@ -46,7 +46,11 @@ class JobModel extends Model
             'job.agent',
             'agent.name_customer as agent_name',
             'job.data_agent as id_data_agent',
-            'data_agent.data as agent_data',
+            'data_agent.pic as data_agent_pic',
+            'data_agent.email as data_agent_email',
+            'data_agent.phone as data_agent_phone',
+            'data_agent.tax_id as data_agent_tax_id',
+            'data_agent.address as data_agent_address',
             'job.consignee',
             'job.airline',
             'airlines.name as airline_name',
@@ -94,7 +98,6 @@ class JobModel extends Model
             ->paginate($limit);
 
         $job->getCollection()->transform(function ($item) {
-            $item->agent_data = json_decode($item->agent_data, true);
             $dimension_job = DB::table('dimension_job')
                 ->where('id_job', $item->id_job)
                 ->get();
@@ -114,7 +117,11 @@ class JobModel extends Model
                 'shippinginstruction.agent',
                 'agent.name_customer as agent_name',
                 'shippinginstruction.data_agent as id_data_agent',
-                'data_agent.data as agent_data',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
                 'shippinginstruction.consignee',
                 'shippinginstruction.airline',
                 'airlines.name as airline_name',
@@ -161,7 +168,7 @@ class JobModel extends Model
                 ->where('id_shippinginstruction', $item->id_shippinginstruction)
                 ->first();
             if ($shippingInstruction) {
-                $shippingInstruction->agent_data = json_decode($shippingInstruction->agent_data, true);
+
                 $shippingInstruction->dimensions_shippinginstruction = json_decode($shippingInstruction->dimensions, true);
                 unset($shippingInstruction->dimensions);
                 $item->data_shippinginstruction = $shippingInstruction;
@@ -185,7 +192,11 @@ class JobModel extends Model
                     'awb.agent',
                     'agent.name_customer as agent_name',
                     'awb.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
+                    'data_agent.pic as data_agent_pic',
+                    'data_agent.email as data_agent_email',
+                    'data_agent.phone as data_agent_phone',
+                    'data_agent.tax_id as data_agent_tax_id',
+                    'data_agent.address as data_agent_address',
                     'awb.consignee',
                     'awb.airline',
                     'airlines.name as airline_name',
@@ -214,7 +225,6 @@ class JobModel extends Model
                 
                 ->first();
             if ($awb) {
-                $awb->agent_data = json_decode($awb->agent_data, true);
                 $item->data_awb = $awb;
                 $data_awb = $item->data_awb;
                 $dimension_awb = DB::table('dimension_awb')
@@ -298,7 +308,11 @@ class JobModel extends Model
                 'job.agent',
                 'agent.name_customer as agent_name',
                 'job.data_agent as id_data_agent',
-                'data_agent.data as agent_data',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
                 'job.consignee',
                 'job.airline',
                 'airlines.name as airline_name',
@@ -326,7 +340,6 @@ class JobModel extends Model
         if (!$job) {
             throw new Exception('Job not found', 404);
         } else {
-            $job->agent_data = json_decode($job->agent_data, true);
             $job->dimensions_job = DB::table('dimension_job')
                 ->where('id_job', $job->id_job)
                 ->get();
@@ -342,7 +355,11 @@ class JobModel extends Model
                 'shippinginstruction.agent',
                 'agent.name_customer as agent_name',
                 'shippinginstruction.data_agent as id_data_agent',
-                'data_agent.data as agent_data',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
                 'shippinginstruction.consignee',
                 'shippinginstruction.airline',
                 'airlines.name as airline_name',
@@ -389,7 +406,6 @@ class JobModel extends Model
                 ->where('id_shippinginstruction', $job->id_shippinginstruction)
                 ->first();
             if ($shippingInstruction) {
-                $shippingInstruction->agent_data = json_decode($shippingInstruction->agent_data, true);
                 $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions, true);
                 $job->data_shippinginstruction = $shippingInstruction;
             }
@@ -400,6 +416,12 @@ class JobModel extends Model
                 'awb.awb',
                 'awb.agent',
                 'agent.name_customer as agent_name',
+                'awb.data_agent as id_data_agent',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
                 'awb.consignee',
                 'awb.airline',
                 'airlines.name as airline_name',
@@ -426,6 +448,7 @@ class JobModel extends Model
             $awb = DB::table('awb')
                 ->select($selectAwb)
                 ->leftJoin('customers as agent', 'awb.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer as data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
                 ->leftJoin('airports as pol', 'awb.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports as pod', 'awb.pod', '=', 'pod.id_airport')
                 ->leftJoin('users as created_by', 'awb.created_by', '=', 'created_by.id_user')
@@ -508,7 +531,11 @@ class JobModel extends Model
             'awb.agent',
             'agent.name_customer as agent_name',
             'awb.data_agent as id_data_agent',
-            'data_agent.data as agent_data',
+            'data_agent.pic as data_agent_pic',
+            'data_agent.email as data_agent_email',
+            'data_agent.phone as data_agent_phone',
+            'data_agent.tax_id as data_agent_tax_id',
+            'data_agent.address as data_agent_address',
             'awb.consignee',
             'awb.airline',
             'airlines.name as airline_name',
@@ -553,7 +580,6 @@ class JobModel extends Model
             ->paginate($limit);
 
         $awb->getCollection()->transform(function ($item) {
-            $item->agent_data = json_decode($item->agent_data, true);
             // Add dimension data to each AWB
             $dimension_awb = DB::table('dimension_awb')
                 ->where('id_awb', $item->id_awb)
@@ -630,7 +656,11 @@ class JobModel extends Model
                     'job.agent',
                     'agent.name_customer as agent_name',
                     'job.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
+                    'data_agent.pic as data_agent_pic',
+                    'data_agent.email as data_agent_email',
+                    'data_agent.phone as data_agent_phone',
+                    'data_agent.tax_id as data_agent_tax_id',
+                    'data_agent.address as data_agent_address',
                     'job.consignee',
                     'job.airline',
                     'airlines.name as airline_name',
@@ -656,7 +686,6 @@ class JobModel extends Model
                 )
                 ->first();
             if ($job) {
-                $job->agent_data = json_decode($job->agent_data, true);
                 $job->dimensions_job = DB::table('dimension_job')
                     ->where('id_job', $job->id_job)
                     ->get();
@@ -683,7 +712,11 @@ class JobModel extends Model
             'awb.agent',
             'agent.name_customer as agent_name',
             'awb.data_agent as id_data_agent',
-            'data_agent.data as agent_data',
+            'data_agent.pic as data_agent_pic',
+            'data_agent.email as data_agent_email',
+            'data_agent.phone as data_agent_phone',
+            'data_agent.tax_id as data_agent_tax_id',
+            'data_agent.address as data_agent_address',
             'awb.consignee',
             'awb.airline',
             'airlines.name as airline_name',
@@ -719,7 +752,6 @@ class JobModel extends Model
             ->where('awb.id_awb', $id_awb)
             ->first();
         if ($awb) {
-            $awb->agent_data = json_decode($awb->agent_data, true);
             $dimension_awb = DB::table('dimension_awb')
                 ->where('id_awb', $awb->id_awb)
                 ->get();
@@ -793,7 +825,11 @@ class JobModel extends Model
                     'job.agent',
                     'agent.name_customer as agent_name',
                     'job.data_agent as id_data_agent',
-                    'data_agent.data as agent_data',
+                    'data_agent.pic as data_agent_pic',
+                    'data_agent.email as data_agent_email',
+                    'data_agent.phone as data_agent_phone',
+                    'data_agent.tax_id as data_agent_tax_id',
+                    'data_agent.address as data_agent_address',
                     'job.data_agent',
                     'job.consignee',
                     'job.airline',
@@ -820,7 +856,6 @@ class JobModel extends Model
                 )
                 ->first();
             if ($job) {
-                $job->agent_data = json_decode($job->agent_data, true);
                 $job->dimensions_job = DB::table('dimension_job')
                     ->where('id_job', $job->id_job)
                     ->get();
