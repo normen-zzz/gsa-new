@@ -299,6 +299,11 @@ class ShippingInstructionController extends Controller
             'c.name_customer as agent',
             'c.id_customer as id_agent',
             'a.data_agent as id_data_agent',
+            'data_agent.pic as data_agent_pic',
+            'data_agent.email as data_agent_email',
+            'data_agent.phone as data_agent_phone',
+            'data_agent.tax_id as data_agent_tax_id',
+            'data_agent.address as data_agent_address',
             'a.consignee as consignee',
             'a.airline',
             'h.name as airline_name',
@@ -324,6 +329,7 @@ class ShippingInstructionController extends Controller
             ->select($select)
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('customers AS c', 'a.agent', '=', 'c.id_customer')
+            ->leftJoin('data_customer AS data_agent', 'a.data_agent', '=', 'data_agent.id_datacustomer')
             ->leftJoin('airports AS e', 'a.pol', '=', 'e.id_airport')
             ->leftJoin('airports AS f', 'a.pod', '=', 'f.id_airport')
             ->leftJoin('airlines AS h', 'a.airline', '=', 'h.id_airline')
