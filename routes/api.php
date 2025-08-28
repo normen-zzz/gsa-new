@@ -23,6 +23,7 @@ use App\Http\Controllers\master\PermissionController;
 use App\Http\Controllers\master\DatacompanyController;
 use App\Http\Controllers\master\TypesellingController;
 use App\Http\Controllers\master\FlowApprovalController;
+use App\Http\Controllers\flow\invoice\InvoiceController;
 use App\Http\Controllers\master\WeightbracketController;
 use App\Http\Controllers\flow\jobsheet\JobsheetController;
 use App\Http\Controllers\flow\ShippingInstructionController;
@@ -256,3 +257,12 @@ Route::put('/updateJobsheet', [JobsheetController::class, 'updateJobsheet'])->mi
 Route::put('/deleteJobsheet', [JobsheetController::class, 'deleteJobsheet'])->middleware('auth:api');
 Route::put('/activateJobsheet', [JobsheetController::class, 'activateJobsheet'])->middleware('auth:api');
 Route::put('/actionJobsheet', [JobsheetController::class, 'actionJobsheet'])->middleware('auth:api');
+
+//invoice
+Route::post('/createInvoice', [InvoiceController::class, 'createInvoice'])->middleware('auth:api');
+Route::get('/getInvoice', [InvoiceController::class, 'getInvoice'])->middleware('auth:api');
+Route::get('/getInvoiceById', [InvoiceController::class, 'getInvoiceById'])->middleware('auth:api');
+Route::put('/updateInvoice', [InvoiceController::class, 'updateInvoice'])->middleware('auth:api');
+Route::put('/deleteInvoice', [InvoiceController::class, 'deleteInvoice'])->middleware('auth:api');
+Route::put('/activateInvoice', [InvoiceController::class, 'activateInvoice'])->middleware('auth:api');
+Route::put('/actionInvoice', [InvoiceController::class, 'actionInvoice'])->middleware('auth:api');

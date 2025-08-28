@@ -46,13 +46,14 @@ return new class extends Migration
           Schema::create('listothercharge_invoice', function (Blueprint $table) {
             $table->id('id_listothercharge_invoice');
             $table->string('name');
-            $table->decimal('amount', 15, 2)->nullable();
+            $table->enum('type', ['percentage_subtotal', 'multiple_awb','multiple_chargeableweight','multiple_grossweight','nominal']);
             $table->timestamps();
         });
 
         Schema::create('otherscharge_invoice', function (Blueprint $table) {
             $table->id('id_otherscharge_invoice');
-            $table->string('name');
+            $table->unsignedBigInteger('id_listothercharge_invoice');
+            $table->unsignedBigInteger('id_invoice');
             $table->decimal('amount', 15, 2)->nullable();
             $table->timestamps();
         });

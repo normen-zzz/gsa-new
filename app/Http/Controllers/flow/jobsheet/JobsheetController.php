@@ -208,7 +208,7 @@ class JobsheetController extends Controller
                 'cost_jobsheet.charge_by',
                 'cost_jobsheet.description',
                 'cost_jobsheet.id_vendor',
-                'v.name_vendor+ AS vendor_name',
+                'v.name_vendor AS vendor_name',
                 'cost_jobsheet.created_by',
                 'created_by.name AS created_by_name',
                 'cost_jobsheet.created_at'

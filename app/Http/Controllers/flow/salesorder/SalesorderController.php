@@ -25,7 +25,7 @@ class SalesorderController extends Controller
             // Logic to create a sales order
             // Validate the request data
             $request->validate([
-                'id_shippinginstruction' => 'required|integer|exists:shipping_instructions,id_shippinginstruction',
+                'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
                 'remarks' => 'nullable|string|max:255',
                 'attachments' => 'required|array',
                 'attachments.*.image' => 'nullable|string',
@@ -36,7 +36,7 @@ class SalesorderController extends Controller
                 'selling.*.description' => 'nullable|string|max:255'
             ]);
 
-           $shippinginstruction = DB::table('shipping_instructions')->where('id_shippinginstruction', $request->id_shippinginstruction)->first();
+           $shippinginstruction = DB::table('shippinginstruction')->where('id_shippinginstruction', $request->id_shippinginstruction)->first();
 
             $dataSalesorder = [
                 'id_shippinginstruction' => $request->id_shippinginstruction,
