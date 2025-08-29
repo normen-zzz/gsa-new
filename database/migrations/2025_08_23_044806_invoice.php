@@ -46,7 +46,7 @@ return new class extends Migration
           Schema::create('listothercharge_invoice', function (Blueprint $table) {
             $table->id('id_listothercharge_invoice');
             $table->string('name');
-            $table->enum('type', ['percentage_subtotal', 'multiple_awb','multiple_chargeableweight','multiple_grossweight','nominal']);
+            $table->enum('type', ['percentage_subtotal','multiple_chargeableweight','multiple_grossweight','nominal']);
             $table->timestamps();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();

@@ -226,17 +226,92 @@ class InvoiceController extends Controller
             return ResponseHelper::success('Invoice not found');
         }
 
+        $selectDetail = [
+            'detail_invoice.id_detail_invoice',
+            'detail_invoice.id_invoice',
+            'detail_invoice.id_jobsheet',
+            'detail_invoice.id_salesorder',
+            'detail_invoice.id_awb',
+            'a.name AS airline_name',
+            'a.code AS airline_code',
+            'awb.awb',
+            'awb.pol',
+            'pol.name_airport AS pol_name',
+            'pol.code_airport AS pol_code',
+            'awb.pod',
+            'pod.name_airport AS pod_name',
+            'pod.code_airport AS pod_code',
+            'awb.etd',
+            'awb.gross_weight',
+            'awb.chargeable_weight',
+            'awb.pieces'
+
+        ];
         $detailInvoice = DB::table('detail_invoice')
+            ->select($selectDetail)
+            ->join('awb', 'detail_invoice.id_awb', '=', 'awb.id_awb')
+            ->join('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
+            ->join('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
+            ->join('airlines AS a', 'awb.airline', '=', 'a.id_airline')
             ->where('id_invoice', $invoice->id_invoice)
             ->get();
 
+
+        $total_selling = 0;
+        foreach ($detailInvoice as $key => $value) {
+            $selectSelling = [
+                'ts.initials AS initials_typeselling',
+                'selling_salesorder.selling_value',
+                'selling_salesorder.charge_by',
+            ];
+
+            $awb = DB::table('awb')
+                ->where('id_awb', $value->id_awb)
+                ->first();
+
+            $data_selling_salesorder = [];
+            $selling_salesorder = DB::table('selling_salesorder')
+                ->select($selectSelling)
+                ->join('typeselling AS ts', 'selling_salesorder.id_typeselling', '=', 'ts.id_typeselling')
+                ->where('id_salesorder', $value->id_salesorder)
+                ->get();
+
+            foreach ($selling_salesorder as $sell) {
+                switch ($sell->charge_by) {
+                    case 'chargeable_weight':
+                        $weight = $awb->chargeable_weight;
+                        $total = $sell->selling_value * $weight;
+                        break;
+                    case 'gross_weight':
+                        $weight = $awb->gross_weight;
+                        $total = $sell->selling_value * $weight;
+                        break;
+                    case 'awb':
+                        $weight = 1;
+                        $total = $sell->selling_value * $weight;
+                        break;
+
+                    default:
+                        $total = $sell->selling_value;
+                        break;
+                }
+                $total_selling += $total;
+                $data_selling_salesorder[] = [
+                    'initials' => $sell->initials_typeselling,
+                    'selling_value' => $sell->selling_value,
+                    'charge_by' => $sell->charge_by,
+                    'weight' => $weight,
+                    'amount' => $total,
+                ];
+            }
+            $detailInvoice[$key]->selling_salesorder = $data_selling_salesorder;
+        }
         $invoice->detail_invoice = $detailInvoice;
+        $subtotal = $total_selling ;
+          $invoice->subtotal = $subtotal;
 
-        $approval = DB::table('approval_invoice')
-            ->where('id_invoice', $invoice->id_invoice)
-            ->get();
 
-        $invoice->approval_invoice = $approval;
+        
 
         $othersCharge = DB::table('otherscharge_invoice AS oci')
             ->select('oci.*', 'l.name AS charge_name', 'l.type AS charge_type')
@@ -244,7 +319,60 @@ class InvoiceController extends Controller
             ->where('oci.id_invoice', $invoice->id_invoice)
             ->get();
 
-        $invoice->others_charge = $othersCharge;
+        $dataOtherscharge = [];
+
+
+        foreach ($othersCharge as $charge) {
+            $multiplier = 0;
+            switch ($charge->charge_type) {
+                case 'percentage_subtotal':
+                    $multiplier = $total_selling;
+                    $total = ($charge->amount / 100) * $multiplier;
+                    $total_selling += $total;
+                    break;
+                case 'nominal':
+                    $multiplier = 1;
+                    $total = $charge->amount * $multiplier;
+                    $total_selling += $total;
+                    break;
+                case 'multiple_chargeableweight':
+                    $multiplier = $awb->chargeable_weight;
+                    $total = $charge->amount * $multiplier;
+                    $total_selling += $total;
+                    break;
+                case 'multiple_grossweight':
+                    $multiplier = $awb->gross_weight;
+                    $total   = $charge->amount * $multiplier;
+                    $total_selling += $total;
+                    break;
+
+                default:
+                    $multiplier = 1;
+                    $total = $charge->amount * $multiplier;
+                    $total_selling += $total;
+                    break;
+            }
+            $dataOtherscharge[] = [
+                'id_otherscharge_invoice' => $charge->id_otherscharge_invoice,
+                'id_listothercharge_invoice' => $charge->id_listothercharge_invoice,
+                'charge_name' => $charge->charge_name,
+                'charge_type' => $charge->charge_type,
+                'amount' => $charge->amount,
+                'total' => $total
+            ];
+        }
+
+        $invoice->others_charge = $dataOtherscharge;
+      
+        $invoice->grand_total = $total_selling;
+        $approval = DB::table('approval_invoice')
+            ->where('id_invoice', $invoice->id_invoice)
+            ->get();
+
+        $invoice->approval_invoice = $approval;
+
+
+
 
         return ResponseHelper::success('Invoice retrieved successfully', $invoice);
     }
@@ -348,7 +476,8 @@ class InvoiceController extends Controller
         }
     }
 
-    public function deleteOtherschargeinvoice(Request $request)  {
+    public function deleteOtherschargeinvoice(Request $request)
+    {
         DB::beginTransaction();
         try {
             $request->validate([
