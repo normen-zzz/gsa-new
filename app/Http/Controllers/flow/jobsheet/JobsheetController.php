@@ -273,6 +273,12 @@ class JobsheetController extends Controller
                 'c.agent',
                 'cu.name_customer AS agent_name',
                 'c.consignee',
+                'c.pol',
+                'pol.name_airport AS pol_name',
+                'pol.code_airport AS pol_code',
+                'c.pod',
+                'pod.name_airport AS pod_name',
+                'pod.code_airport AS pod_code',
                 'a.remarks',
                 'a.created_at',
                 'a.created_by',
@@ -291,6 +297,8 @@ class JobsheetController extends Controller
                 ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
                 ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
                 ->leftJoin('salesorder AS so', 'a.id_salesorder', '=', 'so.id_salesorder')
+                ->leftJoin('airports AS pol', 'c.pol', '=', 'pol.id_airport')
+                ->leftJoin('airports AS pod', 'c.pod', '=', 'pod.id_airport')
                 ->where('c.agent', $id_agent)
                 ->get();
 
