@@ -300,6 +300,11 @@ class JobsheetController extends Controller
                 ->leftJoin('airports AS pol', 'c.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports AS pod', 'c.pod', '=', 'pod.id_airport')
                 ->where('c.agent', $id_agent)
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                          ->from('detail_invoice')
+                          ->whereColumn('detail_invoice.id_jobsheet', 'a.id_jobsheet');
+                })
                 ->get();
 
             $jobsheets->transform(function ($item) {

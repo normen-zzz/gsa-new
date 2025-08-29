@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
-    public function createInvoice(Request $request) {
+    public function createInvoice(Request $request)
+    {
         DB::beginTransaction();
         try {
             $request->validate([
@@ -78,7 +79,7 @@ class InvoiceController extends Controller
                         'created_by' => Auth::id(),
                     ]);
                 }
-            } else{
+            } else {
                 throw new Exception('No approval flow found');
             }
 
@@ -100,10 +101,10 @@ class InvoiceController extends Controller
             DB::rollBack();
             return ResponseHelper::error($e);
         }
-
     }
 
-    public function getInvoice(Request $request) {
+    public function getInvoice(Request $request)
+    {
         $limit = $request->input('limit', 10);
         $searchKey = $request->input('searchKey', '');
 
@@ -144,38 +145,39 @@ class InvoiceController extends Controller
             ->leftJoin('customers AS e', 'a.agent', '=', 'e.id_customer')
             ->leftJoin('data_customer AS f', 'a.data_agent', '=', 'f.id_datacustomer')
             ->where('a.deleted_at', null)
-            ->where(function($query) use ($searchKey) {
+            ->where(function ($query) use ($searchKey) {
                 $query->where('a.no_invoice', 'LIKE', "%{$searchKey}%")
-                      ->orWhere('a.remarks', 'LIKE', "%{$searchKey}%");
+                    ->orWhere('a.remarks', 'LIKE', "%{$searchKey}%");
             })
             ->paginate($limit);
 
-           foreach ($invoices as $key => $value) {
-               $detailInvoice = DB::table('detail_invoice')
-                   ->where('id_invoice', $value->id_invoice)
-                   ->get();
+        foreach ($invoices as $key => $value) {
+            $detailInvoice = DB::table('detail_invoice')
+                ->where('id_invoice', $value->id_invoice)
+                ->get();
 
-               $invoices[$key]->detail_invoice = $detailInvoice;
+            $invoices[$key]->detail_invoice = $detailInvoice;
 
-               $approval = DB::table('approval_invoice')
-                   ->where('id_invoice', $value->id_invoice)
-                   ->get();
+            $approval = DB::table('approval_invoice')
+                ->where('id_invoice', $value->id_invoice)
+                ->get();
 
-               $invoices[$key]->approval_invoice = $approval;
+            $invoices[$key]->approval_invoice = $approval;
 
-               $othersCharge = DB::table('otherscharge_invoice AS oci')
-                   ->select('oci.*', 'l.name AS charge_name', 'l.type AS charge_type')
-                   ->leftJoin('listothercharge_invoice AS l', 'oci.id_listothercharge_invoice', '=', 'l.id_listothercharge_invoice')
-                   ->where('oci.id_invoice', $value->id_invoice)
-                   ->get();
+            $othersCharge = DB::table('otherscharge_invoice AS oci')
+                ->select('oci.*', 'l.name AS charge_name', 'l.type AS charge_type')
+                ->leftJoin('listothercharge_invoice AS l', 'oci.id_listothercharge_invoice', '=', 'l.id_listothercharge_invoice')
+                ->where('oci.id_invoice', $value->id_invoice)
+                ->get();
 
-               $invoices[$key]->others_charge = $othersCharge;
-           }
+            $invoices[$key]->others_charge = $othersCharge;
+        }
 
         return ResponseHelper::success('Invoices retrieved successfully', $invoices);
     }
 
-    public function getInvoiceById(Request $request) {
+    public function getInvoiceById(Request $request)
+    {
         $request->validate([
             'id_invoice' => 'required|exists:invoice,id_invoice',
         ]);
@@ -247,15 +249,20 @@ class InvoiceController extends Controller
         return ResponseHelper::success('Invoice retrieved successfully', $invoice);
     }
 
-    public function updateInvoice(Request $request) {
+    public function updateInvoice(Request $request)
+    {
         $request->validate([
             'id_invoice' => 'required|exists:invoice,id_invoice',
             'agent' => 'required|exists:customers,id_customer',
             'data_agent' => 'required|exists:data_customer,id_datacustomer',
-            'no_invoice' => 'required|string|max:255',
-            'invoice_date' => 'required|date',
             'due_date' => 'required|date',
             'remarks' => 'nullable|string|max:255',
+            'id_datacompany' => 'required|exists:datacompany,id_datacompany',
+            'jobsheet' => 'nullable|array',
+            'jobsheet.*.id_jobsheet' => 'required|exists:jobsheet,id_jobsheet',
+            'others' => 'nullable|array',
+            'others.*.id_listothercharge_invoice' => 'required',
+            'others.*.amount' => 'required|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -273,9 +280,42 @@ class InvoiceController extends Controller
                     'updated_at' => now(),
                     'updated_by' => Auth::id(),
                 ]);
+            if ($invoice) {
+                if ($request->input('jobsheet')) {
+                    foreach ($request->input('jobsheet') as $jobsheet1 => $value) {
+                        $dataJobsheet = DB::table('jobsheet')->where('id_jobsheet', $value['id_jobsheet'])->first();
+                        $insertJobsheet = DB::table('detail_invoice')->insert(
+                            [
+                                'id_invoice' => $request->input('id_invoice'),
+                                'id_jobsheet' => $dataJobsheet->id_jobsheet,
+                                'id_salesorder' => $dataJobsheet->id_salesorder,
+                                'id_awb' => $dataJobsheet->id_awb,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        if (!$insertJobsheet) {
+                            throw new Exception('Failed to insert jobsheet to detail invoice');
+                        }
+                    }
+                }
 
-            if (!$invoice) {
-                throw new Exception('Failed to update invoice');
+                if ($request->input('others')) {
+                    foreach ($request->input('others') as $other) {
+                        $insertOther = DB::table('otherscharge_invoice')->insert(
+                            [
+                                'id_invoice' => $request->input('id_invoice'),
+                                'id_listothercharge_invoice' => $other['id_listothercharge_invoice'],
+                                'amount' => $other['amount'],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        if (!$insertOther) {
+                            throw new Exception('Failed to insert other charge to invoice');
+                        }
+                    }
+                }
             }
 
             DB::commit();
@@ -286,4 +326,45 @@ class InvoiceController extends Controller
         }
     }
 
+    public function deleteDetailinvoice(Request $request)
+    {
+
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_detail_invoice' => 'required|exists:detail_invoice,id_detail_invoice',
+            ]);
+            $delete = DB::table('detail_invoice')
+                ->where('id_detail_invoice', $request->input('id_detail_invoice'))
+                ->delete();
+            if (!$delete) {
+                throw new Exception('Failed to delete detail invoice');
+            }
+            DB::commit();
+            return ResponseHelper::success('Detail invoice deleted successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteOtherschargeinvoice(Request $request)  {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_otherscharge_invoice' => 'required|exists:otherscharge_invoice,id_otherscharge_invoice',
+            ]);
+            $delete = DB::table('otherscharge_invoice')
+                ->where('id_otherscharge_invoice', $request->input('id_otherscharge_invoice'))
+                ->delete();
+            if (!$delete) {
+                throw new Exception('Failed to delete other charge invoice');
+            }
+            DB::commit();
+            return ResponseHelper::success('Other charge invoice deleted successfully');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
 }
