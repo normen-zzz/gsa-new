@@ -256,6 +256,127 @@ class JobsheetController extends Controller
         return ResponseHelper::success('Jobsheets retrieved successfully', $jobsheets);
     }
 
+    public function getUninvoicedJobsheet(Request $request)
+    {
+
+        $id_agent = $request->input('id_agent');
+        if (!$id_agent) {
+            return ResponseHelper::success('Agent ID is required', null, 400);
+        } else {
+
+            $select = [
+                'a.id_jobsheet',
+                'a.id_salesorder',
+                'a.id_shippinginstruction',
+                'a.id_job',
+                'a.id_awb',
+                'c.agent',
+                'cu.name_customer AS agent_name',
+                'c.consignee',
+                'a.remarks',
+                'a.created_at',
+                'a.created_by',
+                'b.name AS created_by_name',
+                'a.deleted_at',
+                'a.deleted_by',
+                'd.name AS deleted_by_name',
+                'a.status'
+            ];
+
+
+            $jobsheets = DB::table('jobsheet AS a')
+                ->select($select)
+                ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
+                ->leftJoin('users AS d', 'a.deleted_by', '=', 'd.id_user')
+                ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
+                ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
+                ->leftJoin('salesorder AS so', 'a.id_salesorder', '=', 'so.id_salesorder')
+                ->where('c.agent', $id_agent)
+                ->get();
+
+            $jobsheets->transform(function ($item) {
+
+                $selectAttachments = [
+                    'attachments_jobsheet.id_attachment_jobsheet',
+                    'attachments_jobsheet.id_jobsheet',
+                    'attachments_jobsheet.file_name',
+                    'attachments_jobsheet.url',
+                    'attachments_jobsheet.public_id',
+                    'attachments_jobsheet.created_by',
+                    'created_by.name AS created_by_name',
+                    'attachments_jobsheet.created_at',
+                    'attachments_jobsheet.deleted_at',
+                    'deleted_by.name AS deleted_by_name'
+
+                ];
+
+                $attachments = DB::table('attachments_jobsheet')
+                    ->leftJoin('users AS created_by', 'attachments_jobsheet.created_by', '=', 'created_by.id_user')
+                    ->leftJoin('users AS deleted_by', 'attachments_jobsheet.deleted_by', '=', 'deleted_by.id_user')
+                    ->where('id_jobsheet', $item->id_jobsheet)
+                    ->select($selectAttachments)
+                    ->get();
+
+
+
+                $selectCost = [
+                    'cost_jobsheet.id_cost_jobsheet',
+                    'cost_jobsheet.id_jobsheet',
+                    'cost_jobsheet.id_typecost',
+                    'ts.name AS typecost_name',
+                    'cost_jobsheet.cost_value',
+                    'cost_jobsheet.charge_by',
+                    'cost_jobsheet.description',
+                    'cost_jobsheet.id_vendor',
+                    'v.name_vendor AS vendor_name',
+                    'cost_jobsheet.created_by',
+                    'created_by.name AS created_by_name',
+                    'cost_jobsheet.created_at'
+                ];
+
+                $cost = DB::table('cost_jobsheet')
+                    ->where('id_jobsheet', $item->id_jobsheet)
+                    ->leftJoin('typecost AS ts', 'cost_jobsheet.id_typecost', '=', 'ts.id_typecost')
+                    ->leftJoin('users AS created_by', 'cost_jobsheet.created_by', '=', 'created_by.id_user')
+                    ->leftJoin('vendors AS v', 'cost_jobsheet.id_vendor', '=', 'v.id_vendor')
+                    ->select($selectCost)
+                    ->get();
+
+                $selectApproval = [
+                    'approval_jobsheet.id_approval_jobsheet',
+                    'approval_jobsheet.id_jobsheet',
+                    'approval_jobsheet.approval_position',
+                    'approval_position.name AS approval_position_name',
+                    'approval_jobsheet.approval_division',
+                    'approval_division.name AS approval_division_name',
+                    'approval_jobsheet.step_no',
+
+                    'approval_jobsheet.created_by',
+                    'created_by.name AS created_by_name',
+                    'approval_jobsheet.approved_by',
+                    'approved_by.name AS approved_by_name',
+                    'approval_jobsheet.status',
+
+                ];
+
+                $approval_jobsheet = DB::table('approval_jobsheet')
+                    ->select($selectApproval)
+                    ->leftJoin('users AS approval_position', 'approval_jobsheet.approval_position', '=', 'approval_position.id_user')
+                    ->leftJoin('users AS approval_division', 'approval_jobsheet.approval_division', '=', 'approval_division.id_user')
+                    ->leftJoin('users AS approved_by', 'approval_jobsheet.approved_by', '=', 'approved_by.id_user')
+                    ->leftJoin('users AS created_by', 'approval_jobsheet.created_by', '=', 'created_by.id_user')
+                    ->where('id_jobsheet', $item->id_jobsheet)
+                    ->get();
+
+                $item->attachments_jobsheet = $attachments;
+                $item->cost_jobsheet = $cost;
+                $item->approval_jobsheet = $approval_jobsheet;
+                return $item;
+            });
+            return ResponseHelper::success('Jobsheets retrieved successfully', $jobsheets);
+        }
+    }
+
     public function getJobsheetById(Request $request)
     {
         $id = $request->input('id_jobsheet');

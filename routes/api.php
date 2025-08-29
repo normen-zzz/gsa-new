@@ -267,6 +267,7 @@ Route::put('/updateJobsheet', [JobsheetController::class, 'updateJobsheet'])->mi
 Route::put('/deleteJobsheet', [JobsheetController::class, 'deleteJobsheet'])->middleware('auth:api');
 Route::put('/activateJobsheet', [JobsheetController::class, 'activateJobsheet'])->middleware('auth:api');
 Route::put('/actionJobsheet', [JobsheetController::class, 'actionJobsheet'])->middleware('auth:api');
+Route::get('/getUninvoicedJobsheet', [JobsheetController::class, 'getUninvoicedJobsheet'])->middleware('auth:api');
 
 //invoice
 Route::post('/createInvoice', [InvoiceController::class, 'createInvoice'])->middleware('auth:api');

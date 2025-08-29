@@ -338,7 +338,52 @@ class ShippingInstructionController extends Controller
 
         // json decode dimensions
         if ($instruction && $instruction->dimensions) {
+            $gross_weight = 0;
+            $volume_weight = 0;
+            $chargeable_weight = 0;
             $instruction->dimensions_shippinginstruction = json_decode($instruction->dimensions, true);
+            foreach ($instruction->dimensions_shippinginstruction as $item) {
+                $gross_weight += $item['weight'] ?? 0;
+                $volume_weight += ($item['length'] * $item['width'] * $item['height'] / 5000) ?? 0;
+               
+            }
+            $chargeable_weight = max($gross_weight, $volume_weight);
+            $route = DB::table('routes')
+                    ->where('airline', $instruction->airline)
+                    ->where('pol', $instruction->id_pol)
+                    ->where('pod', $instruction->id_pod)
+                    ->first();
+                if (!$route) {
+                    throw new Exception('Route not found');
+                } else {
+                    $getWeightBrackets = DB::table('weight_bracket_selling')
+                        ->where('min_weight', '<=', $chargeable_weight)
+                        ->orderBy('min_weight', 'desc')
+                        ->first();
+                        
+                    $selectSelling = [
+                        'selling.id_selling',
+                        'selling.id_weight_bracket_selling',
+                        'weight_bracket_selling.min_weight',
+                        'selling.id_typeselling',
+                        'typeselling.initials as typeselling_initials',
+                        'typeselling.name as typeselling_name',
+                        'selling.id_route',
+                        'selling.selling_value',
+                        'selling.charge_by'
+                    ];
+                    $getSelling = DB::table('selling')
+                    ->select($selectSelling)
+                    ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
+                    ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
+                    
+                        ->where('id_route', $route->id_route)
+                        ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
+                        ->get();
+                    if ($getSelling) {
+                        $instruction->selling_data = $getSelling;
+                    }
+                }
             unset($instruction->dimensions); // remove original dimensions field
         } else {
             $instruction->dimensions_shippinginstruction = [];
@@ -513,6 +558,8 @@ class ShippingInstructionController extends Controller
                         ->get();
                     if ($getSelling) {
                         $instruction->selling_data = $getSelling;
+                    } else {
+                        $instruction->selling_data = [];
                     }
                 }
                 $instruction->awb_data = $awb;
