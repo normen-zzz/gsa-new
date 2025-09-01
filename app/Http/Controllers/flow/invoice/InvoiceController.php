@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\flow\invoice;
 
-use App\Helpers\ResponseHelper;
-use App\Http\Controllers\Controller;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Helpers\NumberHelper;
+use App\Helpers\ResponseHelper;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Riskihajar\Terbilang\Facades\Terbilang;
+
 
 class InvoiceController extends Controller
 {
@@ -307,11 +310,11 @@ class InvoiceController extends Controller
             $detailInvoice[$key]->selling_salesorder = $data_selling_salesorder;
         }
         $invoice->detail_invoice = $detailInvoice;
-        $subtotal = $total_selling ;
-          $invoice->subtotal = $subtotal;
+        $subtotal = $total_selling;
+        $invoice->subtotal = $subtotal;
 
 
-        
+
 
         $othersCharge = DB::table('otherscharge_invoice AS oci')
             ->select('oci.*', 'l.name AS charge_name', 'l.type AS charge_type')
@@ -363,8 +366,12 @@ class InvoiceController extends Controller
         }
 
         $invoice->others_charge = $dataOtherscharge;
-      
+
         $invoice->grand_total = $total_selling;
+        Config::set('terbilang.locale', 'en');
+        // "one million ... dollars"
+        $terbilang = strtoupper(Terbilang::make($invoice->grand_total, ' rupiahs'));
+        $invoice->said = $terbilang;
         $approval = DB::table('approval_invoice')
             ->where('id_invoice', $invoice->id_invoice)
             ->get();
