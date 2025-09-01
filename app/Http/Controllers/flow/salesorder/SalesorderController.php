@@ -402,16 +402,73 @@ class SalesorderController extends Controller
             ->where('id_awb', $salesorder->id_awb)
             ->first();
 
+
+            $select = [
+                'shippinginstruction.id_shippinginstruction',
+                'shippinginstruction.agent',
+                'agent.name_customer as agent_name',
+                'shippinginstruction.data_agent as id_data_agent',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
+                'shippinginstruction.consignee',
+                'shippinginstruction.airline',
+                'airlines.name as airline_name',
+                'shippinginstruction.type',
+                'shippinginstruction.etd',
+                'shippinginstruction.eta',
+                'shippinginstruction.pol',
+                'pol.name_airport as pol_name',
+                'shippinginstruction.pod',
+                'pod.name_airport as pod_name',
+                'shippinginstruction.commodity',
+                'shippinginstruction.gross_weight',
+                'shippinginstruction.chargeable_weight',
+                'shippinginstruction.pieces',
+                'shippinginstruction.dimensions',
+                'shippinginstruction.special_instructions',
+                'shippinginstruction.created_by',
+                'created_by.name as created_by_name',
+                'shippinginstruction.updated_by',
+                'updated_by.name as updated_by_name',
+                'shippinginstruction.received_by',
+                'received_by.name as received_by_name',
+                'shippinginstruction.deleted_by',
+                'deleted_by.name as deleted_by_name',
+                'shippinginstruction.created_at',
+                'shippinginstruction.updated_at',
+                'shippinginstruction.received_at',
+                'shippinginstruction.deleted_at'
+            ];
+
+            $shippingInstruction = DB::table('shippinginstruction')
+                ->select(
+                    $select
+                )
+                ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
+                ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
+                ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
+                ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
+                ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
+                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
+                ->where('id_shippinginstruction', $salesorder->id_shippinginstruction)
+                ->first();
+
         $route = DB::table('routes')
-            ->where('airline', $awb->airline)
-            ->where('pol', $awb->pol)
-            ->where('pod', $awb->pod)
+            ->where('airline', $shippingInstruction->airline)
+            ->where('pol', $shippingInstruction->pol)
+            ->where('pod', $shippingInstruction->pod)
             ->first();
         if (!$route) {
             throw new Exception('Route not found');
         } else {
             $getWeightBrackets = DB::table('weight_bracket_costs')
-                ->where('min_weight', '<=', $awb->chargeable_weight)
+                ->where('min_weight', '<=', $shippingInstruction->chargeable_weight)
                 ->orderBy('min_weight', 'desc')
                 ->first();
             if (!$getWeightBrackets) {
