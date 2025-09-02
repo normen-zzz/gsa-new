@@ -2,13 +2,30 @@
 
 namespace Database\Seeders;
 
-use App\Models\master\CustomerModel;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\User;
-use Illuminate\Contracts\Queue\Job;
-use PHPOpenSourceSaver\JWTAuth\Claims\Custom;
+use Database\Seeders\AwbSeeder;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\JobsheetSeeder;
+use Database\Seeders\master\JobSeeder;
+use Database\Seeders\SalesorderSeeder;
+use Database\Seeders\master\CostSellingSeeder;
+use Database\Seeders\master\MenuSeeder;
+use Database\Seeders\master\UserSeeder;
+use Database\Seeders\master\RouteSeeder;
+use Database\Seeders\master\AirlineSeeder;
+use Database\Seeders\master\AirportSeeder;
+use Database\Seeders\master\BracketSeeder;
+use Database\Seeders\master\CountrySeeder;
+use Database\Seeders\master\CustomerSeeder;
+use Database\Seeders\master\DivisionSeeder;
+use Database\Seeders\master\PositionSeeder;
+use Database\Seeders\master\TypecostSeeder;
+use Database\Seeders\master\MenusSuperAdmin;
+use Database\Seeders\master\PermissionSeeder;
+use Database\Seeders\master\TypesellingSeeder;
+use Database\Seeders\master\FlowapprovalSeeder;
+use Database\Seeders\ShippinginstructionSeeder;
 
 class DatabaseSeeder extends Seeder
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\master;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -13,21 +13,24 @@ class AirlineSeeder extends Seeder
      */
     public function run(): void
     {
-         DB::table('airlines')->insert([
+        DB::table('airlines')->insert([
+            [
             'name' => 'Ethiopian Airlines',
             'code' => 'ET',
             'status' => true,
             'created_at' => now(),
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
-        ],[
+            ],
+            [
             'name' => 'Srilankan Airlines',
             'code' => 'UL',
             'status' => true,
             'created_at' => now(),
             'updated_at' => now(),
             'created_by' => 1, // Assuming the admin user has ID 1
+            ]
         ]);
-      
+
     }
 }

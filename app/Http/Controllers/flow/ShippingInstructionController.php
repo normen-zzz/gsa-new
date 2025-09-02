@@ -20,6 +20,13 @@ class ShippingInstructionController extends Controller
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
+        $user = DB::table('users')->where('id_user', Auth::id())->first();
+        $division = DB::table('divisions')->where('id_division', $user->id_division)->first();
+        if ($division->name_division == 'Key Account' || $division->name_division == 'Sales') {
+            $id_user = Auth::id();
+        } else {
+            $id_user = null;
+        }
         $select = [
             'a.id_shippinginstruction',
             'a.airline',
@@ -54,9 +61,6 @@ class ShippingInstructionController extends Controller
             'a.updated_by',
             'g.name as updated_by_name',
             'a.deleted_at'
-
-
-
         ];
 
         $query = DB::table('shippinginstruction AS a')
@@ -68,8 +72,11 @@ class ShippingInstructionController extends Controller
             ->leftJoin('airports AS f', 'a.pod', '=', 'f.id_airport')
             ->leftJoin('users AS g', 'a.updated_by', '=', 'g.id_user')
             ->leftJoin('airlines AS h', 'a.airline', '=', 'h.id_airline')
-            ->where('d.is_primary', true)
-            ->where('c.name_customer', 'like', '%' . $search . '%')
+            ->where('d.is_primary', true);
+        if ($id_user) {
+            $query->where('a.created_by', $id_user);
+        }
+        $query->where('c.name_customer', 'like', '%' . $search . '%')
             ->orWhere('e.name_airport', 'like', '%' . $search . '%')
             ->orWhere('f.name_airport', 'like', '%' . $search . '%')
             ->orderBy('a.created_at', 'desc');
@@ -88,7 +95,7 @@ class ShippingInstructionController extends Controller
                 $instruction->dimensions_shippinginstruction = [];
             }
 
-            
+
 
             $job = DB::table('job')
                 ->select([
@@ -97,11 +104,11 @@ class ShippingInstructionController extends Controller
                     'job.agent',
                     'agent.name_customer as agent_name',
                     'job.data_agent as id_data_agent',
-                   'data_agent.pic as data_agent_pic',
-                   'data_agent.email as data_agent_email',
-                   'data_agent.phone as data_agent_phone',
-                   'data_agent.tax_id as data_agent_tax_id',
-                   'data_agent.address as data_agent_address',
+                    'data_agent.pic as data_agent_pic',
+                    'data_agent.email as data_agent_email',
+                    'data_agent.phone as data_agent_phone',
+                    'data_agent.tax_id as data_agent_tax_id',
+                    'data_agent.address as data_agent_address',
                     'job.consignee',
                     'job.airline',
                     'airline.name as airline_name',
@@ -346,45 +353,44 @@ class ShippingInstructionController extends Controller
             foreach ($instruction->dimensions_shippinginstruction as $item) {
                 $gross_weight += $item['weight'] ?? 0;
                 $volume_weight += ($item['length'] * $item['width'] * $item['height'] / 5000) ?? 0;
-               
             }
             $chargeable_weight = max($gross_weight, $volume_weight);
             $route = DB::table('routes')
-                    ->where('airline', $instruction->airline)
-                    ->where('pol', $instruction->id_pol)
-                    ->where('pod', $instruction->id_pod)
+                ->where('airline', $instruction->airline)
+                ->where('pol', $instruction->id_pol)
+                ->where('pod', $instruction->id_pod)
+                ->first();
+            if (!$route) {
+                throw new Exception('Route not found');
+            } else {
+                $getWeightBrackets = DB::table('weight_bracket_selling')
+                    ->where('min_weight', '<=', $chargeable_weight)
+                    ->orderBy('min_weight', 'desc')
                     ->first();
-                if (!$route) {
-                    throw new Exception('Route not found');
-                } else {
-                    $getWeightBrackets = DB::table('weight_bracket_selling')
-                        ->where('min_weight', '<=', $chargeable_weight)
-                        ->orderBy('min_weight', 'desc')
-                        ->first();
-                        
-                    $selectSelling = [
-                        'selling.id_selling',
-                        'selling.id_weight_bracket_selling',
-                        'weight_bracket_selling.min_weight',
-                        'selling.id_typeselling',
-                        'typeselling.initials as typeselling_initials',
-                        'typeselling.name as typeselling_name',
-                        'selling.id_route',
-                        'selling.selling_value',
-                        'selling.charge_by'
-                    ];
-                    $getSelling = DB::table('selling')
+
+                $selectSelling = [
+                    'selling.id_selling',
+                    'selling.id_weight_bracket_selling',
+                    'weight_bracket_selling.min_weight',
+                    'selling.id_typeselling',
+                    'typeselling.initials as typeselling_initials',
+                    'typeselling.name as typeselling_name',
+                    'selling.id_route',
+                    'selling.selling_value',
+                    'selling.charge_by'
+                ];
+                $getSelling = DB::table('selling')
                     ->select($selectSelling)
                     ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
                     ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
-                    
-                        ->where('id_route', $route->id_route)
-                        ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
-                        ->get();
-                    if ($getSelling) {
-                        $instruction->selling_data = $getSelling;
-                    }
+
+                    ->where('id_route', $route->id_route)
+                    ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
+                    ->get();
+                if ($getSelling) {
+                    $instruction->selling_data = $getSelling;
                 }
+            }
             unset($instruction->dimensions); // remove original dimensions field
         } else {
             $instruction->dimensions_shippinginstruction = [];
@@ -537,7 +543,7 @@ class ShippingInstructionController extends Controller
                         ->where('min_weight', '<=', $awb->chargeable_weight)
                         ->orderBy('min_weight', 'desc')
                         ->first();
-                        
+
                     $selectSelling = [
                         'selling.id_selling',
                         'selling.id_weight_bracket_selling',
@@ -550,10 +556,10 @@ class ShippingInstructionController extends Controller
                         'selling.charge_by'
                     ];
                     $getSelling = DB::table('selling')
-                    ->select($selectSelling)
-                    ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
-                    ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
-                    
+                        ->select($selectSelling)
+                        ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
+                        ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
+
                         ->where('id_route', $route->id_route)
                         ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
                         ->get();

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('eta')->nullable();
             $table->integer('pol')->unsigned();
             $table->integer('pod')->unsigned();
-            $table->string('commodity');
+            $table->string('commodity')->nullable();
             $table->integer('gross_weight')->unsigned();
             $table->integer('chargeable_weight')->unsigned();
             $table->integer('pieces')->unsigned();

@@ -11,23 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('airports', function (Blueprint $table) {
-            $table->id('id_airport');
-            $table->string('name_airport')->unique();
-            $table->string('code_airport')->unique();
-            $table->integer('identifier')->unique()->nullable();
+        Schema::create('city', function (Blueprint $table) {
+            $table->id('id_city');
             $table->unsignedBigInteger('id_country');
-            $table->unsignedBigInteger('id_city');
+            $table->string('name_city')->unique();
             $table->timestamps();
             $table->boolean('status')->default(true);
             $table->unsignedBigInteger('created_by');
             $table->softDeletes();
+            $table->unsignedBigInteger('deleted_by')->nullable();
         });
 
-        Schema::create('log_airport', function (Blueprint $table) {
-            $table->id('id_logairport');
-            $table->unsignedBigInteger('id_airport');
-            $table->text('action');
+        Schema::create('log_city', function (Blueprint $table) {
+            $table->id('id_logcity');
+            $table->unsignedBigInteger('id_city');
+            $table->json('action');
             $table->unsignedBigInteger('id_user');
             $table->timestamps();
         });
@@ -38,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('airports');
+        //
     }
 };

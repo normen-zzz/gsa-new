@@ -24,7 +24,7 @@ return new class extends Migration
             $table->date('eta');
             $table->integer('pol');
             $table->integer('pod');
-            $table->string('commodity');
+            $table->string('commodity')->nullable();
             $table->decimal('gross_weight', 8, 2)->nullable();
             $table->decimal('chargeable_weight', 8, 2)->nullable();
             $table->integer('pieces')->nullable();

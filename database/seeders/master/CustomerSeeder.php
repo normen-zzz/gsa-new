@@ -1,77 +1,81 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\master;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+
 use Illuminate\Support\Facades\DB;
 
-class AirportSeeder extends Seeder
+class CustomerSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        DB::table('airports')->insert([
+        DB::table('customers')->insert(
             [
-                'name_airport' => 'Soekarno-Hatta International Airport',
-                'code_airport' => 'CGK',
-                'id_country' => 1, // Assuming the Indonesia country has ID 1
+                'name_customer' => 'CEVA',
+                'type' => 'agent',
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
+
             ],
             [
-                'name_airport' => 'Miami International Airport',
-                'code_airport' => 'MIA',
-                'id_country' => 1, // Assuming the Indonesia country has ID 1
+                'name_customer' => 'TCS',
+                'type' => 'agent',
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
+
             ],
-            //malaysia
             [
-                'name_airport' => 'Kuala Lumpur International Airport',
-                'code_airport' => 'KUL',
-                'id_country' => 2, // Assuming the Malaysia country has ID 2
+                'name_customer' => 'PT. Transtama',
+                'type' => 'agent',
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
+
             ],
-            //ethiopian
             [
-                'name_airport' => 'Addis Ababa Bole International Airport',
-                'code_airport' => 'ADD',
-                'id_country' => 3, // Assuming the Ethiopia country has ID 3
+                'name_customer' => 'DHL',
+                'type' => 'consignee',
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
+
             ],
-            //united states
             [
-                'name_airport' => 'Los Angeles International Airport',
-                'code_airport' => 'LAX',
-                'id_country' => 4, // Assuming the United States country has ID 4
+                'name_customer' => 'FedEx',
+                'type' => 'consignee',
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
-            ],
-            //srilankan
+
+            ]
+        );
+
+        DB::table('data_customer')->insert(
             [
-                'name_airport' => 'Bandaranaike International Airport',
-                'code_airport' => 'CMB',
-                'id_country' => 5, // Assuming the Sri Lanka country has ID 4
-                'status' => true,
+                'id_customer' => 1, // Assuming the CEVA customer has ID 1
+                'pic' => 'John Doe',
+                'email' => 'john.doe@ceva.com',
+                'address' => '123 CEVA Street',
+                'phone' => '123456789',
+                'tax_id' => '1234567890',
+                'is_primary' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
                 'created_by' => 1, // Assuming the admin user has ID 1
             ],
-        ]);
+
+        );
     }
 }
