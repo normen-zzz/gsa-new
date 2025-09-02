@@ -876,7 +876,7 @@ class ShippingInstructionController extends Controller
         try {
             $request->validate([
                 'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
-                'awb' => 'required|integer|unique:awb,awb',
+                'awb' => 'required|string|unique:awb,awb',
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
                 'consignee' => 'nullable|string',

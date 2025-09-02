@@ -29,6 +29,10 @@ class MenuSeeder extends Seeder
                         "url" => "/dashboard/master/master-customer"
                     ],
                     [
+                        "title" => "Company",
+                        "url" => "/dashboard/master/master-company"
+                    ],
+                    [
                         "title" => "Vendor",
                         "url" => "/dashboard/master/master-vendor"
                     ],
@@ -74,6 +78,10 @@ class MenuSeeder extends Seeder
                                 "url" => "/dashboard/master/master-selling/master-selling"
                             ]
                         ]
+                    ],
+                    [
+                        "title" => "Other Charge",
+                        "url" => "/dashboard/master/other-charge"
                     ],
                     [
                         "title" => "Wilayah",
