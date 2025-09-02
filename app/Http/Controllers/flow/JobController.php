@@ -101,7 +101,7 @@ class JobController extends Controller
                 // Update or insert flight information
                 if (isset($request->flight_job) && is_array($request->flight_job)) {
                     foreach ($request->flight_job as $flight) {
-                        if (isset($flight['id_flightjob']) && $flight['id_flightjob']) {
+                        if ($flight['id_flightjob'] != null) {
                             // Update existing flight
                             DB::table('flight_job')
                                 ->where('id_flightjob', $flight['id_flightjob'])
