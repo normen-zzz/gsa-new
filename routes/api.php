@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\flow\JobController;
+use App\Http\Controllers\master\CityController;
 use App\Http\Controllers\master\CostController;
 use App\Http\Controllers\master\MenuController;
 use App\Http\Controllers\master\RoleController;
@@ -213,6 +214,13 @@ Route::post('/createFlowApprovalInvoice', [FlowApprovalController::class, 'creat
 Route::put('/updateFlowApprovalInvoice', [FlowApprovalController::class, 'updateFlowApprovalInvoice'])->middleware('auth:api');
 Route::put('/deleteFlowApprovalInvoice', [FlowApprovalController::class, 'deleteFlowApprovalInvoice'])->middleware('auth:api');
 Route::put('/activateFlowApprovalInvoice', [FlowApprovalController::class, 'activateFlowApprovalInvoice'])->middleware('auth:api');
+
+//Master City
+Route::get('/getCity', [CityController::class, 'getCity'])->middleware('auth:api');
+Route::post('/createCity', [CityController::class, 'createCity'])->middleware('auth:api');
+Route::put('/updateCity', [CityController::class, 'updateCity'])->middleware('auth:api');
+Route::put('/deleteCity', [CityController::class, 'deleteCity'])->middleware('auth:api');
+Route::put('/activateCity', [CityController::class, 'activateCity'])->middleware('auth:api');
 
 
 

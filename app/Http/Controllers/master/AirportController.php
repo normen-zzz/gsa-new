@@ -20,6 +20,7 @@ class AirportController extends Controller
                 'name_airport' => 'required|string|max:100|unique:airports,name_airport',
                 'code_airport' => 'required|string|max:10|unique:airports,code_airport',
                 'id_country' => 'required|integer|exists:countries,id_country',
+                'id_city' => 'required|integer|exists:city,id_city',
                 'status' => 'required|boolean',
             ]);
 
@@ -49,6 +50,8 @@ class AirportController extends Controller
             'airports.name_airport',
             'airports.code_airport',
             'airports.id_country',
+            'airports.id_city',
+            'city.name_city',
             'countries.name_country',
             'airports.status',
             'users.name as created_by',
@@ -60,6 +63,7 @@ class AirportController extends Controller
             ->where('airports.name_airport', 'like', '%' . $search . '%')
             ->join('users', 'airports.created_by', '=', 'users.id_user')
             ->join('countries', 'airports.id_country', '=', 'countries.id_country')
+            ->join('city', 'airports.id_city', '=', 'city.id_city')
             ->orWhere('airports.code_airport', 'like', '%' . $search . '%')
             ->orderBy('airports.created_at', 'desc');
 
@@ -167,6 +171,7 @@ class AirportController extends Controller
             'name_airport' => 'required|string|max:100|unique:airports,name_airport,'.$id.',id_airport',
             'code_airport' => 'required|string|max:10|unique:airports,code_airport,'.$id.',id_airport',
             'id_country' => 'required|integer|exists:countries,id_country',
+            'id_city' => 'required|integer|exists:city,id_city',
             'status' => 'nullable|boolean',
         ]);
 
