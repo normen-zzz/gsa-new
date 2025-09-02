@@ -8,15 +8,16 @@ use Illuminate\Support\Facades\DB;
 use App\Helpers\ResponseHelper;
 use Illuminate\Support\Facades\Auth;
 use Exception;
+use GuzzleHttp\Psr7\Response;
 
 class CityController extends Controller
 {
-    public function createcity(Request $request)
+    public function createCity(Request $request)
     {
         DB::beginTransaction();
         try {
             $data = $request->validate([
-                'id_country' => 'required|exists:country,id_country',
+                'id_country' => 'required|exists:countries,id_country',
                 'name_city' => 'required|string|max:100|unique:city,name_city',
                 'status' => 'required|boolean',
             ]);
@@ -37,7 +38,7 @@ class CityController extends Controller
         }
     }
 
-    public function getcity(Request $request)
+    public function getCity(Request $request)
     {
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
@@ -74,7 +75,7 @@ class CityController extends Controller
         ]);
     }
 
-    public function deactivatecity(Request $request)
+    public function deactivateCity(Request $request)
     {
 
 
@@ -117,15 +118,7 @@ class CityController extends Controller
                     throw new Exception('Failed to log deactivation action.');
                 } else {
                     DB::commit();
-                    return response()->json([
-                        'code' => 200,
-                        'status' => 'success',
-                        'data' => $city,
-                        'meta_data' => [
-                            'code' => 200,
-                            'message' => 'city deactivated successfully.',
-                        ]
-                    ], 200);
+                   return ResponseHelper::success('city deactivated successfully.', NULL, 200);
                 }
             } else {
                 throw new Exception('Failed to deactivate city.');
@@ -144,7 +137,7 @@ class CityController extends Controller
         }
     }
 
-    public function activatecity(Request $request)
+    public function activateCity(Request $request)
     {
 
         DB::beginTransaction();
@@ -186,33 +179,16 @@ class CityController extends Controller
                     throw new Exception('Failed to log activation action.');
                 } else {
                     DB::commit();
-                    return response()->json([
-                        'code' => 200,
-                        'status' => 'success',
-                        'data' => $city,
-                        'meta_data' => [
-                            'code' => 200,
-                            'message' => 'city activated successfully.',
-
-                        ]
-                    ], 200);
+                    return ResponseHelper::success('city activated successfully.', NULL, 200);
                 }
             }
         } catch (Exception $th) {
             DB::rollback();
-            return response()->json([
-                'code' => 500,
-                'status' => 'error',
-                'meta_data' => [
-                    'code' => 500,
-                    'message' => 'Failed to activate city: ',
-                    'errors' => $th->getMessage(),
-                ]
-            ], 500);
+            return ResponseHelper::error($th);
         }
     }
 
-    public function updatecity(Request $request)
+    public function updateCity(Request $request)
     {
         DB::beginTransaction();
         try {

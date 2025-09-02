@@ -219,7 +219,7 @@ Route::put('/activateFlowApprovalInvoice', [FlowApprovalController::class, 'acti
 Route::get('/getCity', [CityController::class, 'getCity'])->middleware('auth:api');
 Route::post('/createCity', [CityController::class, 'createCity'])->middleware('auth:api');
 Route::put('/updateCity', [CityController::class, 'updateCity'])->middleware('auth:api');
-Route::put('/deleteCity', [CityController::class, 'deleteCity'])->middleware('auth:api');
+Route::put('/deactivateCity', [CityController::class, 'deactivateCity'])->middleware('auth:api');
 Route::put('/activateCity', [CityController::class, 'activateCity'])->middleware('auth:api');
 
 
