@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by');
             $table->softDeletes();
             $table->unsignedBigInteger('deleted_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
         });
 
         Schema::create('log_city', function (Blueprint $table) {
