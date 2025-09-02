@@ -89,6 +89,10 @@ class MenuSeeder extends Seeder
                             [
                                 "title" => "Country",
                                 "url" => "/dashboard/master/master-negara"
+                            ],
+                            [
+                                "title" => "City",
+                                "url" => "/dashboard/master/master-city"
                             ]
                             ]
                         ],
