@@ -22,7 +22,7 @@ class ShippingInstructionController extends Controller
         $search = $request->input('searchKey', '');
         $user = DB::table('users')->where('id_user', Auth::id())->first();
         $division = DB::table('divisions')->where('id_division', $user->id_division)->first();
-        if ($division->name_division == 'Key Account' || $division->name_division == 'Sales') {
+        if ($division->name == 'Key Account' || $division->name == 'Sales') {
             $id_user = Auth::id();
         } else {
             $id_user = null;
