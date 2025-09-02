@@ -18,6 +18,7 @@ class AirportSeeder extends Seeder
                 'name_airport' => 'Soekarno-Hatta International Airport',
                 'code_airport' => 'CGK',
                 'id_country' => 1, // Assuming the Indonesia country has ID 1
+                'id_city' => 1, // Assuming the Jakarta city has ID 1
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -27,6 +28,7 @@ class AirportSeeder extends Seeder
                 'name_airport' => 'Miami International Airport',
                 'code_airport' => 'MIA',
                 'id_country' => 1, // Assuming the Indonesia country has ID 1
+                'id_city' => 1, // Assuming the Miami city has ID 2
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -37,6 +39,7 @@ class AirportSeeder extends Seeder
                 'name_airport' => 'Kuala Lumpur International Airport',
                 'code_airport' => 'KUL',
                 'id_country' => 2, // Assuming the Malaysia country has ID 2
+                'id_city' => 2, // Assuming the Kuala Lumpur city has ID 2
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -47,6 +50,7 @@ class AirportSeeder extends Seeder
                 'name_airport' => 'Addis Ababa Bole International Airport',
                 'code_airport' => 'ADD',
                 'id_country' => 3, // Assuming the Ethiopia country has ID 3
+                 'id_city' => 2, // Assuming the Kuala Lumpur city has ID 2
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -57,6 +61,7 @@ class AirportSeeder extends Seeder
                 'name_airport' => 'Los Angeles International Airport',
                 'code_airport' => 'LAX',
                 'id_country' => 4, // Assuming the United States country has ID 4
+                 'id_city' => 2, // Assuming the Kuala Lumpur city has ID 2
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -67,6 +72,7 @@ class AirportSeeder extends Seeder
                 'name_airport' => 'Bandaranaike International Airport',
                 'code_airport' => 'CMB',
                 'id_country' => 5, // Assuming the Sri Lanka country has ID 4
+                 'id_city' => 2, // Assuming the Kuala Lumpur city has ID 2
                 'status' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
