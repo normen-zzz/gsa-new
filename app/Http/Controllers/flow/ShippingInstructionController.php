@@ -76,6 +76,7 @@ class ShippingInstructionController extends Controller
 
 
 
+
         $instructions = $query->paginate($limit);
         $instructions->getCollection()->transform(function ($instruction) {
 

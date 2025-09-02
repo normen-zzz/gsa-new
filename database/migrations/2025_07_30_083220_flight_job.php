@@ -16,9 +16,9 @@ return new class extends Migration
             $table->unsignedBigInteger('id_job');
             $table->string('flight_number', 20);
             $table->dateTime('departure');
-            $table->string('departure_timezone', 50);
+            $table->string('departure_timezone', 50)->nullable();
             $table->dateTime('arrival');
-            $table->string('arrival_timezone', 50);
+            $table->string('arrival_timezone', 50)->nullable();
             $table->integer('created_by')->unsigned();
             $table->integer('updated_by')->unsigned()->nullable();
             $table->timestamps();

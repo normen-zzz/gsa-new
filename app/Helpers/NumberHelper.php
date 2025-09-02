@@ -8,7 +8,7 @@ use Carbon\Carbon;
 class NumberHelper
 {
 
-     public static function generateShippingInstructionNumber()
+    public static function generateShippingInstructionNumber()
     {
         $month = Carbon::now()->format('m');
         $year = Carbon::now()->format('y');
@@ -32,7 +32,7 @@ class NumberHelper
         return "{$month}/{$year}/{$nextNumber}";
     }
 
-     public static function generateJobNumber()
+    public static function generateJobNumber()
     {
         $month = Carbon::now()->format('m');
         $year = Carbon::now()->format('y');
@@ -81,7 +81,7 @@ class NumberHelper
         return "{$month}/{$year}/{$nextNumber}";
     }
 
-     public static function generateJobsheetNumber()
+    public static function generateJobsheetNumber()
     {
         $month = Carbon::now()->format('m');
         $year = Carbon::now()->format('y');
@@ -123,5 +123,26 @@ class NumberHelper
         }
 
         return "{$year}{$month}{$nextNumber}";
+    }
+
+
+    public static function generateAccountpayablenumber($type): string
+    {
+        // Find the last record with the same type
+        $lastRecord = DB::table('accountpayable')
+            ->where('type', $type)
+            ->orderBy('id_accountpayable', 'desc')
+            ->first();
+
+        if ($lastRecord && isset($lastRecord->no_accountpayable)) {
+            // Extract the number part after the hyphen
+            $parts = explode('-', $lastRecord->no_accountpayable);
+            $lastNumber = intval(end($parts));
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1; // Start with 1 if no previous record
+        }
+
+        return "{$type}-{$nextNumber}";
     }
 }

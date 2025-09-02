@@ -29,6 +29,7 @@ use App\Http\Controllers\flow\jobsheet\JobsheetController;
 use App\Http\Controllers\flow\ShippingInstructionController;
 use App\Http\Controllers\flow\salesorder\SalesorderController;
 use App\Http\Controllers\master\OtherchargesinvoiceController;
+use App\Http\Controllers\flow\accountpayable\AccountpayableController;
 
 
 
@@ -277,3 +278,12 @@ Route::put('/updateInvoice', [InvoiceController::class, 'updateInvoice'])->middl
 Route::put('/deleteInvoice', [InvoiceController::class, 'deleteInvoice'])->middleware('auth:api');
 Route::put('/activateInvoice', [InvoiceController::class, 'activateInvoice'])->middleware('auth:api');
 Route::put('/actionInvoice', [InvoiceController::class, 'actionInvoice'])->middleware('auth:api');
+
+//Account payable
+Route::post('/createAccountpayable', [AccountpayableController::class, 'createAccountpayable'])->middleware('auth:api');
+Route::get('/getAccountpayable', [AccountpayableController::class, 'getAccountpayable'])->middleware('auth:api');
+Route::get('/getAccountpayableById', [AccountpayableController::class, 'getAccountpayableById'])->middleware('auth:api');
+Route::put('/updateAccountpayable', [AccountpayableController::class, 'updateAccountpayable'])->middleware('auth:api');
+Route::put('/deleteAccountpayable', [AccountpayableController::class, 'deleteAccountpayable'])->middleware('auth:api');
+Route::put('/activateAccountpayable', [AccountpayableController::class, 'activateAccountpayable'])->middleware('auth:api');
+Route::put('/actionAccountpayable', [AccountpayableController::class, 'actionAccountpayable'])->middleware('auth:api');
