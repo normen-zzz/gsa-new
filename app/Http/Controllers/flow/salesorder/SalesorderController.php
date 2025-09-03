@@ -36,7 +36,7 @@ class SalesorderController extends Controller
                 'selling.*.description' => 'nullable|string|max:255'
             ]);
 
-           $shippinginstruction = DB::table('shippinginstruction')->where('id_shippinginstruction', $request->id_shippinginstruction)->first();
+            $shippinginstruction = DB::table('shippinginstruction')->where('id_shippinginstruction', $request->id_shippinginstruction)->first();
 
             $dataSalesorder = [
                 'id_shippinginstruction' => $request->id_shippinginstruction,
@@ -51,10 +51,10 @@ class SalesorderController extends Controller
                     foreach ($request->attachments as $attachment) {
                         // Generate a unique filename with timestamp
                         $file_name = time() . '_' . $insertSalesorder . '.jpg';
-                        
+
                         // Decode the base64 image
                         $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
-                        
+
                         // Save file to public storage
                         $path = 'salesorders/' . $file_name;
                         Storage::disk('public')->put($path, $image);
@@ -63,10 +63,10 @@ class SalesorderController extends Controller
                         if (!file_exists(public_path('storage'))) {
                             throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
                         }
-                        
+
                         // Generate public URL that can be accessed directly
                         $url = url('storage/' . $path);
-                        
+
                         // Verify file was saved successfully
                         if (!Storage::disk('public')->exists($path)) {
                             throw new Exception('Failed to save attachment to storage');
@@ -259,14 +259,19 @@ class SalesorderController extends Controller
     {
         $id = $request->input('id_salesorder');
 
+        $id_shippinginstruction = DB::table('salesorder')
+            ->where('id_salesorder', $id)
+            ->value('id_shippinginstruction');
+        $id_job = DB::table('job')
+            ->where('id_shippinginstruction', $id_shippinginstruction)
+            ->value('id_job');
+        $id_awb = DB::table('awb')
+            ->where('id_job', $id_job)
+            ->value('id_awb');
+
         $select = [
             'a.id_salesorder',
             'a.id_shippinginstruction',
-            'a.id_job',
-            'a.id_awb',
-            'c.agent',
-            'cu.name_customer AS agent_name',
-            'c.consignee',
             'a.remarks',
             'a.created_at',
             'a.created_by',
@@ -280,8 +285,6 @@ class SalesorderController extends Controller
         $salesorder = DB::table('salesorder AS a')
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('users AS d', 'a.deleted_by', '=', 'd.id_user')
-            ->leftJoin('awb AS c', 'a.id_awb', '=', 'c.id_awb')
-            ->leftJoin('customers AS cu', 'c.agent', '=', 'cu.id_customer')
             ->select($select)
             ->where('id_salesorder', $id)
             ->first();
@@ -316,6 +319,7 @@ class SalesorderController extends Controller
             'selling_salesorder.id_salesorder',
             'selling_salesorder.id_typeselling',
             'ts.name AS typeselling_name',
+            'ts.initials AS typeselling_initials',
             'selling_salesorder.selling_value',
             'selling_salesorder.charge_by',
             'selling_salesorder.description',
@@ -399,65 +403,65 @@ class SalesorderController extends Controller
             ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
             ->leftJoin('users AS updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
             ->leftJoin('airlines AS airline', 'awb.airline', '=', 'airline.id_airline')
-            ->where('id_awb', $salesorder->id_awb)
+            ->where('id_awb', $id_awb)
             ->first();
 
 
-            $select = [
-                'shippinginstruction.id_shippinginstruction',
-                'shippinginstruction.agent',
-                'agent.name_customer as agent_name',
-                'shippinginstruction.data_agent as id_data_agent',
-                'data_agent.pic as data_agent_pic',
-                'data_agent.email as data_agent_email',
-                'data_agent.phone as data_agent_phone',
-                'data_agent.tax_id as data_agent_tax_id',
-                'data_agent.address as data_agent_address',
-                'shippinginstruction.consignee',
-                'shippinginstruction.airline',
-                'airlines.name as airline_name',
-                'shippinginstruction.type',
-                'shippinginstruction.etd',
-                'shippinginstruction.eta',
-                'shippinginstruction.pol',
-                'pol.name_airport as pol_name',
-                'shippinginstruction.pod',
-                'pod.name_airport as pod_name',
-                'shippinginstruction.commodity',
-                'shippinginstruction.gross_weight',
-                'shippinginstruction.chargeable_weight',
-                'shippinginstruction.pieces',
-                'shippinginstruction.dimensions',
-                'shippinginstruction.special_instructions',
-                'shippinginstruction.created_by',
-                'created_by.name as created_by_name',
-                'shippinginstruction.updated_by',
-                'updated_by.name as updated_by_name',
-                'shippinginstruction.received_by',
-                'received_by.name as received_by_name',
-                'shippinginstruction.deleted_by',
-                'deleted_by.name as deleted_by_name',
-                'shippinginstruction.created_at',
-                'shippinginstruction.updated_at',
-                'shippinginstruction.received_at',
-                'shippinginstruction.deleted_at'
-            ];
+        $select = [
+            'shippinginstruction.id_shippinginstruction',
+            'shippinginstruction.agent',
+            'agent.name_customer as agent_name',
+            'shippinginstruction.data_agent as id_data_agent',
+            'data_agent.pic as data_agent_pic',
+            'data_agent.email as data_agent_email',
+            'data_agent.phone as data_agent_phone',
+            'data_agent.tax_id as data_agent_tax_id',
+            'data_agent.address as data_agent_address',
+            'shippinginstruction.consignee',
+            'shippinginstruction.airline',
+            'airlines.name as airline_name',
+            'shippinginstruction.type',
+            'shippinginstruction.etd',
+            'shippinginstruction.eta',
+            'shippinginstruction.pol',
+            'pol.name_airport as pol_name',
+            'shippinginstruction.pod',
+            'pod.name_airport as pod_name',
+            'shippinginstruction.commodity',
+            'shippinginstruction.gross_weight',
+            'shippinginstruction.chargeable_weight',
+            'shippinginstruction.pieces',
+            'shippinginstruction.dimensions',
+            'shippinginstruction.special_instructions',
+            'shippinginstruction.created_by',
+            'created_by.name as created_by_name',
+            'shippinginstruction.updated_by',
+            'updated_by.name as updated_by_name',
+            'shippinginstruction.received_by',
+            'received_by.name as received_by_name',
+            'shippinginstruction.deleted_by',
+            'deleted_by.name as deleted_by_name',
+            'shippinginstruction.created_at',
+            'shippinginstruction.updated_at',
+            'shippinginstruction.received_at',
+            'shippinginstruction.deleted_at'
+        ];
 
-            $shippingInstruction = DB::table('shippinginstruction')
-                ->select(
-                    $select
-                )
-                ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
-                ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
-                ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
-                ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
-                ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
-                ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
-                ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
-                ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
-                ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
-                ->where('id_shippinginstruction', $salesorder->id_shippinginstruction)
-                ->first();
+        $shippingInstruction = DB::table('shippinginstruction')
+            ->select(
+                $select
+            )
+            ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
+            ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
+            ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
+            ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
+            ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
+            ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
+            ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
+            ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
+            ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
+            ->where('id_shippinginstruction', $salesorder->id_shippinginstruction)
+            ->first();
 
         $route = DB::table('routes')
             ->where('airline', $shippingInstruction->airline)
@@ -473,7 +477,7 @@ class SalesorderController extends Controller
                 ->first();
             if (!$getWeightBrackets) {
                 // $getCost = [];
-                 throw new Exception('Route not found');
+                throw new Exception('Route not found');
             } else {
                 $selectCost = [
                     'cost.id_cost',
@@ -501,14 +505,19 @@ class SalesorderController extends Controller
             }
         }
         if (isset($getCost)) {
-              $salesorder->data_cost = $getCost;
-        } 
+            $salesorder->data_cost = $getCost;
+        }
         if (isset($getWeightBrackets)) {
             $salesorder->weight_bracket_cost = $getWeightBrackets;
         }
         $salesorder->route = $route;
-        
-      
+
+        if ($id_awb) {
+            $salesorder->data_awb = $awb;
+        } else{
+            $salesorder->data_awb = null;
+        }
+
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;
         $salesorder->approval_salesorder = $approval_salesorder;
@@ -636,15 +645,15 @@ class SalesorderController extends Controller
             if ($request->has('attachments')) {
                 foreach ($request->attachments as $attachment) {
                     //    upload ke local
-                     $file_name = time() . '_' . $request->id_salesorder . '.jpg';
+                    $file_name = time() . '_' . $request->id_salesorder . '.jpg';
 
-                        // Decode the base64 image
-                        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
-                        
-                        // Save file to public storage
-                        $path = 'salesorders/' . $file_name;
-                        Storage::disk('public')->put($path, $image);
-                   
+                    // Decode the base64 image
+                    $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+
+                    // Save file to public storage
+                    $path = 'salesorders/' . $file_name;
+                    Storage::disk('public')->put($path, $image);
+
                     $insert = DB::table('attachments_salesorder')->insertGetId([
                         'id_salesorder' => $request->id_salesorder,
                         'file_name' => $file_name,
@@ -718,7 +727,7 @@ class SalesorderController extends Controller
                     ->where('id_salesorder', $request->id_salesorder)
                     ->get();
 
-               
+
 
                 $log = [
                     'id_salesorder' => $request->id_salesorder,
