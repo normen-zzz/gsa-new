@@ -460,6 +460,7 @@ class JobsheetController extends Controller
             'cost_jobsheet.id_jobsheet',
             'cost_jobsheet.id_typecost',
             'ts.name AS typecost_name',
+            'ts.initials AS typecost_initials',
             'cost_jobsheet.cost_value',
             'cost_jobsheet.charge_by',
             'cost_jobsheet.description',
