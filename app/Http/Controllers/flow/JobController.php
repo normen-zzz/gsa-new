@@ -439,7 +439,7 @@ class JobController extends Controller
 
             if (isset($request->dimensions) && is_array($request->dimensions)) {
                 foreach ($request->dimensions as $dimension) {
-                    if (isset($dimension['id_dimensionawb']) && $dimension['id_dimensionawb']) {
+                    if ($dimension['id_dimensionawb'] != null) {
                         DB::table('dimension_awb')
                             ->where('id_dimensionawb', $dimension['id_dimensionawb'])
                             ->update([
