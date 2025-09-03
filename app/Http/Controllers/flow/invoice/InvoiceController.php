@@ -301,7 +301,7 @@ class InvoiceController extends Controller
                 }
                 $total_selling += $total;
                 $data_selling_salesorder[] = [
-                    'initials' => $sell->initials_typeselling,
+                    'initials' => $sell->typeselling_initials,
                     'selling_value' => $sell->selling_value,
                     'charge_by' => $sell->charge_by,
                     'weight' => $weight,
