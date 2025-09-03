@@ -518,6 +518,14 @@ class SalesorderController extends Controller
             $salesorder->data_awb = null;
         }
 
+        if ($shippingInstruction) {
+            // decode dimension
+            $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions);
+            $salesorder->data_shippinginstruction = $shippingInstruction;
+        } else{
+            $salesorder->data_shippinginstruction = null;
+        }
+
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;
         $salesorder->approval_salesorder = $approval_salesorder;
