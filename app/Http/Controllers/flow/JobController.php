@@ -37,6 +37,13 @@ class JobController extends Controller
                 'pieces' => 'required|integer|min:1',
                 'special_instructions' => 'nullable|string|max:500',
                 'dimensions_job' => 'nullable|array',
+                'dimensions_job.*.id_dimensionjob' => 'nullable|integer|exists:dimension_job,id_dimensionjob',
+                'dimensions_job.*.pieces' => 'required|integer|min:1',
+                'dimensions_job.*.length' => 'required|numeric|min:0',
+                'dimensions_job.*.width' => 'required|numeric|min:0',
+                'dimensions_job.*.height' => 'required|numeric|min:0',
+                'dimensions_job.*.weight' => 'required|numeric|min:0',
+                'dimensions_job.*.remarks' => 'nullable|string|max:500',
                 'flight_job' => 'nullable|array',
                 'flight_job.*.id_flightjob' => 'nullable|integer|exists:flight_job,id_flightjob',
                 'flight_job.*.flight_number' => 'required|string|max:50',
@@ -83,18 +90,35 @@ class JobController extends Controller
                 // Update or insert dimensions
                 if (isset($request->dimensions_job) && is_array($request->dimensions_job)) {
                     foreach ($request->dimensions_job as $dimension) {
-                        DB::table('dimension_job')->insert([
-                            'id_job' => $job->id_job,
-                            'pieces' => $dimension['pieces'],
-                            'length' => $dimension['length'],
-                            'width' => $dimension['width'],
-                            'height' => $dimension['height'],
-                            'weight' => $dimension['weight'],
-                            'remarks' => $dimension['remarks'],
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                            'created_by' => $request->user()->id_user,
-                        ]);
+                        if ($dimension['id_dimensionjob'] != null) {
+                            // Update existing dimension
+                            DB::table('dimension_job')
+                                ->where('id_dimensionjob', $dimension['id_dimensionjob'])
+                                ->update([
+                                    'pieces' => $dimension['pieces'],
+                                    'length' => $dimension['length'],
+                                    'width' => $dimension['width'],
+                                    'height' => $dimension['height'],
+                                    'weight' => $dimension['weight'],
+                                    'remarks' => $dimension['remarks'],
+                                    'updated_at' => now(),
+                                    'updated_by' => $request->user()->id_user,
+                                ]);
+                        } else {
+                            // Insert new dimension
+                            DB::table('dimension_job')->insert([
+                                'id_job' => $job->id_job,
+                                'pieces' => $dimension['pieces'],
+                                'length' => $dimension['length'],
+                                'width' => $dimension['width'],
+                                'height' => $dimension['height'],
+                                'weight' => $dimension['weight'],
+                                'remarks' => $dimension['remarks'],
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                                'created_by' => $request->user()->id_user,
+                            ]);
+                        }
                     }
                 }
 

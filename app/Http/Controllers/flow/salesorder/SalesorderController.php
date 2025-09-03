@@ -465,7 +465,7 @@ class SalesorderController extends Controller
             ->where('pod', $shippingInstruction->pod)
             ->first();
         if (!$route) {
-            throw new Exception('Route not found');
+            // throw new Exception('Route not found');
         } else {
             $getWeightBrackets = DB::table('weight_bracket_costs')
                 ->where('min_weight', '<=', $shippingInstruction->chargeable_weight)
@@ -500,13 +500,15 @@ class SalesorderController extends Controller
                     ->get();
             }
         }
-        if ($getCost == []) {
-            // $getCost = [];
-             throw new Exception('Route not found');
+        if (isset($getCost)) {
+              $salesorder->data_cost = $getCost;
+        } 
+        if (isset($getWeightBrackets)) {
+            $salesorder->weight_bracket_cost = $getWeightBrackets;
         }
         $salesorder->route = $route;
-        $salesorder->weight_bracket_cost = $getWeightBrackets;
-        $salesorder->data_cost = $getCost;
+        
+      
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;
         $salesorder->approval_salesorder = $approval_salesorder;

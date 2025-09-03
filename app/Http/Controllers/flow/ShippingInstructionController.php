@@ -29,6 +29,7 @@ class ShippingInstructionController extends Controller
         }
         $select = [
             'a.id_shippinginstruction',
+            'a.no_shippinginstruction',
             'a.airline',
             'h.name as airline_name',
             'c.name_customer as agent',
@@ -102,6 +103,7 @@ class ShippingInstructionController extends Controller
                     'job.id_job',
                     'job.id_shippinginstruction',
                     'job.agent',
+                    'job.no_job',
                     'agent.name_customer as agent_name',
                     'job.data_agent as id_data_agent',
                     'data_agent.pic as data_agent_pic',
@@ -304,6 +306,7 @@ class ShippingInstructionController extends Controller
 
         $select = [
             'a.id_shippinginstruction',
+            'a.no_shippinginstruction',
             'c.name_customer as agent',
             'c.id_customer as id_agent',
             'a.data_agent as id_data_agent',
@@ -361,7 +364,7 @@ class ShippingInstructionController extends Controller
                 ->where('pod', $instruction->id_pod)
                 ->first();
             if (!$route) {
-                throw new Exception('Route not found');
+                // throw new Exception('Route not found');
             } else {
                 $getWeightBrackets = DB::table('weight_bracket_selling')
                     ->where('min_weight', '<=', $chargeable_weight)
@@ -406,6 +409,7 @@ class ShippingInstructionController extends Controller
                 'job.id_job',
                 'job.id_shippinginstruction',
                 'job.agent',
+                'job.no_job',
                 'agent.name_customer as agent_name',
                 'job.data_agent as id_data_agent',
                 'data_agent.pic as data_agent_pic',
