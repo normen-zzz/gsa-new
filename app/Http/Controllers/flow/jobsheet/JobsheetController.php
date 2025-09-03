@@ -35,8 +35,15 @@ class JobsheetController extends Controller
                 'cost.*.id_vendor' => 'required|integer|exists:vendors,id_vendor'
             ]);
 
+            $id_shippinginstruction = DB::table('salesorder')
+                ->where('id_salesorder', $request->id_salesorder)
+                ->value('id_shippinginstruction');
+            $id_job = DB::table('job')
+                ->where('id_shippinginstruction', $id_shippinginstruction)
+                ->value('id_job');
+            $awb = DB::table('awb')->where('id_job', $id_job)->first();
+
             $salesorder = DB::table('salesorder')->where('id_salesorder', $request->id_salesorder)->first();
-            $awb = DB::table('awb')->where('id_awb', $salesorder->id_awb)->first();
             $id_job = $awb->id_job ?? null;
             $id_shippinginstruction = DB::table('job')->where('id_job', $id_job)->value('id_shippinginstruction');
             $no_jobsheet = $salesorder->no_salesorder;
@@ -300,10 +307,10 @@ class JobsheetController extends Controller
                 ->leftJoin('airports AS pol', 'c.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports AS pod', 'c.pod', '=', 'pod.id_airport')
                 ->where('c.agent', $id_agent)
-                ->whereNotExists(function($query) {
+                ->whereNotExists(function ($query) {
                     $query->select(DB::raw(1))
-                          ->from('detail_invoice')
-                          ->whereColumn('detail_invoice.id_jobsheet', 'a.id_jobsheet');
+                        ->from('detail_invoice')
+                        ->whereColumn('detail_invoice.id_jobsheet', 'a.id_jobsheet');
                 })
                 ->get();
 
