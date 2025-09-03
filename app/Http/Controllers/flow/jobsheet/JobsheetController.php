@@ -624,8 +624,7 @@ class JobsheetController extends Controller
                     }
                 }
             }
-
-            if ($request->has('attachments')) {
+            if ($request->has('attachments') && is_array($request->attachments) && count($request->attachments) > 0) {
                 foreach ($request->attachments as $attachment) {
                     $file_name = time() . '_' . $request->id_jobsheet;
                     // Decode the base64 image

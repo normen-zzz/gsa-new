@@ -263,7 +263,8 @@ class InvoiceController extends Controller
         $total_selling = 0;
         foreach ($detailInvoice as $key => $value) {
             $selectSelling = [
-                'ts.initials AS initials_typeselling',
+                'ts.name AS typeselling_name',
+                'ts.initials AS typeselling_initials',
                 'selling_salesorder.selling_value',
                 'selling_salesorder.charge_by',
             ];
