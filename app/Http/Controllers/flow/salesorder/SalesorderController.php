@@ -47,7 +47,7 @@ class SalesorderController extends Controller
             ];
             $insertSalesorder = DB::table('salesorder')->insertGetId($dataSalesorder);
             if ($insertSalesorder) {
-                if (isset($request->attachments) && is_array($request->attachments)) {
+                if (isset($request->attachments) && is_array($request->attachments) && count($request->attachments) > 0) {
                     foreach ($request->attachments as $attachment) {
                         // Generate a unique filename with timestamp
                         $file_name = time() . '_' . $insertSalesorder . '.jpg';
