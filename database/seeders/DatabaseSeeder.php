@@ -16,6 +16,7 @@ use Database\Seeders\master\RouteSeeder;
 use Database\Seeders\master\AirlineSeeder;
 use Database\Seeders\master\AirportSeeder;
 use Database\Seeders\master\BracketSeeder;
+use Database\Seeders\master\CitySeeder;
 use Database\Seeders\master\CountrySeeder;
 use Database\Seeders\master\CustomerSeeder;
 use Database\Seeders\master\DivisionSeeder;
@@ -43,6 +44,7 @@ class DatabaseSeeder extends Seeder
             AirportSeeder::class,
             AwbSeeder::class,
             CountrySeeder::class,
+            CitySeeder::class,
             CustomerSeeder::class,
             // FlowapprovalSeeder::class,
             // JobSeeder::class,
