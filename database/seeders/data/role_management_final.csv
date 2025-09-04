@@ -1,0 +1,104 @@
+division,position,menu_id,can_create,can_view,can_edit,can_delete,can_approve,can_reject,can_import,can_export
+Finance,Manager,26,0,0,0,0,0,0,0,0
+Finance,Manager,27,0,0,0,0,0,0,0,0
+Finance,Manager,28,0,0,0,0,0,0,0,0
+Finance,Manager,29,0,1,0,0,0,0,0,0
+Finance,Manager,30,0,1,0,0,1,1,1,1
+Finance,Manager,31,1,1,1,1,1,1,1,1
+Finance,Staff,26,0,0,0,0,0,0,0,0
+Finance,Staff,27,0,0,0,0,0,0,0,0
+Finance,Staff,28,0,0,0,0,0,0,0,0
+Finance,Staff,29,0,1,0,0,0,0,0,0
+Finance,Staff,30,0,1,0,0,1,1,1,1
+Finance,Staff,31,1,1,1,1,1,1,1,1
+OPS,Manager,26,0,1,0,0,1,0,0,0
+OPS,Manager,27,0,1,0,0,1,0,0,0
+OPS,Manager,28,0,1,0,0,1,0,0,0
+OPS,Manager,29,0,0,0,0,0,0,0,0
+OPS,Manager,30,0,0,0,0,0,0,0,0
+OPS,Manager,31,0,0,0,0,0,0,0,0
+OPS,Manager,26,0,1,0,0,1,0,1,1
+OPS,Manager,27,0,1,0,0,1,0,1,1
+OPS,Manager,28,0,1,0,0,1,0,1,1
+OPS,Staff,25,0,0,0,0,0,0,0,0
+OPS,Staff,29,0,0,0,0,0,0,0,0
+OPS,Staff,30,0,0,0,0,0,0,0,0
+OPS,Staff,31,0,0,0,0,0,0,0,0
+Sales,Manager,26,0,1,0,0,0,0,0,0
+Sales,Manager,27,0,1,0,0,0,0,0,0
+Sales,Manager,28,0,1,0,0,0,0,0,0
+Sales,Manager,29,1,1,1,1,1,1,1,1
+Sales,Manager,30,0,0,0,0,0,0,0,0
+Sales,Manager,31,0,1,0,0,0,0,0,0
+Sales,Staff,26,0,0,0,0,0,0,0,0
+Sales,Staff,27,0,0,0,0,0,0,0,0
+Sales,Staff,28,0,0,0,0,0,0,0,0
+Sales,Staff,29,1,1,1,1,0,0,1,1
+Sales,Staff,30,0,0,0,0,0,0,0,0
+Sales,Staff,31,0,1,0,0,0,0,0,0
+Customer Service,Manager,26,0,0,0,0,0,0,0,0
+Customer Service,Manager,27,0,0,0,0,0,0,0,0
+Customer Service,Manager,28,0,0,0,0,0,0,0,0
+Customer Service,Manager,29,0,1,0,0,0,0,0,0
+Customer Service,Manager,30,0,1,0,0,1,1,1,1
+Customer Service,Manager,31,1,1,1,1,1,1,1,1
+Key Account,Manager,26,0,0,0,0,0,0,0,0
+Key Account,Manager,27,0,0,0,0,0,0,0,0
+Key Account,Manager,28,0,0,0,0,0,0,0,0
+Key Account,Manager,29,0,1,0,0,0,0,0,0
+Key Account,Manager,30,0,1,0,0,1,1,1,1
+Key Account,Manager,31,1,1,1,1,1,1,1,1
+Key Account,Staff,26,0,0,0,0,0,0,0,0
+Key Account,Staff,27,0,0,0,0,0,0,0,0
+Key Account,Staff,28,0,0,0,0,0,0,0,0
+Key Account,Staff,29,1,1,1,1,0,0,1,1
+Key Account,Staff,30,0,0,0,0,0,0,0,0
+Key Account,Staff,31,0,1,0,0,0,0,0,0
+Director,Director,25,1,1,1,1,1,1,1,1
+Director,Director,25,1,1,1,1,1,1,1,1
+Director,Director,26,1,1,1,1,1,1,1,1
+Director,Director,27,1,1,1,1,1,1,1,1
+Director,Director,28,1,1,1,1,1,1,1,1
+Director,Director,29,1,1,1,1,1,1,1,1
+Director,Director,30,1,1,1,1,1,1,1,1
+Director,Director,31,1,1,1,1,1,1,1,1
+General Manager,General Manager,25,1,1,1,1,1,1,1,1
+General Manager,General Manager,25,1,1,1,1,1,1,1,1
+General Manager,General Manager,26,1,1,1,1,1,1,1,1
+General Manager,General Manager,27,1,1,1,1,1,1,1,1
+General Manager,General Manager,28,1,1,1,1,1,1,1,1
+General Manager,General Manager,29,1,1,1,1,1,1,1,1
+General Manager,General Manager,30,1,1,1,1,1,1,1,1
+General Manager,General Manager,31,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,1,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,2,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,3,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,4,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,5,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,6,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,7,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,8,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,9,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,10,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,11,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,12,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,13,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,14,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,15,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,16,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,17,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,18,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,19,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,20,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,21,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,22,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,23,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,24,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,25,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,26,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,27,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,28,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,29,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,30,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,31,1,1,1,1,1,1,1,1
+Super Admin,Super Admin,32,1,1,1,1,1,1,1,1

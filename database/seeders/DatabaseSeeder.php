@@ -25,6 +25,8 @@ use Database\Seeders\master\MenusSuperAdmin;
 use Database\Seeders\master\PermissionSeeder;
 use Database\Seeders\master\TypesellingSeeder;
 use Database\Seeders\master\FlowapprovalSeeder;
+use Database\Seeders\master\RoleSeeder;
+use Database\Seeders\master\UserMenuAndPermissionSeeder;
 use Database\Seeders\ShippinginstructionSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -42,33 +44,25 @@ class DatabaseSeeder extends Seeder
             AwbSeeder::class,
             CountrySeeder::class,
             CustomerSeeder::class,
-            DivisionSeeder::class,
-            FlowapprovalSeeder::class,
-            JobSeeder::class,
-            JobsheetSeeder::class,
-            MenuSeeder::class,
-            MenusSuperAdmin::class,
-            PermissionSeeder::class,
+            // FlowapprovalSeeder::class,
+            // JobSeeder::class,
+            // JobsheetSeeder::class,
             PositionSeeder::class,
+            DivisionSeeder::class,
+            PermissionSeeder::class,
+            MenuSeeder::class,
+            // MenusSuperAdmin::class,
             RouteSeeder::class,
             SalesorderSeeder::class,
-            ShippinginstructionSeeder::class,
-            TypecostSeeder::class, // Uncomment if you want to seed typecost
-            TypesellingSeeder::class, // Uncomment if you want to seed typeselling
-            UserSeeder::class,
+            // ShippinginstructionSeeder::class,
+            TypecostSeeder::class,
+            TypesellingSeeder::class, 
             BracketSeeder::class,
-            CostSellingSeeder::class
-
+            CostSellingSeeder::class,
+            RoleSeeder::class,
+            UserMenuAndPermissionSeeder::class,
+            UserSeeder::class,
         ]);
-        // CREATE JOBS
 
-        DB::table('roles')->insert([
-            'name' => 'Super Admin',
-            'id_division' => 1, // Assuming IT division has ID 1
-            'description' => 'Super Admin Role',
-            'status' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
     }
 }

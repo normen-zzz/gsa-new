@@ -33,5 +33,25 @@ class MenusSuperAdmin extends Seeder
                 'updated_at' => now(),
             ]);
         }
+
+        DB::table('menu_user')->insert([
+            'id_position' => 5, 
+            'id_division' => 4, 
+            'id_listmenu' => 25,
+            'status' => true,
+            'can_read' => true,
+            'can_create' => true,
+            'can_update' => true,
+            'can_delete' => true,
+            'can_approve' => true,
+            'can_reject' => true,
+            'can_print' => true,
+            'can_export' => true,
+            'can_import' => true,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

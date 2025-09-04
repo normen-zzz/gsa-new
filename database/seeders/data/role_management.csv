@@ -1,0 +1,65 @@
+division,position,menu_id,menu_name,parent_id,can_create,can_view,can_edit,can_delete,can_approve,can_reject,can_import,can_export
+Admin,Admin,2,Airlines,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,3,Airport,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,4,Customer,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,7,Routes,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,8,Weight Brackets,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,11,Cost,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,14,Selling,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,18,Wilayah,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,21,Approval Flow,1.0,1,1,1,1,1,1,1,1
+Admin,Admin,9,Bracket Cost,8.0,1,1,1,1,1,1,1,1
+Admin,Admin,10,Bracket Selling,8.0,1,1,1,1,1,1,1,1
+Admin,Admin,12,Cost Type,11.0,1,1,1,1,1,1,1,1
+Admin,Admin,13,List Cost,11.0,1,1,1,1,1,1,1,1
+Admin,Admin,15,Selling Type,14.0,1,1,1,1,1,1,1,1
+Admin,Admin,16,List Selling,14.0,1,1,1,1,1,1,1,1
+Admin,Admin,19,Country,18.0,1,1,1,1,1,1,1,1
+Admin,Admin,22,Sales Order Flow,21.0,1,1,1,1,1,1,1,1
+Admin,Admin,27,Job List,26.0,1,1,1,1,1,1,1,1
+Admin,Admin,28,Execute Job,26.0,1,1,1,1,1,1,1,1
+Admin,Admin,1,Master,,1,1,1,1,1,1,1,1
+Admin,Admin,25,Shipping Instructions,,1,1,1,1,1,1,1,1
+Admin,Admin,26,Job,,1,1,1,1,1,1,1,1
+Admin,Admin,29,Sales Order,,1,1,1,1,1,1,1,1
+Admin,Admin,30,Jobsheet,,1,1,1,1,1,1,1,1
+CS,Manager,26,Job,,1,1,0,0,1,1,1,1
+CS,Manager,29,Sales Order,,0,1,0,0,0,0,1,1
+CS,Manager,30,Jobsheet,,1,1,1,1,1,1,1,1
+CS,Manager,31,Invoice,,0,0,0,0,0,0,0,0
+CS,Staff,26,Job,,1,1,1,1,0,0,1,1
+CS,Staff,29,Sales Order,,0,1,0,0,1,1,1,1
+CS,Staff,30,Jobsheet,,1,1,1,1,0,0,1,1
+CS,Staff,31,Invoice,,0,1,0,0,0,0,0,0
+Finance,Manager,26,Job,,0,0,0,0,0,0,0,0
+Finance,Manager,29,Sales Order,,0,1,0,0,0,0,0,0
+Finance,Manager,30,Jobsheet,,0,1,0,0,1,1,1,1
+Finance,Manager,31,Invoice,,1,1,1,1,1,1,1,1
+Finance,Staff,26,Job,,0,0,0,0,0,0,0,0
+Finance,Staff,29,Sales Order,,0,1,0,0,0,0,0,0
+Finance,Staff,30,Jobsheet,,0,1,0,0,1,1,1,1
+Finance,Staff,31,Invoice,,1,1,1,1,1,1,1,1
+Key account,Manager,26,Job,,0,1,0,0,0,0,0,0
+Key account,Manager,29,Sales Order,,1,1,1,1,1,1,1,1
+Key account,Manager,30,Jobsheet,,0,0,0,0,0,0,0,0
+Key account,Manager,31,Invoice,,0,1,0,0,0,0,0,0
+Key account,Staff,26,Job,,0,0,0,0,0,0,0,0
+Key account,Staff,29,Sales Order,,1,1,1,1,0,0,1,1
+Key account,Staff,30,Jobsheet,,0,0,0,0,0,0,0,0
+Key account,Staff,31,Invoice,,0,1,0,0,0,0,0,0
+OPS,Manager,26,Job,,0,1,0,0,1,0,0,0
+OPS,Manager,29,Sales Order,,0,0,0,0,0,0,0,0
+OPS,Manager,30,Jobsheet,,0,0,0,0,0,0,0,0
+OPS,Manager,31,Invoice,,0,0,0,0,0,0,0,0
+OPS,Staff,26,Job,,0,1,0,0,1,0,1,1
+OPS,Staff,29,Sales Order,,0,0,0,0,0,0,0,0
+OPS,Staff,30,Jobsheet,,0,0,0,0,0,0,0,0
+OPS,Staff,31,Invoice,,0,0,0,0,0,0,0,0
+Sales,Manager,26,Job,,0,1,0,0,0,0,0,0
+Sales,Manager,29,Sales Order,,1,1,1,1,1,1,1,1
+Sales,Manager,30,Jobsheet,,0,0,0,0,0,0,0,0
+Sales,Manager,31,Invoice,,0,1,0,0,0,0,0,0
+Sales,Staff,26,Job,,0,0,0,0,0,0,0,0
+Sales,Staff,29,Sales Order,,1,1,1,1,0,0,1,1
+Sales,Staff,30,Jobsheet,,0,0,0,0,0,0,0,0
+Sales,Staff,31,Invoice,,0,1,0,0,0,0,0,0
