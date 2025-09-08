@@ -23,8 +23,8 @@ Admin,Admin,25,Shipping Instructions,,1,1,1,1,1,1,1,1
 Admin,Admin,26,Job,,1,1,1,1,1,1,1,1
 Admin,Admin,29,Sales Order,,1,1,1,1,1,1,1,1
 Admin,Admin,30,Jobsheet,,1,1,1,1,1,1,1,1
-CS,Manager,26,Job,,1,1,0,0,1,1,1,1
-CS,Manager,29,Sales Order,,0,1,0,0,0,0,1,1
+CS,Manager,26,Job,,0,1,0,0,1,1,1,1
+CS,Manager,29,Sales Order,,1,1,0,0,0,0,1,1
 CS,Manager,30,Jobsheet,,1,1,1,1,1,1,1,1
 CS,Manager,31,Invoice,,0,0,0,0,0,0,0,0
 CS,Staff,26,Job,,1,1,1,1,0,0,1,1

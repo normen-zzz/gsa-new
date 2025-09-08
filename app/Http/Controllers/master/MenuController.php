@@ -15,7 +15,7 @@ class MenuController extends Controller
 {
     public function getListMenu(Request $request)
     {
-        $limit = $request->input('limit', 10);
+        $limit = $request->input('limit');
         $search = $request->input('searchKey', '');
 
         $query = DB::table('list_menu')
@@ -135,7 +135,7 @@ class MenuController extends Controller
 
     public function getMenuUser(Request $request)
     {
-        $limit = $request->input('limit', 10);
+        $limit = $request->input('limit',10000000);
         $search = $request->input('searchKey', '');
         $id_position = $request->input('id_position', null);
         $id_division = $request->input('id_division', null);
@@ -180,6 +180,7 @@ class MenuController extends Controller
                     ->orWhere('path', 'like', '%' . $search . '%');
             })
             ->orderBy('id_menu_user', 'asc')
+
             ->paginate($limit);
 
 

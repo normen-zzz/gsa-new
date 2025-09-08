@@ -20,11 +20,19 @@ class AccountpayableController extends Controller
             $request->validate([
                 'type' => 'required|in:RE,PO,CA,CAR',
                 'description' => 'required|string|max:255',
+                'no_ca' => 'nullable|string|max:100|exists:account_payable,no_accountpayable',
                 'detail' => 'required|array',
                 'detail.*.type_pengeluaran' => 'required|numeric|exists:type_pengeluaran,id_typepengeluaran',
                 'detail.*.description' => 'required|string|max:255',
                 'detail.*.amount' => 'required|numeric|min:0',
             ]);
+
+            $checkNoCa = DB::table('account_payable')
+                ->where('no_accountpayable', $request->input('no_ca'))
+                ->first();
+            if ($checkNoCa->type !== 'CA') {
+                throw new Exception('The no_ca must refer to an account payable of type CA');
+            }
 
             $no_accountpayable = NumberHelper::generateAccountpayablenumber($request->input('type'));
 
@@ -72,7 +80,7 @@ class AccountpayableController extends Controller
     public function getAccountpayable(Request $request)
     {
         $limit = $request->input('limit', 10);
-        $searchKey = $request->input('search_key', '');
+        $searchKey = $request->input('searchKey', '');
 
         $accountPayables = DB::table('account_payable as ap')
             ->leftJoin('users as u', 'ap.created_by', '=', 'u.id_user')
@@ -80,10 +88,14 @@ class AccountpayableController extends Controller
                 'ap.id_accountpayable',
                 'ap.no_accountpayable',
                 'ap.type',
+                'ap.no_ca',
                 'ap.total',
                 'ap.status',
                 'ap.created_at',
-                'u.name as created_by'
+                'u.name as created_by',
+                'ap.deleted_at',
+                'ap.deleted_by',
+                'u2.name as deleted_by_name'
             )
             ->when($searchKey, function ($query, $searchKey) {
                 return $query->where(function ($q) use ($searchKey) {
@@ -127,14 +139,19 @@ class AccountpayableController extends Controller
         try {
             $accountPayable = DB::table('account_payable as ap')
                 ->leftJoin('users as u', 'ap.created_by', '=', 'u.id_user')
+                ->leftJoin('users as u2', 'ap.deleted_by', '=', 'u2.id_user')
                 ->select(
                     'ap.id_accountpayable',
                     'ap.no_accountpayable',
                     'ap.type',
+                    'ap.no_ca',
                     'ap.total',
                     'ap.status',
                     'ap.created_at',
-                    'u.name as created_by'
+                    'u.name as created_by',
+                    'ap.deleted_at',
+                    'ap.deleted_by',
+                    'u2.name as deleted_by_name'
                 )
                 ->where('ap.id_accountpayable', $id)
                 ->first();
@@ -174,6 +191,7 @@ class AccountpayableController extends Controller
                 'id_accountpayable' => 'required|numeric|exists:account_payable,id_accountpayable',
                 'type' => 'required|in:RE,PO,CA,CAR',
                 'description' => 'required|string|max:255',
+                'no_ca' => 'nullable|string|max:100|exists:account_payable,no_accountpayable',
                 'detail' => 'required|array',
                 'detail.*.id_detailaccountpayable' => 'nullable|numeric|exists:detail_accountpayable,id_detailaccountpayable',
                 'detail.*.type_pengeluaran' => 'required|numeric|exists:type_pengeluaran,id_typepengeluaran',
@@ -183,12 +201,28 @@ class AccountpayableController extends Controller
 
             $id_accountpayable = $request->input('id_accountpayable');
 
+
+
+
             $accountPayable = [
                 'type' => $request->input('type'),
                 'description' => $request->input('description'),
                 'updated_by' => Auth::id(),
                 'updated_at' => now(),
             ];
+            if ($request->input('no_ca') !== null) {
+                $checkNoCa = DB::table('account_payable')
+                    ->where('no_accountpayable', $request->input('no_ca'))
+                    ->first();
+                if ($checkNoCa->type !== 'CA') {
+                    throw new Exception('The no_ca must refer to an account payable of type CA');
+                }
+                DB::table('account_payable')
+                    ->where('no_ca', $request->input('no_ca'))
+                    ->update(['no_ca' => null]);
+                $accountPayable['no_ca'] = $request->input('no_ca');
+            }
+
             $updateAccountpayable = DB::table('account_payable')
                 ->where('id_accountpayable', $id_accountpayable)
                 ->update($accountPayable);
@@ -260,7 +294,8 @@ class AccountpayableController extends Controller
         }
     }
 
-    public function activateAccountpayable(Request $request)  {
+    public function activateAccountpayable(Request $request)
+    {
         DB::beginTransaction();
         try {
             $request->validate([

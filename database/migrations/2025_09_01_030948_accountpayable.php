@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('type', ['RE', 'PO','CA','CAR']);
             $table->text('description');
             $table->decimal('total', 15, 2);
+            $table->string('no_ca')->nullable();
             $table->timestamps();
             $table->integer('created_by');
             $table->integer('updated_by');
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->integer('deleted_by')->nullable();
 
         });
+        
 
         Schema::create('type_pengeluaran', function (Blueprint $table) {
             $table->id('id_typepengeluaran');

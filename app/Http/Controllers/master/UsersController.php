@@ -17,16 +17,32 @@ class UsersController extends Controller
         $limit = $request->input('limit', 10);
         $search = $request->input('searchKey', '');
 
+        $select = [
+            'users.id_user',
+            'users.name',
+            'users.email',
+            'users.status',
+            'users.created_at',
+            'positions.id_position',
+            'positions.name as position_name',
+            'divisions.id_division',
+            'divisions.name as division_name',
+        ];
+
         $query = DB::table('users')
-            ->select('users.id_user', 'users.name', 'users.email', 'users.status', 'users.created_at', 'roles.name as role_name')
-            ->join('roles', 'users.id_role', '=', 'roles.id_role')
-            ->where('users.name', 'like', '%' . $search . '%')
-            ->orWhere('users.email', 'like', '%' . $search . '%')
+            ->select($select)
+            ->join('positions', 'users.id_position', '=', 'positions.id_position')
+            ->join('divisions', 'users.id_division', '=', 'divisions.id_division')
+            ->when($search, function ($query, $search) {
+                return $query
+                    ->where('users.name', 'like', '%' . $search . '%')
+                    ->orWhere('users.email', 'like', '%' . $search . '%');
+            })
             ->orderBy('users.created_at', 'desc');
 
         $users = $query->paginate($limit);
 
-      return ResponseHelper::success('Users retrieved successfully.', $users, 200);
+        return ResponseHelper::success('Users retrieved successfully.', $users, 200);
     }
     public function getUserById($id)
     {
@@ -40,14 +56,11 @@ class UsersController extends Controller
             'positions.name as position_name',
             'divisions.id_division',
             'divisions.name as division_name',
-            'roles.id_role',
-            'roles.name as role_name',
         ];
         $user = DB::table('users')
             ->select($select)
             ->join('positions', 'users.id_position', '=', 'positions.id_position')
             ->join('divisions', 'users.id_division', '=', 'divisions.id_division')
-            ->join('roles', 'users.id_role', '=', 'roles.id_role')
             ->where('users.id_user', $id)
             ->first();
 
@@ -55,8 +68,6 @@ class UsersController extends Controller
             return ResponseHelper::success('User not found.', NULL, 404);
         }
 
-       return ResponseHelper::success('User retrieved successfully.', $user, 200);
+        return ResponseHelper::success('User retrieved successfully.', $user, 200);
     }
-
-    
 }
