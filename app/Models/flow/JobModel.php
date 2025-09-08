@@ -730,7 +730,7 @@ class JobModel extends Model
             'awb.eta',
             'awb.pol',
             'pol.name_airport as pol_name',
-            'awb.code_airport as pol_code',
+            'pol.code_airport as pol_code',
             'awb.pod',
             'pod.name_airport as pod_name',
             'pod.code_airport as pod_code',
