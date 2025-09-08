@@ -27,6 +27,7 @@ use App\Http\Controllers\master\FlowApprovalController;
 use App\Http\Controllers\flow\invoice\InvoiceController;
 use App\Http\Controllers\master\WeightbracketController;
 use App\Http\Controllers\flow\jobsheet\JobsheetController;
+use App\Http\Controllers\master\TypepengeluaranController;
 use App\Http\Controllers\flow\ShippingInstructionController;
 use App\Http\Controllers\flow\salesorder\SalesorderController;
 use App\Http\Controllers\master\OtherchargesinvoiceController;
@@ -202,6 +203,13 @@ Route::put('/updateOtherchargesinvoice', [OtherchargesinvoiceController::class, 
 Route::put('/deleteOtherchargesinvoice', [OtherchargesinvoiceController::class, 'deleteOtherchargesinvoice'])->middleware('auth:api');
 Route::put('/activateOtherchargesinvoice', [OtherchargesinvoiceController::class, 'activateOtherchargesinvoice'])->middleware('auth:api');
 
+//master type pengeluaran 
+Route::get('/getTypepengeluaran', [TypepengeluaranController::class, 'getTypepengeluaran'])->middleware('auth:api');
+Route::get('/getTypepengeluaranById', [TypepengeluaranController::class, 'getTypepengeluaranById'])->middleware('auth:api');
+Route::post('/createTypepengeluaran', [TypepengeluaranController::class, 'createTypepengeluaran'])->middleware('auth:api');
+Route::put('/updateTypepengeluaran', [TypepengeluaranController::class, 'updateTypepengeluaran'])->middleware('auth:api');
+Route::put('/deleteTypepengeluaran', [TypepengeluaranController::class, 'deleteTypepengeluaran'])->middleware('auth:api');
+Route::put('/restoreTypepengeluaran', [TypepengeluaranController::class, 'restoreTypepengeluaran'])->middleware('auth:api');
 
 //salesorder flow approval
 Route::get('/getFlowApprovalSalesOrder', [FlowApprovalController::class, 'getFlowApprovalSalesOrder'])->middleware('auth:api');
