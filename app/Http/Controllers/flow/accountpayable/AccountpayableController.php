@@ -104,6 +104,7 @@ class AccountpayableController extends Controller
                         ->orWhere('u.name', 'like', '%' . $searchKey . '%');
                 });
             })
+            ->where('created_by', Auth::id())
             ->orderBy('ap.created_at', 'desc')
             ->paginate($limit);
 
