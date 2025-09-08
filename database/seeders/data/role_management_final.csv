@@ -30,12 +30,9 @@ Sales,Manager,28,0,1,0,0,0,0,0,0
 Sales,Manager,29,1,1,1,1,1,1,1,1
 Sales,Manager,30,0,0,0,0,0,0,0,0
 Sales,Manager,31,0,1,0,0,0,0,0,0
-Sales,Staff,26,0,0,0,0,0,0,0,0
-Sales,Staff,27,0,0,0,0,0,0,0,0
+Sales,Staff,25,1,1,1,1,0,0,1,1
 Sales,Staff,28,0,0,0,0,0,0,0,0
 Sales,Staff,29,1,1,1,1,0,0,1,1
-Sales,Staff,30,0,0,0,0,0,0,0,0
-Sales,Staff,31,0,1,0,0,0,0,0,0
 Customer Service,Manager,26,0,0,0,0,0,0,0,0
 Customer Service,Manager,27,0,0,0,0,0,0,0,0
 Customer Service,Manager,28,0,0,0,0,0,0,0,0

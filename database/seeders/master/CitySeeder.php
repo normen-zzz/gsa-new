@@ -14,9 +14,9 @@ class CitySeeder extends Seeder
     public function run(): void
     {
         DB::table('city')->insert([
-            ['name' => 'Jakarta', 'id_country' => 1, 'created_by' => 1],
-            ['name' => 'Kuala Lumpur', 'id_country' => 2, 'created_by' => 1],
-            ['name' => 'Miami', 'id_country' => 3, 'created_by' => 1],
+            ['name_city' => 'Jakarta', 'id_country' => 1, 'created_by' => 1],
+            ['name_city' => 'Kuala Lumpur', 'id_country' => 2, 'created_by' => 1],
+            ['name_city' => 'Miami', 'id_country' => 3, 'created_by' => 1],
         ]);
     }
 }

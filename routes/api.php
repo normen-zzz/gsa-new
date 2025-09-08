@@ -36,6 +36,16 @@ use App\Http\Controllers\flow\accountpayable\AccountpayableController;
 
 
 
+// routes/api.php - paling atas, tanpa middleware
+Route::get('/debug-cors', function() {
+    return response()->json([
+        'message' => 'Direct access working',
+        'timestamp' => now(),
+        'method' => request()->method(),
+        'headers' => request()->headers->all()
+    ]);
+});
+
 
 // Authentication routes
 Route::post('/register', [AuthController::class, 'register']);
