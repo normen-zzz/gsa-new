@@ -129,7 +129,7 @@ class NumberHelper
     public static function generateAccountpayablenumber($type): string
     {
         // Find the last record with the same type
-        $lastRecord = DB::table('accountpayable')
+        $lastRecord = DB::table('account_payable')
             ->where('type', $type)
             ->orderBy('id_accountpayable', 'desc')
             ->first();

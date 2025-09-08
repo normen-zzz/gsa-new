@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('id_accountpayable');
             $table->string('no_accountpayable')->unique();
             $table->enum('type', ['RE', 'PO','CA','CAR']);
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->decimal('total', 15, 2);
             $table->string('no_ca')->nullable();
             $table->timestamps();

@@ -27,11 +27,14 @@ class AccountpayableController extends Controller
                 'detail.*.amount' => 'required|numeric|min:0',
             ]);
 
-            $checkNoCa = DB::table('account_payable')
-                ->where('no_accountpayable', $request->input('no_ca'))
-                ->first();
-            if ($checkNoCa->type !== 'CA') {
-                throw new Exception('The no_ca must refer to an account payable of type CA');
+            if ($request->input('no_ca') !== null) {
+
+                $checkNoCa = DB::table('account_payable')
+                    ->where('no_accountpayable', $request->input('no_ca'))
+                    ->first();
+                if ($checkNoCa->type !== 'CA') {
+                    throw new Exception('The no_ca must refer to an account payable of type CA');
+                }
             }
 
             $no_accountpayable = NumberHelper::generateAccountpayablenumber($request->input('type'));
@@ -41,7 +44,8 @@ class AccountpayableController extends Controller
 
             $insertAccountpayable = DB::table('account_payable')->insertGetId([
                 'no_accountpayable' => $no_accountpayable,
-                'type' => $request->input('type'),
+                'type' => $request->input('type') ?: null,
+                'description' => $request->input('description') ?: null,
                 'total' => $total,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
