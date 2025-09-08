@@ -55,6 +55,9 @@ return new class extends Migration
             $table->unsignedBigInteger('id_user');
             $table->timestamps();
         });
+
+
+        
     }
 
     /**

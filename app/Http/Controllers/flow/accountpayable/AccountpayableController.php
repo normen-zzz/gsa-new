@@ -88,13 +88,13 @@ class AccountpayableController extends Controller
 
         $accountPayables = DB::table('account_payable as ap')
             ->leftJoin('users as u', 'ap.created_by', '=', 'u.id_user')
+            ->leftJoin('users as u2', 'ap.deleted_by', '=', 'u2.id_user')
             ->select(
                 'ap.id_accountpayable',
                 'ap.no_accountpayable',
                 'ap.type',
                 'ap.no_ca',
                 'ap.total',
-                'ap.status',
                 'ap.created_at',
                 'u.name as created_by',
                 'ap.deleted_at',
@@ -116,7 +116,7 @@ class AccountpayableController extends Controller
         $accountPayables->getCollection()->transform(function ($item) {
             $detail_accountpayable = DB::table('detail_accountpayable as d')
                 ->select(
-                    'd.id_detail_accountpayable',
+                    'd.id_detailaccountpayable',
                     'd.id_accountpayable',
                     'd.type_pengeluaran',
                     'tp.name as type_pengeluaran_name',
@@ -137,10 +137,11 @@ class AccountpayableController extends Controller
 
     public function getAccountpayableById(Request $request)
     {
-        $id = $request->input('id_accountpayable');
+        
 
 
         DB::beginTransaction();
+        $id = $request->input('id_accountpayable');
         try {
             $accountPayable = DB::table('account_payable as ap')
                 ->leftJoin('users as u', 'ap.created_by', '=', 'u.id_user')
@@ -151,7 +152,6 @@ class AccountpayableController extends Controller
                     'ap.type',
                     'ap.no_ca',
                     'ap.total',
-                    'ap.status',
                     'ap.created_at',
                     'u.name as created_by',
                     'ap.deleted_at',
@@ -167,7 +167,7 @@ class AccountpayableController extends Controller
 
             $detail_accountpayable = DB::table('detail_accountpayable as d')
                 ->select(
-                    'd.id_detail_accountpayable',
+                    'd.id_detailaccountpayable',
                     'd.id_accountpayable',
                     'd.type_pengeluaran',
                     'tp.name as type_pengeluaran_name',
