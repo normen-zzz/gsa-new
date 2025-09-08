@@ -57,6 +57,11 @@ Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:ap
 
 // Master data routes
 
+//Master Users
+Route::get('/getUsers', [UsersController::class, 'getUsers'])->middleware('auth:api');
+Route::get('/getUserById', [UsersController::class, 'getUserById'])->middleware('auth:api');
+Route::post('/createUser', [UsersController::class, 'createUser'])->middleware('auth:api');
+
 // Master Customer
 Route::get('/getCustomer', [CustomerController::class, 'getCustomer'])->middleware('auth:api');
 Route::get('/getCustomerById/{id}', [CustomerController::class, 'getCustomerById'])->middleware('auth:api');
@@ -233,6 +238,14 @@ Route::put('/updateFlowApprovalInvoice', [FlowApprovalController::class, 'update
 Route::put('/deleteFlowApprovalInvoice', [FlowApprovalController::class, 'deleteFlowApprovalInvoice'])->middleware('auth:api');
 Route::put('/activateFlowApprovalInvoice', [FlowApprovalController::class, 'activateFlowApprovalInvoice'])->middleware('auth:api');
 
+//Account payable flow approval
+Route::get('/getFlowApprovalAccountpayable', [FlowApprovalController::class, 'getFlowApprovalAccountpayable'])->middleware('auth:api');
+Route::post('/createFlowApprovalAccountpayable', [FlowApprovalController::class, 'createFlowApprovalAccountpayable'])->middleware('auth:api');
+Route::put('/updateFlowApprovalAccountpayable', [FlowApprovalController::class, 'updateFlowApprovalAccountpayable'])->middleware('auth:api');
+Route::put('/deleteFlowApprovalAccountpayable', [FlowApprovalController::class, 'deleteFlowApprovalAccountpayable'])->middleware('auth:api');
+Route::put('/activateFlowApprovalAccountpayable', [FlowApprovalController::class, 'activateFlowApprovalAccountpayable'])->middleware('auth:api');
+
+
 //Master City
 Route::get('/getCity', [CityController::class, 'getCity'])->middleware('auth:api');
 Route::post('/createCity', [CityController::class, 'createCity'])->middleware('auth:api');
@@ -302,6 +315,7 @@ Route::get('/getInvoice', [InvoiceController::class, 'getInvoice'])->middleware(
 Route::get('/getInvoiceById', [InvoiceController::class, 'getInvoiceById'])->middleware('auth:api');
 Route::put('/updateInvoice', [InvoiceController::class, 'updateInvoice'])->middleware('auth:api');
 Route::put('/deleteInvoice', [InvoiceController::class, 'deleteInvoice'])->middleware('auth:api');
+Route::put('/deleteDetailInvoice', [InvoiceController::class, 'deleteDetailInvoice'])->middleware('auth:api');
 Route::put('/activateInvoice', [InvoiceController::class, 'activateInvoice'])->middleware('auth:api');
 Route::put('/actionInvoice', [InvoiceController::class, 'actionInvoice'])->middleware('auth:api');
 
