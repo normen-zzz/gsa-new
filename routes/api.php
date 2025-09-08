@@ -318,6 +318,7 @@ Route::put('/deleteInvoice', [InvoiceController::class, 'deleteInvoice'])->middl
 Route::put('/deleteDetailInvoice', [InvoiceController::class, 'deleteDetailInvoice'])->middleware('auth:api');
 Route::put('/activateInvoice', [InvoiceController::class, 'activateInvoice'])->middleware('auth:api');
 Route::put('/actionInvoice', [InvoiceController::class, 'actionInvoice'])->middleware('auth:api');
+Route::put('/deleteOthersChargeInvoice', [InvoiceController::class, 'deleteOthersChargeInvoice'])->middleware('auth:api');
 
 //Account payable
 Route::post('/createAccountpayable', [AccountpayableController::class, 'createAccountpayable'])->middleware('auth:api');
