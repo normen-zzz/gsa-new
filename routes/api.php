@@ -61,6 +61,9 @@ Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:ap
 Route::get('/getUsers', [UsersController::class, 'getUsers'])->middleware('auth:api');
 Route::get('/getUserById', [UsersController::class, 'getUserById'])->middleware('auth:api');
 Route::post('/createUser', [UsersController::class, 'createUser'])->middleware('auth:api');
+Route::put('/updateUser', [UsersController::class, 'updateUser'])->middleware('auth:api');
+Route::put('/deleteUser', [UsersController::class, 'deleteUser'])->middleware('auth:api');
+Route::put('/activateUser', [UsersController::class, 'activateUser'])->middleware('auth:api');
 
 // Master Customer
 Route::get('/getCustomer', [CustomerController::class, 'getCustomer'])->middleware('auth:api');
