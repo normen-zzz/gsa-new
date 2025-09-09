@@ -20,7 +20,7 @@ class AccountpayableController extends Controller
             $request->validate([
                 'type' => 'required|in:RE,PO,CA,CAR',
                 'description' => 'required|string|max:255',
-                'no_ca' => 'nullable|string|max:100|exists:account_payable,no_accountpayable|unique:account_payable,no_ca',
+                'no_ca' => 'nullable|string|max:100|exists:account_payable,no_accountpayable,type,CA|unique:account_payable,no_ca',
                 'detail' => 'required|array',
                 'detail.*.type_pengeluaran' => 'required|numeric|exists:type_pengeluaran,id_typepengeluaran',
                 'detail.*.description' => 'required|string|max:255',
@@ -32,9 +32,8 @@ class AccountpayableController extends Controller
 
 
 
-            $no_accountpayable = NumberHelper::generateAccountpayablenumber($request->input('type'));
-            if ($request->input('no_ca') !== null) {
 
+            if ($request->input('no_ca') !== null) {
                 $checkNoCa = DB::table('account_payable')
                     ->where('no_accountpayable', $request->input('no_ca'))
                     ->first();
@@ -49,6 +48,10 @@ class AccountpayableController extends Controller
 
                 // get just number no_ca
                 $no_accountpayable = 'CAR-' . $angka;
+                $no_ca = $request->input('no_ca');
+            } else {
+                $no_ca = null;
+                $no_accountpayable = NumberHelper::generateAccountpayablenumber($request->input('type'));
             }
 
             // Calculate total upfront instead of updating later
@@ -58,6 +61,7 @@ class AccountpayableController extends Controller
                 'no_accountpayable' => $no_accountpayable,
                 'type' => $request->input('type') ?: null,
                 'description' => $request->input('description') ?: null,
+                'no_ca' => $no_ca,
                 'total' => $total,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
