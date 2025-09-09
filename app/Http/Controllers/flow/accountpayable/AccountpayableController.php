@@ -20,11 +20,14 @@ class AccountpayableController extends Controller
             $request->validate([
                 'type' => 'required|in:RE,PO,CA,CAR',
                 'description' => 'required|string|max:255',
-                'no_ca' => 'nullable|string|max:100|exists:account_payable,no_accountpayable',
+                'no_ca' => 'nullable|string|max:100|exists:account_payable,no_accountpayable|unique:account_payable,no_ca',
                 'detail' => 'required|array',
                 'detail.*.type_pengeluaran' => 'required|numeric|exists:type_pengeluaran,id_typepengeluaran',
                 'detail.*.description' => 'required|string|max:255',
                 'detail.*.amount' => 'required|numeric|min:0',
+            ], [
+                'no_ca.exists' => 'The selected no_ca does not exist in account payable',
+                'no_ca.unique' => 'The no_ca is already linked to another account payable',
             ]);
 
 
@@ -39,12 +42,6 @@ class AccountpayableController extends Controller
                     throw new Exception('The no_ca must refer to an account payable of type CA');
                 }
 
-                $checkUniqueCa = DB::table('account_payable')
-                    ->where('no_ca', $request->input('no_ca'))
-                    ->first();
-                if ($checkUniqueCa) {
-                    throw new Exception('The no_ca is already linked to another account payable');
-                }
                 $str = $request->input('no_ca');
                 $parts = explode("-", $str);
                 $angka = (int) $parts[1]; // hasil: 1001 (integer)
