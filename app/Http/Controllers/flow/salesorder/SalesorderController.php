@@ -146,7 +146,7 @@ class SalesorderController extends Controller
         $limit = $request->input('limit', 10);
         $searchKey = $request->input('searchKey', '');
 
-         $user = DB::table('users')->where('id_user', Auth::id())->first();
+        $user = DB::table('users')->where('id_user', Auth::id())->first();
         $division = DB::table('divisions')->where('id_division', $user->id_division)->first();
         if ($division->name == 'Key Account' || $division->name == 'Sales') {
             $id_user = Auth::id();
@@ -156,6 +156,7 @@ class SalesorderController extends Controller
 
         $select = [
             'a.id_salesorder',
+            'a.no_salesorder',
             'a.id_shippinginstruction',
             'a.id_job',
             'a.id_awb',
@@ -182,145 +183,153 @@ class SalesorderController extends Controller
             ->when($searchKey, function ($query, $searchKey) {
                 $query->where('cu.name_customer', 'like', "%{$searchKey}%");
             });
-            if ($id_user) {
-                $salesorders->where('a.created_by', $id_user);
-            }
-            $salesorders = $salesorders->paginate($limit);
+        if ($id_user) {
+            $salesorders->where('a.created_by', $id_user);
+        }
+        $salesorders = $salesorders->paginate($limit);
 
-        $salesorders->getCollection()->transform(function ($item) {
-            $selectAttachments = [
-                'attachments_salesorder.id_attachment_salesorder',
-                'attachments_salesorder.id_salesorder',
-                'attachments_salesorder.file_name',
-                'attachments_salesorder.url',
-                'attachments_salesorder.public_id',
-                'attachments_salesorder.created_by',
-                'created_by.name AS created_by_name',
-                'attachments_salesorder.created_at',
-                'attachments_salesorder.deleted_at',
-                'deleted_by.name AS deleted_by_name'
-
-            ];
-
-            $attachments = DB::table('attachments_salesorder')
-                ->leftJoin('users AS created_by', 'attachments_salesorder.created_by', '=', 'created_by.id_user')
-                ->leftJoin('users AS deleted_by', 'attachments_salesorder.deleted_by', '=', 'deleted_by.id_user')
-                ->where('id_salesorder', $item->id_salesorder)
-                ->select($selectAttachments)
-                ->get();
+        if ($salesorders->isEmpty()) {
+            return ResponseHelper::success('No sales orders found', null, 204);
+        } else {
 
 
+            $salesorders->getCollection()->transform(function ($item) {
+                $selectAttachments = [
+                    'attachments_salesorder.id_attachment_salesorder',
+                    'attachments_salesorder.id_salesorder',
+                    'attachments_salesorder.file_name',
+                    'attachments_salesorder.url',
+                    'attachments_salesorder.public_id',
+                    'attachments_salesorder.created_by',
+                    'created_by.name AS created_by_name',
+                    'attachments_salesorder.created_at',
+                    'attachments_salesorder.deleted_at',
+                    'deleted_by.name AS deleted_by_name'
 
-            $selectSelling = [
-                'selling_salesorder.id_selling_salesorder',
-                'selling_salesorder.id_salesorder',
-                'selling_salesorder.id_typeselling',
-                'ts.name AS typeselling_name',
-                'selling_salesorder.selling_value',
-                'selling_salesorder.charge_by',
-                'selling_salesorder.description',
-                'selling_salesorder.created_by',
-                'created_by.name AS created_by_name',
-                'selling_salesorder.created_at'
-            ];
+                ];
 
-            $selling = DB::table('selling_salesorder')
-                ->where('id_salesorder', $item->id_salesorder)
-                ->join('typeselling AS ts', 'selling_salesorder.id_typeselling', '=', 'ts.id_typeselling')
-                ->leftJoin('users AS created_by', 'selling_salesorder.created_by', '=', 'created_by.id_user')
-                ->select($selectSelling)
-                ->get();
+                $attachments = DB::table('attachments_salesorder')
+                    ->leftJoin('users AS created_by', 'attachments_salesorder.created_by', '=', 'created_by.id_user')
+                    ->leftJoin('users AS deleted_by', 'attachments_salesorder.deleted_by', '=', 'deleted_by.id_user')
+                    ->where('id_salesorder', $item->id_salesorder)
+                    ->select($selectAttachments)
+                    ->get();
 
-            $selectApproval = [
-                'approval_salesorder.id_approval_salesorder',
-                'approval_salesorder.id_salesorder',
-                'approval_salesorder.approval_position',
-                'approval_position.name AS approval_position_name',
-                'approval_salesorder.approval_division',
-                'approval_division.name AS approval_division_name',
-                'approval_salesorder.step_no',
 
-                'approval_salesorder.created_by',
-                'created_by.name AS created_by_name',
-                'approval_salesorder.approved_by',
-                'approved_by.name AS approved_by_name',
-                'approval_salesorder.status',
 
-            ];
+                $selectSelling = [
+                    'selling_salesorder.id_selling_salesorder',
+                    'selling_salesorder.id_salesorder',
+                    'selling_salesorder.id_typeselling',
+                    'ts.name AS typeselling_name',
+                    'selling_salesorder.selling_value',
+                    'selling_salesorder.charge_by',
+                    'selling_salesorder.description',
+                    'selling_salesorder.created_by',
+                    'created_by.name AS created_by_name',
+                    'selling_salesorder.created_at'
+                ];
 
-            $approval_salesorder = DB::table('approval_salesorder')
-                ->select($selectApproval)
-                ->leftJoin('users AS approval_position', 'approval_salesorder.approval_position', '=', 'approval_position.id_user')
-                ->leftJoin('users AS approval_division', 'approval_salesorder.approval_division', '=', 'approval_division.id_user')
-                ->leftJoin('users AS approved_by', 'approval_salesorder.approved_by', '=', 'approved_by.id_user')
-                ->leftJoin('users AS created_by', 'approval_salesorder.created_by', '=', 'created_by.id_user')
-                ->where('id_salesorder', $item->id_salesorder)
-                ->get();
+                $selling = DB::table('selling_salesorder')
+                    ->where('id_salesorder', $item->id_salesorder)
+                    ->join('typeselling AS ts', 'selling_salesorder.id_typeselling', '=', 'ts.id_typeselling')
+                    ->leftJoin('users AS created_by', 'selling_salesorder.created_by', '=', 'created_by.id_user')
+                    ->select($selectSelling)
+                    ->get();
+
+                $selectApproval = [
+                    'approval_salesorder.id_approval_salesorder',
+                    'approval_salesorder.id_salesorder',
+                    'approval_salesorder.approval_position',
+                    'approval_position.name AS approval_position_name',
+                    'approval_salesorder.approval_division',
+                    'approval_division.name AS approval_division_name',
+                    'approval_salesorder.step_no',
+
+                    'approval_salesorder.created_by',
+                    'created_by.name AS created_by_name',
+                    'approval_salesorder.approved_by',
+                    'approved_by.name AS approved_by_name',
+                    'approval_salesorder.status',
+
+                ];
+
+                $approval_salesorder = DB::table('approval_salesorder')
+                    ->select($selectApproval)
+                    ->leftJoin('users AS approval_position', 'approval_salesorder.approval_position', '=', 'approval_position.id_user')
+                    ->leftJoin('users AS approval_division', 'approval_salesorder.approval_division', '=', 'approval_division.id_user')
+                    ->leftJoin('users AS approved_by', 'approval_salesorder.approved_by', '=', 'approved_by.id_user')
+                    ->leftJoin('users AS created_by', 'approval_salesorder.created_by', '=', 'created_by.id_user')
+                    ->where('id_salesorder', $item->id_salesorder)
+                    ->get();
 
                 $select = [
-            'shippinginstruction.id_shippinginstruction',
-            'shippinginstruction.agent',
-            'agent.name_customer as agent_name',
-            'shippinginstruction.data_agent as id_data_agent',
-            'data_agent.pic as data_agent_pic',
-            'data_agent.email as data_agent_email',
-            'data_agent.phone as data_agent_phone',
-            'data_agent.tax_id as data_agent_tax_id',
-            'data_agent.address as data_agent_address',
-            'shippinginstruction.consignee',
-            'shippinginstruction.airline',
-            'airlines.name as airline_name',
-            'shippinginstruction.type',
-            'shippinginstruction.etd',
-            'shippinginstruction.eta',
-            'shippinginstruction.pol',
-            'pol.name_airport as pol_name',
-            'shippinginstruction.pod',
-            'pod.name_airport as pod_name',
-            'shippinginstruction.commodity',
-            'shippinginstruction.gross_weight',
-            'shippinginstruction.chargeable_weight',
-            'shippinginstruction.pieces',
-            'shippinginstruction.dimensions',
-            'shippinginstruction.special_instructions',
-            'shippinginstruction.created_by',
-            'created_by.name as created_by_name',
-            'shippinginstruction.updated_by',
-            'updated_by.name as updated_by_name',
-            'shippinginstruction.received_by',
-            'received_by.name as received_by_name',
-            'shippinginstruction.deleted_by',
-            'deleted_by.name as deleted_by_name',
-            'shippinginstruction.created_at',
-            'shippinginstruction.updated_at',
-            'shippinginstruction.received_at',
-            'shippinginstruction.deleted_at'
-        ];
+                    'shippinginstruction.id_shippinginstruction',
+                    'shippinginstruction.agent',
+                    'agent.name_customer as agent_name',
+                    'shippinginstruction.data_agent as id_data_agent',
+                    'data_agent.pic as data_agent_pic',
+                    'data_agent.email as data_agent_email',
+                    'data_agent.phone as data_agent_phone',
+                    'data_agent.tax_id as data_agent_tax_id',
+                    'data_agent.address as data_agent_address',
+                    'shippinginstruction.consignee',
+                    'shippinginstruction.airline',
+                    'airlines.name as airline_name',
+                    'shippinginstruction.type',
+                    'shippinginstruction.etd',
+                    'shippinginstruction.eta',
+                    'shippinginstruction.pol',
+                    'pol.name_airport as pol_name',
+                    'shippinginstruction.pod',
+                    'pod.name_airport as pod_name',
+                    'shippinginstruction.commodity',
+                    'shippinginstruction.gross_weight',
+                    'shippinginstruction.chargeable_weight',
+                    'shippinginstruction.pieces',
+                    'shippinginstruction.dimensions',
+                    'shippinginstruction.special_instructions',
+                    'shippinginstruction.created_by',
+                    'created_by.name as created_by_name',
+                    'shippinginstruction.updated_by',
+                    'updated_by.name as updated_by_name',
+                    'shippinginstruction.received_by',
+                    'received_by.name as received_by_name',
+                    'shippinginstruction.deleted_by',
+                    'deleted_by.name as deleted_by_name',
+                    'shippinginstruction.created_at',
+                    'shippinginstruction.updated_at',
+                    'shippinginstruction.received_at',
+                    'shippinginstruction.deleted_at'
+                ];
 
-        $shippingInstruction = DB::table('shippinginstruction')
-            ->select(
-                $select
-            )
-            ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
-            ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
-            ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
-            ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
-            ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
-            ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
-            ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
-            ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
-            ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
-            ->where('id_shippinginstruction', $item->id_shippinginstruction)
-            ->first();
-            // decode 
-            $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions);  
-            $item->shippinginstruction = $shippingInstruction;
-            $item->attachments_salesorder = $attachments;
-            $item->selling_salesorder = $selling;
-            $item->approval_salesorder = $approval_salesorder;
-            return $item;
-        });
-        return ResponseHelper::success('Sales orders retrieved successfully', $salesorders);
+                $shippingInstruction = DB::table('shippinginstruction')
+                    ->select(
+                        $select
+                    )
+                    ->leftJoin('customers as agent', 'shippinginstruction.agent', '=', 'agent.id_customer')
+                    ->leftJoin('data_customer as data_agent', 'shippinginstruction.data_agent', '=', 'data_agent.id_datacustomer')
+                    ->leftJoin('airports as pol', 'shippinginstruction.pol', '=', 'pol.id_airport')
+                    ->leftJoin('airports as pod', 'shippinginstruction.pod', '=', 'pod.id_airport')
+                    ->leftJoin('users as created_by', 'shippinginstruction.created_by', '=', 'created_by.id_user')
+                    ->leftJoin('users as updated_by', 'shippinginstruction.updated_by', '=', 'updated_by.id_user')
+                    ->leftJoin('users as received_by', 'shippinginstruction.received_by', '=', 'received_by.id_user')
+                    ->leftJoin('users as deleted_by', 'shippinginstruction.deleted_by', '=', 'deleted_by.id_user')
+                    ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
+                    ->where('id_shippinginstruction', $item->id_shippinginstruction)
+                    ->first();
+                // decode 
+
+                $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions);
+
+                $item->shippinginstruction = $shippingInstruction;
+                $item->attachments_salesorder = $attachments;
+                $item->selling_salesorder = $selling;
+                $item->approval_salesorder = $approval_salesorder;
+                return $item;
+            });
+            return ResponseHelper::success('Sales orders retrieved successfully', $salesorders);
+        }
     }
 
     public function getSalesorderById(Request $request)
@@ -582,7 +591,7 @@ class SalesorderController extends Controller
 
         if ($id_awb) {
             $salesorder->data_awb = $awb;
-        } else{
+        } else {
             $salesorder->data_awb = null;
         }
 
@@ -590,7 +599,7 @@ class SalesorderController extends Controller
             // decode dimension
             $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions);
             $salesorder->data_shippinginstruction = $shippingInstruction;
-        } else{
+        } else {
             $salesorder->data_shippinginstruction = null;
         }
 

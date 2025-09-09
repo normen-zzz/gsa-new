@@ -27,6 +27,9 @@ class AccountpayableController extends Controller
                 'detail.*.amount' => 'required|numeric|min:0',
             ]);
 
+
+
+            $no_accountpayable = NumberHelper::generateAccountpayablenumber($request->input('type'));
             if ($request->input('no_ca') !== null) {
 
                 $checkNoCa = DB::table('account_payable')
@@ -35,9 +38,14 @@ class AccountpayableController extends Controller
                 if ($checkNoCa->type !== 'CA') {
                     throw new Exception('The no_ca must refer to an account payable of type CA');
                 }
-            }
+                $str = $request->input('no_ca');
+                $parts = explode("-", $str);
+                $angka = (int) $parts[1]; // hasil: 1001 (integer)
 
-            $no_accountpayable = NumberHelper::generateAccountpayablenumber($request->input('type'));
+
+                // get just number no_ca
+                $no_accountpayable = 'CAR-' . $angka;
+            }
 
             // Calculate total upfront instead of updating later
             $total = collect($request->input('detail'))->sum('amount');
@@ -137,7 +145,7 @@ class AccountpayableController extends Controller
 
     public function getAccountpayableById(Request $request)
     {
-        
+
         DB::beginTransaction();
         $id = $request->input('id_accountpayable');
         try {

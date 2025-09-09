@@ -90,7 +90,7 @@ class UserSeeder extends Seeder
                             'id_position' => $position->id_position,
                             'id_division' => $division->id_division,
                             'id_role' => 2, // role default user
-                            'password' => Hash::make($password),
+                            'password' => Hash::make('admin123'),
                             'status' => 1,
                             'created_at' => now(),
                             'updated_at' => now(),

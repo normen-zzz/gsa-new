@@ -151,6 +151,7 @@ class JobsheetController extends Controller
 
         $select = [
             'a.id_jobsheet',
+            'a.no_jobsheet',
             'a.id_salesorder',
             'a.id_shippinginstruction',
             'a.id_job',
