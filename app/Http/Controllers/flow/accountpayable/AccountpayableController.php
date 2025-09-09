@@ -156,6 +156,7 @@ class AccountpayableController extends Controller
                     'u.name as created_by',
                     'ap.deleted_at',
                     'ap.deleted_by',
+                    'ap.description',
                     'u2.name as deleted_by_name'
                 )
                 ->where('ap.id_accountpayable', $id)
