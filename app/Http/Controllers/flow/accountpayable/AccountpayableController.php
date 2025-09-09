@@ -38,6 +38,13 @@ class AccountpayableController extends Controller
                 if ($checkNoCa->type !== 'CA') {
                     throw new Exception('The no_ca must refer to an account payable of type CA');
                 }
+
+                $checkUniqueCa = DB::table('account_payable')
+                    ->where('no_ca', $request->input('no_ca'))
+                    ->first();
+                if ($checkUniqueCa) {
+                    throw new Exception('The no_ca is already linked to another account payable');
+                }
                 $str = $request->input('no_ca');
                 $parts = explode("-", $str);
                 $angka = (int) $parts[1]; // hasil: 1001 (integer)
