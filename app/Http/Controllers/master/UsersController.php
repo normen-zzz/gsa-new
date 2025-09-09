@@ -59,6 +59,7 @@ class UsersController extends Controller
             'users.name',
             'users.username',
             'users.email',
+            'users.phone',
             'users.status',
             'users.created_at',
             'positions.id_position',
