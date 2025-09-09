@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
             MenuSeeder::class,
             // MenusSuperAdmin::class,
             RouteSeeder::class,
-            SalesorderSeeder::class,
+            // SalesorderSeeder::class,
             // ShippinginstructionSeeder::class,
             TypecostSeeder::class,
             TypesellingSeeder::class, 
