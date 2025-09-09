@@ -415,6 +415,7 @@ class InvoiceController extends Controller
                     'remarks' => $request->input('remarks'),
                     'updated_at' => now(),
                     'updated_by' => Auth::id(),
+                    
                 ]);
             if ($invoice) {
                 if ($request->input('jobsheet')) {

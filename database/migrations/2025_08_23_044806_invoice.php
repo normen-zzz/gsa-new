@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('remarks')->nullable();
             $table->integer('id_datacompany')->unsigned();
             $table->integer('created_by')->unsigned();
+            $table->integer('updated_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();

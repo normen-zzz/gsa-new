@@ -56,6 +56,48 @@ return new class extends Migration
             $table->timestamps();
         });
 
+          Schema::create('approval_accountpayable', function (Blueprint $table) {
+            $table->id('id_approval_accountpayable');
+            $table->unsignedBigInteger('id_accountpayable');
+            $table->unsignedBigInteger('approval_position');
+            $table->unsignedBigInteger('approval_division');
+            $table->integer('step_no');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('remarks')->nullable();
+            $table->datetime('approved_at')->nullable();
+            $table->integer('approved_by')->nullable();
+            $table->timestamps();
+            $table->integer('created_by')->unsigned();
+        });
+
+        Schema::create('flowapproval_accountpayable', function (Blueprint $table) {
+            $table->id('id_flowapproval_accountpayable');
+            $table->unsignedBigInteger('request_position');
+            $table->unsignedBigInteger('request_division');
+            $table->enum('status', ['active', 'inactive'])->default('active');
+           
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+        Schema::create('detailflowapproval_accountpayable', function (Blueprint $table) {
+            $table->id('id_detailflowapproval_accountpayable');
+            $table->unsignedBigInteger('id_flowapproval_accountpayable');
+            $table->unsignedBigInteger('approval_position');
+            $table->unsignedBigInteger('approval_division');
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->integer('step_no');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
+        Schema::create('log_flowapproval_accountpayable', function (Blueprint $table) {
+            $table->id('id_log_flowapproval_accountpayable');
+            $table->unsignedBigInteger('id_flowapproval_accountpayable');
+            $table->json('action');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+        });
+
 
         
     }

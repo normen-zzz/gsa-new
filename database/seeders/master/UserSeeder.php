@@ -46,6 +46,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'superadmin',
+                'username' => 'superadmin',
                 'id_position' => $positionId,
                 'id_division' => $divisionId,
                 'id_role' => 1, // role super admin
@@ -85,6 +86,7 @@ class UserSeeder extends Seeder
                         ],
                         [
                             'name' => $username,
+                            'username' => $username,
                             'id_position' => $position->id_position,
                             'id_division' => $division->id_division,
                             'id_role' => 2, // role default user

@@ -138,8 +138,6 @@ class AccountpayableController extends Controller
     public function getAccountpayableById(Request $request)
     {
         
-
-
         DB::beginTransaction();
         $id = $request->input('id_accountpayable');
         try {

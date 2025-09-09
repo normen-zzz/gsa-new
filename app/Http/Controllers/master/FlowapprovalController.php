@@ -903,5 +903,297 @@ class FlowapprovalController extends Controller
     }
 
 
+    //account payable
+
+ public function createFlowApprovalAccountpayable(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Validate the request data
+            $request->validate([
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'data' => 'nullable|array',
+                'data.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'data.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'data.*.step_no' => 'required|integer|min:1',
+                'data.*.status' => 'required|in:active,inactive',
+            ]);
+
+            
+
+            $flowApproval = [
+                'request_position' => $request->request_position,
+                'request_division' => $request->request_division,
+                'status' => 'active',
+                'created_by' => Auth::id(),
+                'created_at' => now()
+            ];
+            $insertFlowapproval = DB::table('flowapproval_accountpayable')->insertGetId($flowApproval);
+            if ($insertFlowapproval) {
+                foreach ($request->data as $data) {
+                    
+
+                    $dataDetailflowapproval = [
+                        'id_flowapproval_accountpayable' => $insertFlowapproval,
+                        'approval_position' => $data['approval_position'],
+                        'approval_division' => $data['approval_division'],
+                        'step_no' => $data['step_no'],
+                        'status' => $data['status'],
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ];
+                    $insertDetailflowapproval =  DB::table('detailflowapproval_accountpayable')->insert($dataDetailflowapproval);
+                    if (!$insertDetailflowapproval) {
+                        throw new Exception('Failed to insert detail flow approval account payable');
+                    }
+                }
+            } else {
+                throw new Exception('Failed to insert flow approval account payable');
+            }
+
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for account payable created successfully', null, 200);
+        } catch (Exception $e) {
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function getFlowApprovalAccountpayable(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $search = $request->input('searchKey', '');
+
+        $select = [
+            'a.id_flowapproval_accountpayable',
+            'a.request_position',
+            'c.name AS request_position_name',
+            'a.request_division',
+            'd.name AS request_division_name',
+
+            'a.status',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name'
+        ];
+
+        $flowApprovals = DB::table('flowapproval_accountpayable AS a')
+            ->select($select)
+            ->join('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->join('positions AS c', 'a.request_position', '=', 'c.id_position')
+            ->join('divisions AS d', 'a.request_division', '=', 'd.id_division')
+            ->where(function ($q) use ($search) {
+                $q->where('c.name', 'like', '%' . $search . '%')
+                    ->orWhere('d.name', 'like', '%' . $search . '%');
+            })
+            ->paginate($limit);
+
+        $flowApprovals->transform(function ($item) {
+            $selectDetailflowapproval = [
+                'a.id_detailflowapproval_accountpayable',
+                'a.id_flowapproval_accountpayable',
+                'a.approval_position',
+                'b.name AS approval_position_name',
+                'a.approval_division',
+                'c.name AS approval_division_name',
+                'a.step_no',
+                'a.status',
+                'a.created_at',
+                'd.name AS created_by_name',
+                'a.created_by'
+            ];
+            $detailFlowapproval = DB::table('detailflowapproval_accountpayable AS a')
+                ->select($selectDetailflowapproval)
+                ->join('positions AS b', 'a.approval_position', '=', 'b.id_position')
+                ->join('divisions AS c', 'a.approval_division', '=', 'c.id_division')
+                ->join('users AS d', 'a.created_by', '=', 'd.id_user')
+                ->where('id_flowapproval_accountpayable', $item->id_flowapproval_accountpayable)
+                ->get();
+            $item->detail_flowapproval = $detailFlowapproval;
+            return $item;
+        });
+
+        return ResponseHelper::success('Flow approvals for account payable retrieved successfully.', $flowApprovals, 200);
+    }
+
+    public function updateFlowApprovalAccountpayable(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_accountpayable');
+            $flowapproval_accountpayable = DB::table('flowapproval_accountpayable')->where('id_flowapproval_accountpayable', $id)->first();
+            $request->validate([
+                'id_flowapproval_accountpayable' => 'required|integer|exists:flowapproval_accountpayable,id_flowapproval_accountpayable',
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'status' => 'required|in:active,inactive',
+                'detail_flowapproval' => 'required|array',
+                'detail_flowapproval.*.id_detailflowapproval_accountpayable' => 'nullable|integer|exists:detailflowapproval_accountpayable,id_detailflowapproval_accountpayable',
+                'detail_flowapproval.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'detail_flowapproval.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'detail_flowapproval.*.step_no' => 'required|integer|min:1|distinct',
+                'detail_flowapproval.*.status' => 'required|in:active,inactive',
+            ]);
+
+            $changesFlowapproval = [];
+            $changesDetailflowapproval = [];
+
+            $checkRequestPosition = DB::table('positions')
+                ->where('id_position', $request->request_position)
+                ->exists();
+                if (!$checkRequestPosition) {
+                    throw new Exception('Invalid request position');
+                }
+
+            $checkRequestDivision = DB::table('divisions')
+                ->where('id_division', $request->request_division)
+                ->exists();
+                if (!$checkRequestDivision) {
+                    throw new Exception('Invalid request division');
+                }
+
+            $updateFlowapproval = DB::table('flowapproval_invoice')
+                ->where('id_flowapproval_invoice', $id)
+                ->update([
+                    'request_position' => $request->input('request_position'),
+                    'request_division' => $request->input('request_division'),
+                    'status' => $request->input('status'),
+                    'updated_at' => now(),
+                ]);
+            
+
+
+            if ($request->has('detail_flowapproval')) {
+                foreach ($request->input('detail_flowapproval') as $detail) {
+                    if (isset($detail['id_detailflowapproval_accountpayable']) || $detail['id_detailflowapproval_accountpayable'] != NULL) {
+                        // Update existing detail
+                        $insertDetailflowapproval =  DB::table('detailflowapproval_accountpayable')
+                            ->where('id_detailflowapproval_accountpayable', $detail['id_detailflowapproval_accountpayable'])
+                            ->update([
+                                'approval_position' => $detail['approval_position'],
+                                'approval_division' => $detail['approval_division'],
+                                'step_no' => $detail['step_no'],
+                                'status' => $detail['status'],
+                                'updated_at' => now(),
+                            ]);
+                        if ($insertDetailflowapproval) {
+                            // Log the update action
+                            DB::table('log_flowapproval_accountpayable')->insert([
+                                'id_flowapproval_accountpayable' => $id,
+                                'action' => json_encode([
+                                    'id_detailflowapproval_accountpayable' => $detail['id_detailflowapproval_accountpayable'],
+                                    'type' => 'updated',
+                                    'data' => $detail
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ]);
+                        }
+                    } else {
+                        // Insert new detail
+                        $insert= DB::table('detailflowapproval_accountpayable')->insert([
+                            'id_flowapproval_accountpayable' => $id,
+                            'approval_position' => $detail['approval_position'],
+                            'approval_division' => $detail['approval_division'],
+                            'step_no' => $detail['step_no'],
+                            'status' => $detail['status'],
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                        $log = [
+                            'id_detailflowapproval_accountpayable' => DB::getPdo()->lastInsertId(),
+                            'type' => 'insert',
+                            'old' => null,
+                            'new' => $insert
+                        ];
+                        DB::table('log_flowapproval_accountpayable')->insert([
+                            'id_flowapproval_invoice' => $id,
+                            'action' => json_encode($log),
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for invoice updated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteFlowApprovalAccountPayable(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_accountpayable');
+            $request->validate([
+                'id_flowapproval_accountpayable' => 'required|integer|exists:flowapproval_accountpayable,id_flowapproval_accountpayable',
+            ]);
+
+            DB::table('flowapproval_accountpayable')
+                ->where('id_flowapproval_accountpayable', $id)
+                ->update([
+                    'status' => 'inactive',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'deactivated',
+            ];
+            DB::table('log_flowapproval_accountpayable')->insert([
+                'id_flowapproval_accountpayable' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for account payable deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function activateFlowApprovalAccountPayable(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_accountpayable');
+            $request->validate([
+                'id_flowapproval_accountpayable' => 'required|integer|exists:flowapproval_accountpayable,id_flowapproval_accountpayable',
+            ]);
+
+            DB::table('flowapproval_accountpayable')
+                ->where('id_flowapproval_accountpayable', $id)
+                ->update([
+                    'status' => 'active',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'activated',
+            ];
+
+            DB::table('log_flowapproval_accountpayable')->insert([
+                'id_flowapproval_accountpayable' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for account payable activated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+
 
 }
