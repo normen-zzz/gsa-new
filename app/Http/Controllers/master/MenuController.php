@@ -15,7 +15,7 @@ class MenuController extends Controller
 {
     public function getListMenu(Request $request)
     {
-        $limit = $request->input('limit');
+        $limit = $request->input('limit', 10000000000);
         $search = $request->input('searchKey', '');
 
         $query = DB::table('list_menu')
@@ -25,11 +25,9 @@ class MenuController extends Controller
             })
             ->orderBy('id_listmenu', 'asc');
 
-        if ($limit === 'all') {
-            $listMenu = $query->get(); // ambil semua
-        } else {
-            $listMenu = $query->paginate($limit);
-        }
+
+        $listMenu = $query->paginate($limit);
+
 
         return ResponseHelper::success('List of menus retrieved successfully.', $listMenu, 200);
     }
@@ -107,7 +105,7 @@ class MenuController extends Controller
                     'updated_by' => $request->user()->id_user,
                     'updated_at' => now(),
                 ]);
-                $changes = [];
+            $changes = [];
             foreach ($request->only(['name', 'icon', 'path', 'parent_id', 'status']) as $key => $value) {
                 if ($list_menu->$key !== $value) {
                     $changes[$key] = [
@@ -135,40 +133,40 @@ class MenuController extends Controller
 
     public function getMenuUser(Request $request)
     {
-        $limit = $request->input('limit',10000000);
+        $limit = $request->input('limit', 10000000);
         $search = $request->input('searchKey', '');
         $id_position = $request->input('id_position', null);
         $id_division = $request->input('id_division', null);
 
 
         $listMenu = DB::table('menu_user AS a')
-        ->join('positions AS b', 'a.id_position', '=', 'b.id_position')
-        ->join('divisions AS c', 'a.id_division', '=', 'c.id_division')
-        ->join('list_menu AS d', 'a.id_listmenu', '=', 'd.id_listmenu')
-        ->select(
-            'a.id_menu_user',
-            'a.id_position',
-            'b.name AS position_name',
-            'a.id_division',
-            'c.name AS division_name',
-            'a.id_listmenu',
-            'd.name AS menu_name',
-            "d.parent_id",
-            'd.icon',
-            'd.path',
-            'a.status',
-            'a.created_at',
-            'a.updated_at',
-            'a.can_create',
-            'a.can_read',
-            'a.can_update',
-            'a.can_delete',
-            'a.can_approve',
-            'a.can_reject',
-            'a.can_print',
-            'a.can_export',
-            'a.can_import'
-        )
+            ->join('positions AS b', 'a.id_position', '=', 'b.id_position')
+            ->join('divisions AS c', 'a.id_division', '=', 'c.id_division')
+            ->join('list_menu AS d', 'a.id_listmenu', '=', 'd.id_listmenu')
+            ->select(
+                'a.id_menu_user',
+                'a.id_position',
+                'b.name AS position_name',
+                'a.id_division',
+                'c.name AS division_name',
+                'a.id_listmenu',
+                'd.name AS menu_name',
+                "d.parent_id",
+                'd.icon',
+                'd.path',
+                'a.status',
+                'a.created_at',
+                'a.updated_at',
+                'a.can_create',
+                'a.can_read',
+                'a.can_update',
+                'a.can_delete',
+                'a.can_approve',
+                'a.can_reject',
+                'a.can_print',
+                'a.can_export',
+                'a.can_import'
+            )
             ->when($id_position, function ($query) use ($id_position) {
                 return $query->where('a.id_position', $id_position);
             })
@@ -186,7 +184,7 @@ class MenuController extends Controller
 
         return ResponseHelper::success('List of user menus retrieved successfully.', $listMenu, 200);
     }
-    
+
     public function getMenuUserById(Request $request)
     {
         $id_menu_user = $request->input('id');
@@ -221,10 +219,9 @@ class MenuController extends Controller
             ->first();
         if (!$menuUser) {
             return ResponseHelper::success('Menu user not found.', NULL, 404);
-        }else{
+        } else {
             return ResponseHelper::success('Menu user retrieved successfully.', $menuUser, 200);
         }
-
     }
 
     public function createMenuUser(Request $request)
