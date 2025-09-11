@@ -10,12 +10,19 @@ use App\Http\Controllers\Controller;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\NumberHelper;
+use App\Helpers\DateHelper;
+
 
 // date
 date_default_timezone_set('Asia/Jakarta');
 
 class ShippingInstructionController extends Controller
 {
+    public function __construct()
+    {
+        // set timezone default sekali saja untuk controller ini
+        date_default_timezone_set('Asia/Jakarta');
+    }
     public function getShippingInstructions(Request $request)
     {
         $limit = $request->input('limit', 10);
@@ -689,8 +696,9 @@ class ShippingInstructionController extends Controller
                     'data_agent' => $data['data_agent'],
                     'consignee' => $data['consignee'] ?? null,
                     'airline' => $data['airline'],
-                    'etd' => date('Y-m-d H:i:s', strtotime($data['etd'])),
-                    'eta' => date('Y-m-d H:i:s', strtotime($data['eta'])),
+                    'etd' => DateHelper::formatDate($request->input('etd')),
+
+                    'eta' => DateHelper::formatDate($request->input('eta')),
                     'pol' => $data['pol'],
                     'pod' => $data['pod'],
                     'commodity' => $data['commodity'] ?? null,
@@ -779,8 +787,8 @@ class ShippingInstructionController extends Controller
 
         ]);
         $data['updated_by'] = $request->user()->id_user;
-        $data['etd'] = date('Y-m-d H:i:s', strtotime($data['etd']));
-        $data['eta'] = date('Y-m-d H:i:s', strtotime($data['eta']));
+        $data['etd'] = DateHelper::formatDate($request->input('etd'));
+        $data['eta'] = DateHelper::formatDate($request->input('eta'));
         $id = $request->input('id_shippinginstruction');
 
 
@@ -933,8 +941,8 @@ class ShippingInstructionController extends Controller
                 'data_agent' => $request->input('data_agent'),
                 'consignee' => $request->input('consignee') ?? null,
                 'airline' => $request->input('airline'),
-                'etd' => date('Y-m-d H:i:s', strtotime($request->input('etd'))),
-                'eta' => date('Y-m-d H:i:s', strtotime($request->input('eta'))),
+                'etd' => DateHelper::formatDate($request->input('etd')),
+                'eta' => DateHelper::formatDate($request->input('eta')),
                 'pol' => $request->input('pol'),
                 'pod' => $request->input('pod'),
                 'commodity' => $request->input('commodity') ?? null,
@@ -973,9 +981,9 @@ class ShippingInstructionController extends Controller
                         $flight_job = [
                             'id_job' => $insertJob,
                             'flight_number' => $flight['flight_number'],
-                            'departure' => date('Y-m-d H:i:s', strtotime($flight['departure'])),
+                            'departure' => DateHelper::formatDate($flight['departure']),
                             'departure_timezone' => $flight['departure_timezone'],
-                            'arrival' => date('Y-m-d H:i:s', strtotime($flight['arrival'])),
+                            'arrival' => DateHelper::formatDate($flight['arrival']),
                             'arrival_timezone' => $flight['arrival_timezone'],
                             'created_by' => Auth::id(),
                             'created_at' => now(),

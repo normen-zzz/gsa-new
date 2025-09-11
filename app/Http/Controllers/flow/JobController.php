@@ -10,6 +10,7 @@ use App\Models\flow\JobModel;
 use Illuminate\Validation\ValidationException;
 use App\Helpers\ResponseHelper;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\DateHelper;
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -47,8 +48,8 @@ class JobController extends Controller
                 'flight_job' => 'nullable|array',
                 'flight_job.*.id_flightjob' => 'nullable|integer|exists:flight_job,id_flightjob',
                 'flight_job.*.flight_number' => 'required|string|max:50',
-                'flight_job.*.departure' => 'required|date',
-                'flight_job.*.arrival' => 'required|date',
+                'flight_job.*.departure' => 'required',
+                'flight_job.*.arrival' => 'required',
             ]);
 
             // Get job and related data
@@ -131,9 +132,9 @@ class JobController extends Controller
                                 ->where('id_flightjob', $flight['id_flightjob'])
                                 ->update([
                                     'flight_number' => $flight['flight_number'],
-                                    'departure' => $flight['departure'],
+                                    'departure' =>  DateHelper::formatDate($flight['departure']),
                                     'departure_timezone' => $flight['departure_timezone'] ?? null,
-                                    'arrival' => $flight['arrival'],
+                                    'arrival' => DateHelper::formatDate($flight['arrival']),
                                     'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                                     'updated_at' => now(),
                                     'updated_by' => $request->user()->id_user,
@@ -143,9 +144,9 @@ class JobController extends Controller
                             DB::table('flight_job')->insert([
                                 'id_job' => $job->id_job,
                                 'flight_number' => $flight['flight_number'],
-                                'departure' => $flight['departure'],
+                                'departure' => DateHelper::formatDate($flight['departure']),
                                 'departure_timezone' => $flight['departure_timezone'] ?? null,
-                                'arrival' => $flight['arrival'],
+                                'arrival' => DateHelper::formatDate($flight['arrival']),
                                 'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                                 'created_at' => now(),
                                 'updated_at' => now(),
@@ -261,8 +262,8 @@ class JobController extends Controller
                 'dimensions' => 'nullable|array',
                 'flight' => 'nullable|array',
                 'flight.*.flight_number' => 'required|string|max:50',
-                'flight.*.departure' => 'required|date',
-                'flight.*.arrival' => 'required|date',
+                'flight.*.departure' => 'required',
+                'flight.*.arrival' => 'required',
             ], [
                 'id_job.unique' => 'This job has already been executed and an AWB has been created.',
 
@@ -314,9 +315,9 @@ class JobController extends Controller
                         DB::table('flight_awb')->insert([
                             'id_awb' => $id_awb,
                             'flight_number' => $flight['flight_number'],
-                            'departure' => $flight['departure'],
+                            'departure' => DateHelper::formatDate($flight['departure']),
                             'departure_timezone' => $flight['departure_timezone'] ?? null,
-                            'arrival' => $flight['arrival'],
+                            'arrival' => DateHelper::formatDate($flight['arrival']),
                             'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -408,8 +409,8 @@ class JobController extends Controller
                 'flight' => 'nullable|array',
                 'flight.*.id_flightawb' => 'nullable|integer|exists:flight_awb,id_flightawb',
                 'flight.*.flight_number' => 'nullable|string|max:50',
-                'flight.*.departure' => 'nullable|date',
-                'flight.*.arrival' => 'nullable|date',
+                'flight.*.departure' => 'nullable',
+                'flight.*.arrival' => 'nullable',
             ]);
 
             $awb = DB::table('awb')->where('id_awb', $request->id_awb)->first();
@@ -475,9 +476,9 @@ class JobController extends Controller
                             ->where('id_flightawb', $flight['id_flightawb'])
                             ->update([
                                 'flight_number' => $flight['flight_number'],
-                                'departure' => $flight['departure'],
+                                'departure' => DateHelper::formatDate($flight['departure']),
                                 'departure_timezone' => $flight['departure_timezone'] ?? null,
-                                'arrival' => $flight['arrival'],
+                                'arrival' => DateHelper::formatDate($flight['arrival']),
                                 'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                                 'updated_at' => now(),
                                 'updated_by' => $request->user()->id_user,
@@ -486,9 +487,9 @@ class JobController extends Controller
                         DB::table('flight_awb')->insert([
                             'id_awb' => $request->id_awb,
                             'flight_number' => $flight['flight_number'],
-                            'departure' => $flight['departure'],
+                            'departure' => DateHelper::formatDate($flight['departure']),
                             'departure_timezone' => $flight['departure_timezone'] ?? null,
-                            'arrival' => $flight['arrival'],
+                            'arrival' => DateHelper::formatDate($flight['arrival']),
                             'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                             'created_at' => now(),
                             'updated_at' => now(),
