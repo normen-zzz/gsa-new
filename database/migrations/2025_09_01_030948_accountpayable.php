@@ -98,8 +98,17 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
-        
+       Schema::create('attachments_accountpayable', function (Blueprint $table) {
+            $table->id('id_attachments_accountpayable');
+            $table->unsignedBigInteger('id_detailaccountpayable');
+            $table->string('file_name');
+            $table->string('url');
+            $table->string('public_id');
+            $table->integer('created_by')->unsigned();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->integer('deleted_by')->nullable();
+        });    
     }
 
     /**

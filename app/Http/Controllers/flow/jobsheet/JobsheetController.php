@@ -64,9 +64,10 @@ class JobsheetController extends Controller
                         $file_name = time() . '_' . $insertJobsheet;
                         // Decode the base64 image
                         $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+                        $extension = explode('/', mime_content_type($attachment['image']))[1];
 
                         // Save file to public storage
-                        $path = 'salesorders/' . $file_name;
+                        $path = 'jobsheets/' . $file_name . '.' . $extension;
                         Storage::disk('public')->put($path, $image);
 
                         // Ensure storage link exists

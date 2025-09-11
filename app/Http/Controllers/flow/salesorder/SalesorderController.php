@@ -50,13 +50,14 @@ class SalesorderController extends Controller
                 if (isset($request->attachments) && is_array($request->attachments) && count($request->attachments) > 0) {
                     foreach ($request->attachments as $attachment) {
                         // Generate a unique filename with timestamp
-                        $file_name = time() . '_' . $insertSalesorder . '.jpg';
+                        $file_name = time() . '_' . $insertSalesorder;
 
                         // Decode the base64 image
                         $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+                        $extension = explode('/', mime_content_type($attachment['image']))[1];
 
                         // Save file to public storage
-                        $path = 'salesorders/' . $file_name;
+                        $path = 'salesorders/' . $file_name . '.' . $extension;
                         Storage::disk('public')->put($path, $image);
 
                         // Ensure storage link exists

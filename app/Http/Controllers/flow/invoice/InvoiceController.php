@@ -41,6 +41,9 @@ class InvoiceController extends Controller
                 'remarks' => $request->input('remarks'),
                 'id_datacompany' => $request->input('id_datacompany'),
                 'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
             $insertInvoice = DB::table('invoice')->insertGetId($invoice);
             foreach ($request->input('jobsheet', []) as $jobsheet) {

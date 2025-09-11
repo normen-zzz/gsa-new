@@ -10,6 +10,7 @@ use App\Helpers\ResponseHelper;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 use Illuminate\Validation\Rules\Exists;
+use Illuminate\Support\Facades\Storage;
 
 class AccountpayableController extends Controller
 {
@@ -25,14 +26,11 @@ class AccountpayableController extends Controller
                 'detail.*.type_pengeluaran' => 'required|numeric|exists:type_pengeluaran,id_typepengeluaran',
                 'detail.*.description' => 'required|string|max:255',
                 'detail.*.amount' => 'required|numeric|min:0',
+                'detail.*.attachment' => 'required|string',
             ], [
                 'no_ca.exists' => 'The selected no_ca does not exist in account payable',
                 'no_ca.unique' => 'The no_ca is already linked to another account payable',
             ]);
-
-
-
-
             if ($request->input('no_ca') !== null) {
                 $checkNoCa = DB::table('account_payable')
                     ->where('no_accountpayable', $request->input('no_ca'))
@@ -70,9 +68,32 @@ class AccountpayableController extends Controller
             ]);
 
             // Prepare batch insert for details
-            $detailRecords = [];
+
+            $attachments = [];
             foreach ($request->input('detail') as $detail) {
-                $detailRecords[] = [
+                $file_name = time() . '_' . $insertAccountpayable;
+
+                // Decode the base64 image
+                $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $detail['attachment']));
+                $extension = explode('/', mime_content_type($detail['attachment']))[1];
+
+                // Save file to public storage
+                $path = 'accountpayable/' . $file_name . '.' . $extension;
+                Storage::disk('public')->put($path, $image);
+
+                // Ensure storage link exists
+                if (!file_exists(public_path('storage'))) {
+                    throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                }
+
+                // Generate public URL that can be accessed directly
+                $url = url('storage/' . $path);
+
+                // Verify file was saved successfully
+                if (!Storage::disk('public')->exists($path)) {
+                    throw new Exception('Failed to save attachment to storage');
+                }
+                $detailRecords = [
                     'id_accountpayable' => $insertAccountpayable,
                     'type_pengeluaran' => $detail['type_pengeluaran'],
                     'description' => $detail['description'],
@@ -82,12 +103,21 @@ class AccountpayableController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
+                $insertDetail = DB::table('detail_accountpayable')->insertGetId($detailRecords);
+                if ($insertDetail) {
+                    $attachments = [
+                        'id_detailaccountpayable' => $detail['id_detailaccountpayable'] ?? null,
+                        'file_name' => $file_name,
+                        'url' => $url,
+                    ];
+                    $insertAttachment = DB::table('attachment_accountpayable')->insert($attachments);
+                    if (!$insertAttachment) {
+                        throw new Exception('Failed to save attachment record to database');
+                    }
+                }
             }
 
-            // Batch insert all details at once
-            if (!DB::table('detail_accountpayable')->insert($detailRecords)) {
-                throw new Exception('Failed to create account payable details');
-            }
+
 
             DB::commit();
             return ResponseHelper::success('Account payable created successfully', NULL, 201);
