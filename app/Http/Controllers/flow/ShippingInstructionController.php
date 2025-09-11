@@ -910,9 +910,9 @@ class ShippingInstructionController extends Controller
                 'data_flight' => 'nullable|array',
                 'data_flight.*.flight_number' => 'required|string|max:255',
                 'data_flight.*.departure' => 'required',
-                'data_flight.*.departure_timezone' => 'required|string|max:50',
+                'data_flight.*.departure_timezone' => 'nullable|string|max:50',
                 'data_flight.*.arrival' => 'required',
-                'data_flight.*.arrival_timezone' => 'required|string|max:50',
+                'data_flight.*.arrival_timezone' => 'nullable|string|max:50',
             ]);
 
             $shippingInstruction = DB::table('shippinginstruction')
