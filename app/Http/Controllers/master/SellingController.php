@@ -72,6 +72,7 @@ class SellingController extends Controller
                 'weight_bracket_selling.min_weight',
                 'selling.id_typeselling',
                 'typeselling.name as type_cost_name',
+                'typeselling.initials as type_cost_initial',
                 'selling.id_route',
                 'airlines.name as airline_name',
                 'pol.name_airport as pol_name',
