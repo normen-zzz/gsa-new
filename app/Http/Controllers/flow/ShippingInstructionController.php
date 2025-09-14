@@ -379,28 +379,62 @@ class ShippingInstructionController extends Controller
                     ->where('min_weight', '>=', $chargeable_weight)
                     ->orderBy('min_weight', 'ASC')
                     ->first();
+                if ($getWeightBrackets) {
+                    $selectSelling = [
+                        'selling.id_selling',
+                        'selling.id_weight_bracket_selling',
+                        'weight_bracket_selling.min_weight',
+                        'selling.id_typeselling',
+                        'typeselling.initials as typeselling_initials',
+                        'typeselling.name as typeselling_name',
+                        'selling.id_route',
+                        'selling.selling_value',
+                        'selling.charge_by'
+                    ];
+                    $getSelling = DB::table('selling')
+                        ->select($selectSelling)
+                        ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
+                        ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
 
-                $selectSelling = [
-                    'selling.id_selling',
-                    'selling.id_weight_bracket_selling',
-                    'weight_bracket_selling.min_weight',
-                    'selling.id_typeselling',
-                    'typeselling.initials as typeselling_initials',
-                    'typeselling.name as typeselling_name',
-                    'selling.id_route',
-                    'selling.selling_value',
-                    'selling.charge_by'
-                ];
-                $getSelling = DB::table('selling')
-                    ->select($selectSelling)
-                    ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
-                    ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
+                        ->where('id_route', $route->id_route)
+                        ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
+                        ->get();
+                    if ($getSelling) {
+                        $instruction->selling_data = $getSelling;
+                    } else {
+                        $instruction->selling_data = [];
+                    }
+                } else {
+                    $getWeightBrackets = DB::table('weight_bracket_selling')
+                        ->where('min_weight', '<=', $chargeable_weight)
+                        ->orderBy('min_weight', 'DESC')
+                        ->first();
+                    if ($getWeightBrackets) {
+                        $selectSelling = [
+                            'selling.id_selling',
+                            'selling.id_weight_bracket_selling',
+                            'weight_bracket_selling.min_weight',
+                            'selling.id_typeselling',
+                            'typeselling.initials as typeselling_initials',
+                            'typeselling.name as typeselling_name',
+                            'selling.id_route',
+                            'selling.selling_value',
+                            'selling.charge_by'
+                        ];
+                        $getSelling = DB::table('selling')
+                            ->select($selectSelling)
+                            ->join('weight_bracket_selling', 'selling.id_weight_bracket_selling', '=', 'weight_bracket_selling.id_weight_bracket_selling')
+                            ->join('typeselling', 'selling.id_typeselling', '=', 'typeselling.id_typeselling')
 
-                    ->where('id_route', $route->id_route)
-                    ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
-                    ->get();
-                if ($getSelling) {
-                    $instruction->selling_data = $getSelling;
+                            ->where('id_route', $route->id_route)
+                            ->where('selling.id_weight_bracket_selling', $getWeightBrackets->id_weight_bracket_selling)
+                            ->get();
+                        if ($getSelling) {
+                            $instruction->selling_data = $getSelling;
+                        } else {
+                            $instruction->selling_data = [];
+                        }
+                    }
                 }
             }
             unset($instruction->dimensions); // remove original dimensions field
