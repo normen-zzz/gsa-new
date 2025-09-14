@@ -67,6 +67,33 @@ class AccountpayableController extends Controller
                 'updated_at' => now(),
             ]);
 
+            $id_position = Auth::user()->id_position;
+            $id_division = Auth::user()->id_division;
+            if (!$id_position || !$id_division) {
+                throw new Exception('Invalid user position or division');
+            }
+            $flow_approval = DB::table('flowapproval_accountpayable')
+                ->where(['request_position' => $id_position, 'request_division' => $id_division])
+                ->first();
+            if (!$flow_approval) {
+                throw new Exception('No flow approval found for the user position and division');
+            } else {
+                $detail_flowapproval = DB::table('detailflowapproval_accountpayable')
+                    ->where('id_flowapproval_accountpayable', $flow_approval->id_flowapproval_accountpayable)
+                    ->get();
+                foreach ($detail_flowapproval as $approval) {
+                    $approval = [
+                        'id_accountpayable' => $insertAccountpayable,
+                        'approval_position' => $approval->approval_position,
+                        'approval_division' => $approval->approval_division,
+                        'step_no' => $approval->step_no,
+                        'status' => 'pending',
+                        'created_by' => Auth::id(),
+                    ];
+                    DB::table('approval_accountpayable')->insert($approval);
+                }
+            }
+
             // Prepare batch insert for details
 
             $attachments = [];
@@ -106,11 +133,15 @@ class AccountpayableController extends Controller
                 $insertDetail = DB::table('detail_accountpayable')->insertGetId($detailRecords);
                 if ($insertDetail) {
                     $attachments = [
-                        'id_detailaccountpayable' => $detail['id_detailaccountpayable'] ?? null,
+                        'id_detailaccountpayable' => $insertDetail,
                         'file_name' => $file_name,
                         'url' => $url,
+                        'public_id' => $file_name,
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ];
-                    $insertAttachment = DB::table('attachment_accountpayable')->insert($attachments);
+                    $insertAttachment = DB::table('attachments_accountpayable')->insert($attachments);
                     if (!$insertAttachment) {
                         throw new Exception('Failed to save attachment record to database');
                     }
@@ -172,6 +203,24 @@ class AccountpayableController extends Controller
                 ->join('type_pengeluaran as tp', 'd.type_pengeluaran', '=', 'tp.id_typepengeluaran')
                 ->where('d.id_accountpayable', $item->id_accountpayable)
                 ->get();
+
+                $approval_accountpayable = DB::table('approval_accountpayable as a')
+                ->select(
+                    'a.id_approval_accountpayable',
+                    'a.id_accountpayable',
+                    'a.approval_position',
+                    'p.name as approval_position_name',
+                    'a.approval_division',
+                    'd.name as approval_division_name',
+                    'a.step_no',
+                    'a.status',
+                )
+                ->join('positions as p', 'a.approval_position', '=', 'p.id_position')
+                ->join('divisions as d', 'a.approval_division', '=', 'd.id_division')
+                ->where('a.id_accountpayable', $item->id_accountpayable)
+                ->orderBy('a.step_no', 'asc')
+                ->get();
+            $item->approval_accountpayable = $approval_accountpayable->where('id_accountpayable', $item->id_accountpayable)->values();
 
             $item->detail_accountpayable = $detail_accountpayable->where('id_accountpayable', $item->id_accountpayable)->values();
             return $item;
@@ -247,13 +296,9 @@ class AccountpayableController extends Controller
                 'detail.*.type_pengeluaran' => 'required|numeric|exists:type_pengeluaran,id_typepengeluaran',
                 'detail.*.description' => 'required|string|max:255',
                 'detail.*.amount' => 'required|numeric|min:0',
+                'detail.*.attachment' => 'nullable|string',
             ]);
-
             $id_accountpayable = $request->input('id_accountpayable');
-
-
-
-
             $accountPayable = [
                 'type' => $request->input('type'),
                 'description' => $request->input('description'),
@@ -289,9 +334,58 @@ class AccountpayableController extends Controller
                     $updateDetail = DB::table('detail_accountpayable')
                         ->where('id_detailaccountpayable', $value['id_detailaccountpayable'])
                         ->update($detail);
+
+                    if (isset($value['attachment'])) {
+                        $attachment = DB::table('attachments_accountpayable')
+                            ->where('id_detailaccountpayable', $value['id_detailaccountpayable'])
+                            ->first();
+                        // delete from storage
+                        if ($attachment) {
+                            $file_path = 'accountpayable/' . $attachment->file_name;
+                            if (Storage::disk('public')->exists($file_path)) {
+                                Storage::disk('public')->delete($file_path);
+                            }
+                            DB::table('attachments_accountpayable')
+                                ->where('id_detailaccountpayable', $value['id_detailaccountpayable'])
+                                ->delete();
+
+                            $file_name = time() . '_' . $id_accountpayable;
+                            // Decode the base64 image
+                            $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $value['attachment']));
+                            $extension = explode('/', mime_content_type($value['attachment']))[1];
+                            // Save file to public storage
+                            $path = 'accountpayable/' . $file_name . '.' . $extension;
+                            Storage::disk('public')->put($path, $image);
+                            // Ensure storage link exists
+                            if (!file_exists(public_path('storage'))) {
+                                throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                            }
+                            // Generate public URL that can be accessed directly
+                            $url = url('storage/' . $path);
+                            // Verify file was saved successfully
+                            if (!Storage::disk('public')->exists($path)) {
+                                throw new Exception('Failed to save attachment to storage');
+                            }
+                            $attachments = [
+                                'id_detailaccountpayable' => $value['id_detailaccountpayable'] ?? null,
+                                'file_name' => $file_name,
+                                'url' => $url,
+                                'public_id' => $file_name,
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                            $insertAttachment = DB::table('attachments_accountpayable')->insert($attachments);
+                            if (!$insertAttachment) {
+                                throw new Exception('Failed to save attachment record to database');
+                            }
+                        } else {
+                            throw new Exception('Attachment record not found for the given detail');
+                        }
+                    }
                 } else {
                     $detail = [
-                        'id_accountpayable' => $id_accountpayable,
+                        'id_detailaccountpayable' => $value['id_detailaccountpayable'] ?? null,
                         'type_pengeluaran' => $value['type_pengeluaran'],
                         'description' => $value['description'],
                         'amount' => $value['amount'],
@@ -300,6 +394,44 @@ class AccountpayableController extends Controller
                     ];
                     $insertDetail = DB::table('detail_accountpayable')
                         ->insert($detail);
+                    if ($insertDetail) {
+                        if (isset($value['attachment'])) {
+                            $file_name = time() . '_' . $id_accountpayable;
+                            // Decode the base64 image
+                            $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $value['attachment']));
+                            $extension = explode('/', mime_content_type($value['attachment']))[1];
+                            // Save file to public storage
+                            $path = 'accountpayable/' . $file_name . '.' . $extension;
+                            Storage::disk('public')->put($path, $image);
+                            // Ensure storage link exists
+                            if (!file_exists(public_path('storage'))) {
+                                throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                            }
+                            // Generate public URL that can be accessed directly
+                            $url = url('storage/' . $path);
+                            // Verify file was saved successfully
+                            if (!Storage::disk('public')->exists($path)) {
+                                throw new Exception('Failed to save attachment to storage');
+                            }
+                            $attachments = [
+                                'id_detailaccountpayable' => $value['id_detailaccountpayable'] ?? null,
+                                'file_name' => $file_name,
+                                'url' => $url,
+                                'public_id' => $file_name,
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                            $insertAttachment = DB::table('attachments_accountpayable')->insert($attachments);
+                            if (!$insertAttachment) {
+                                throw new Exception('Failed to save attachment record to database');
+                            }
+                        } else {
+                            throw new Exception('Attachment is required for new detail entries');
+                        }
+                    } else {
+                        throw new Exception('Failed to insert new detail account payable');
+                    }
                 }
             }
 
@@ -363,6 +495,60 @@ class AccountpayableController extends Controller
             }
             DB::commit();
             return ResponseHelper::success('Account payable activated successfully', NULL, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteDetailAccountpayable(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_detailaccountpayable' => 'required|numeric|exists:detail_accountpayable,id_detailaccountpayable',
+            ]);
+
+            $id_detailaccountpayable = $request->input('id_detailaccountpayable');
+
+            $deleteDetailAccountpayable = DB::table('detail_accountpayable')
+                ->where('id_detailaccountpayable', $id_detailaccountpayable)
+                ->delete();
+
+            if (!$deleteDetailAccountpayable) {
+                throw new Exception('Failed to delete detail account payable');
+            }
+            $attachment = DB::table('attachments_accountpayable')
+                ->where('id_detailaccountpayable', $id_detailaccountpayable)
+                ->first();
+            // delete from storage
+            if ($attachment) {
+                $file_path = 'accountpayable/' . $attachment->file_name;
+                if (Storage::disk('public')->exists($file_path)) {
+                    Storage::disk('public')->delete($file_path);
+                }
+                DB::table('attachments_accountpayable')
+                    ->where('id_detailaccountpayable', $id_detailaccountpayable)
+                    ->delete();
+            }
+
+            // Recalculate total in account_payable
+            $detail = DB::table('detail_accountpayable')
+                ->where('id_detailaccountpayable', $id_detailaccountpayable)
+                ->first();
+
+            if ($detail) {
+                $total = DB::table('detail_accountpayable')
+                    ->where('id_accountpayable', $detail->id_accountpayable)
+                    ->sum('amount');
+
+                DB::table('account_payable')
+                    ->where('id_accountpayable', $detail->id_accountpayable)
+                    ->update(['total' => $total]);
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Detail account payable deleted successfully', NULL, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

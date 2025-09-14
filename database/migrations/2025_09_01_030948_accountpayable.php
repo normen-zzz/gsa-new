@@ -116,6 +116,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('attachments_accountpayable');
+        Schema::dropIfExists('log_flowapproval_accountpayable');
+        Schema::dropIfExists('detailflowapproval_accountpayable');
+        Schema::dropIfExists('flowapproval_accountpayable');
+        Schema::dropIfExists('approval_accountpayable');
+        Schema::dropIfExists('log_accountspayable');
+        Schema::dropIfExists('detail_accountpayable');
+        Schema::dropIfExists('type_pengeluaran');
+        Schema::dropIfExists('account_payable');
     }
 };
