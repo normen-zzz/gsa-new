@@ -550,12 +550,11 @@ class SalesorderController extends Controller
             // throw new Exception('Route not found');
         } else {
             $getWeightBrackets = DB::table('weight_bracket_costs')
-                ->where('min_weight', '<=', $shippingInstruction->chargeable_weight)
-                ->orderBy('min_weight', 'desc')
+                ->where('min_weight', '>=', $shippingInstruction->chargeable_weight)
+                ->orderBy('min_weight', 'ASC')
                 ->first();
             if (!$getWeightBrackets) {
-                // $getCost = [];
-                throw new Exception('Route not found');
+                // throw new Exception('Weight bracket not found');
             } else {
                 $selectCost = [
                     'cost.id_cost',

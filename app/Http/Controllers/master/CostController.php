@@ -71,6 +71,7 @@ class CostController extends Controller
                 'weight_bracket_costs.min_weight',
                 'cost.id_typecost',
                 'typecost.name as type_cost_name',
+                'typecost.initials as type_cost_initial',
                 'cost.id_route',
                 'cost.cost_value',
                 'cost.charge_by',

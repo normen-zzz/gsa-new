@@ -360,7 +360,6 @@ class VendorController extends Controller
             $data = $request->validate([
                 'id_vendor' => 'required|integer|exists:vendors,id_vendor',
                 'name_vendor' => 'required|string|min:3|unique:vendors,name_vendor,' . $request->input('id_vendor') . ',id_vendor',
-                'type' => 'required|in:agent,consignee',
                 'data_vendor' => 'nullable|array',
                 'data_vendor.*.id_datavendor' => 'nullable|integer|exists:data_vendor,id_datavendor',
                 'data_vendor.*.account_number' => 'nullable|numeric',

@@ -18,9 +18,8 @@ class DateHelper
         }
 
         try {
-            $date = new DateTime($dateString);
-            $date->setTimezone(new DateTimeZone($timezone));
-            return $date->format('Y-m-d H:i:s');
+            $dt = Carbon::parse($dateString);
+            return $dt->format('Y-m-d H:i:s');    
         } catch (Exception $e) {
             return null;
         }

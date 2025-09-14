@@ -25,8 +25,8 @@ return new class extends Migration
             $table->integer('pol')->unsigned();
             $table->integer('pod')->unsigned();
             $table->string('commodity')->nullable();
-            $table->integer('gross_weight')->unsigned();
-            $table->integer('chargeable_weight')->unsigned();
+            $table->decimal('gross_weight', 10, 2)->unsigned();
+            $table->decimal('chargeable_weight', 10, 2)->unsigned();
             $table->integer('pieces')->unsigned();
             $table->text('special_instructions')->nullable();
             $table->integer('created_by')->unsigned();
