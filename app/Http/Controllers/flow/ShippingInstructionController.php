@@ -723,6 +723,7 @@ class ShippingInstructionController extends Controller
                             'height' => $dimension['height'] ?? null,
                             'weight' => $dimension['weight'] ?? null,
                             'remarks' => $dimension['remarks'] ?? null,
+                            'type_weight' => $dimension['type_weight'] ?? 'per_piece',
                             'created_by' => $data['created_by'],
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -816,6 +817,7 @@ class ShippingInstructionController extends Controller
                             'height' => $dimension['height'] ?? null,
                             'weight' => $dimension['weight'] ?? null,
                             'remarks' => $dimension['remarks'] ?? null,
+                            'type_weight' => $dimension['type_weight'] ?? 'per_piece',
                             'created_by' => $data['updated_by'],
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -893,7 +895,7 @@ class ShippingInstructionController extends Controller
         try {
             $request->validate([
                 'id_shippinginstruction' => 'required|integer|exists:shippinginstruction,id_shippinginstruction',
-                'awb' => 'required|string|unique:awb,awb',
+                'awb' => 'required|string|unique:awb,awb|max:12',
                 'agent' => 'required|integer|exists:customers,id_customer',
                 'data_agent' => 'required|integer|exists:data_customer,id_datacustomer',
                 'consignee' => 'nullable|string',

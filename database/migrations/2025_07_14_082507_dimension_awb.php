@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('width')->nullable();
             $table->decimal('height')->nullable();
             $table->decimal('weight')->nullable();
+            $table->enum('type_weight',['total', 'per_piece'])->default('per_piece');
             $table->text('remarks')->nullable();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
