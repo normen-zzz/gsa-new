@@ -50,7 +50,8 @@ class TypepengeluaranController extends Controller
             'type_pengeluaran.updated_at',
             'type_pengeluaran.updated_by',
             'users2.name as updated_by_name',
-            'type_pengeluaran.deleted_at'
+            'type_pengeluaran.deleted_at',
+            'type_pengeluaran.status'
         ];
 
         $query = DB::table('type_pengeluaran')
@@ -81,7 +82,8 @@ class TypepengeluaranController extends Controller
             'type_pengeluaran.updated_at',
             'type_pengeluaran.updated_by',
             'users2.name as updated_by_name',
-            'type_pengeluaran.deleted_at'
+            'type_pengeluaran.deleted_at',
+            'type_pengeluaran.status'
         ];
 
         $typepengeluaran = DB::table('type_pengeluaran')
@@ -116,6 +118,7 @@ class TypepengeluaranController extends Controller
                 ->update([
                     'deleted_at' => now(),
                     'deleted_by' => $userId,
+                    'status' => 'inactive',
                 ]);
 
             if ($deleted) {

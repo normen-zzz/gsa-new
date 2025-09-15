@@ -33,6 +33,7 @@ return new class extends Migration
             $table->timestamps();
             $table->integer('created_by');
             $table->integer('updated_by');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
         });
