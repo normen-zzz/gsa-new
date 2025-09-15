@@ -14,10 +14,7 @@ class WeightbracketSeeder extends Seeder
     public function run(): void
     {
         DB::table('weight_bracket_costs')->insert([
-            [
-                'min_weight' => 0,
-                'created_by' => 1
-            ],
+           
             [
                 'min_weight' => 45,
                 'created_by' => 1
@@ -30,10 +27,7 @@ class WeightbracketSeeder extends Seeder
         ]);
 
         DB::table('weight_bracket_selling')->insert([
-            [
-                'min_weight' => 0,
-                'created_by' => 1
-            ],
+           
             [
                 'min_weight' => 45,
                 'created_by' => 1
