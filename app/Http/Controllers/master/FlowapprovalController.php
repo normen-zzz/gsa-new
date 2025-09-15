@@ -1118,7 +1118,7 @@ class FlowapprovalController extends Controller
             }
 
             DB::commit();
-            return ResponseHelper::success('Flow approval for invoice updated successfully', null, 200);
+            return ResponseHelper::success('Flow approval for account payable updated successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

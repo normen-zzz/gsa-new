@@ -272,6 +272,14 @@ class AccountpayableController extends Controller
                 ->where('d.id_accountpayable', $id)
                 ->get();
 
+            $detail_accountpayable->transform(function ($item) {
+                $attachment = DB::table('attachments_accountpayable')
+                    ->where('id_detailaccountpayable', $item->id_detailaccountpayable)
+                    ->first();
+                $item->attachment = $attachment;
+                return $item;
+            });
+
             $accountPayable->detail_accountpayable = $detail_accountpayable;
 
             DB::commit();
