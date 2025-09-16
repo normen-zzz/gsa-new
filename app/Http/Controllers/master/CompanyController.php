@@ -46,7 +46,24 @@ class CompanyController extends Controller
         $limit = $request->input('limit', 10);
         $searchKey = $request->input('searchKey', '');
 
-        $dataCompany = DB::table('company')
+        $select = [
+            'a.id_datacompany',
+            'a.name',
+            'a.account_number',
+            'a.bank',
+            'a.branch',
+            'a.swift',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'c.name AS deleted_by_name',
+            'a.status'
+        ];
+        $dataCompany = DB::table('company AS a')
+        ->join('users AS b', 'a.created_by', '=', 'b.id_user')
+        ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
             ->where('deleted_at', null)
             ->where('name', 'like', '%' . $searchKey . '%')
             ->orWhere('bank', 'like', '%' . $searchKey . '%')
@@ -60,13 +77,31 @@ class CompanyController extends Controller
     {
         try {
             $id = $request->input('id_company');
-            $dataCompany = DB::table('company')
+            $select = [
+                'a.id_datacompany',
+                'a.name',
+                'a.account_number',
+                'a.bank',
+                'a.branch',
+                'a.swift',
+                'a.created_at',
+                'a.created_by',
+                'b.name AS created_by_name',
+                'a.deleted_at',
+                'a.deleted_by',
+                'c.name AS deleted_by_name',
+                'a.status'
+            ];
+            $dataCompany = DB::table('company AS a')
+                ->select($select)
+            ->join('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
                 ->where('id_company', $id)
                 ->where('deleted_at', null)
                 ->first();
 
             if (!$dataCompany) {
-                return ResponseHelper::error('Company data not found', null, 404);
+                return ResponseHelper::success('Company data not found', null, 404);
             }
 
             return ResponseHelper::success('Company data retrieved successfully', $dataCompany, 200);

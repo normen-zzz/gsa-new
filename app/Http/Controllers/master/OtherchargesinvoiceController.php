@@ -52,12 +52,17 @@ class OtherchargesinvoiceController extends Controller
             'a.type',
             'a.created_at',
             'a.created_by',
-            'u.name AS created_by_name'
+            'u.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'c.name AS deleted_by_name',
+            'a.status'
         ];
 
         $otherCharges = DB::table('listothercharge_invoice AS a')
             ->select($select)
             ->join('users AS u', 'a.created_by', '=', 'u.id_user')
+            ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
             ->where(function($query) use ($searchKey) {
                 $query->where('a.name', 'LIKE', "%{$searchKey}%");
             })
@@ -71,9 +76,23 @@ class OtherchargesinvoiceController extends Controller
             'id_listothercharge_invoice' => 'required|integer|exists:listothercharge_invoice,id_listothercharge_invoice',
         ]);
 
+        $select = [
+            'a.id_listothercharge_invoice',
+            'a.name',
+            'a.type',
+            'a.created_at',
+            'a.created_by',
+            'u.name AS created_by_name',
+            'a.deleted_at',
+            'a.deleted_by',
+            'c.name AS deleted_by_name',
+            'a.status'
+        ];
+
         $otherCharge = DB::table('listothercharge_invoice AS a')
-            ->select('a.*', 'u.name AS created_by_name')
+            ->select($select)
             ->join('users AS u', 'a.created_by', '=', 'u.id_user')
+            ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
             ->where('a.id_listothercharge_invoice', $request->input('id_listothercharge_invoice'))
             ->first();
 

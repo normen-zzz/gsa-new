@@ -51,6 +51,7 @@ return new class extends Migration
             $table->timestamps();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
+            $table->boolean('status')->default(true);
             $table->integer('deleted_by')->nullable();
         });
 

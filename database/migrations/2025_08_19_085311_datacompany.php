@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('branch');
             $table->string('swift')->nullable();
             $table->timestamps();
+            $table->boolean('status')->default(true);
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
