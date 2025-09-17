@@ -22,7 +22,7 @@ class CompanyController extends Controller
                 'swift_code' => 'required|string|max:11',
             ]);
 
-            $insert = DB::table('company')->insert([
+            $insert = DB::table('datacompany')->insert([
                 'name' => $request->input('name'),
                 'account_number' => $request->input('account_number'),
                 'bank' => $request->input('bank'),
@@ -61,7 +61,7 @@ class CompanyController extends Controller
             'c.name AS deleted_by_name',
             'a.status'
         ];
-        $dataCompany = DB::table('company AS a')
+        $dataCompany = DB::table('datacompany AS a')
         ->join('users AS b', 'a.created_by', '=', 'b.id_user')
         ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
             ->where('deleted_at', null)
@@ -92,7 +92,7 @@ class CompanyController extends Controller
                 'c.name AS deleted_by_name',
                 'a.status'
             ];
-            $dataCompany = DB::table('company AS a')
+            $dataCompany = DB::table('datacompany AS a')
                 ->select($select)
             ->join('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
