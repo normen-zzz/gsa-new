@@ -114,9 +114,10 @@ Route::put('/updateListMenu', [MenuController::class, 'updateListMenu'])->middle
 
 //Master Menu User
 Route::get('/getMenuUser', [MenuController::class, 'getMenuUser'])->middleware('auth:api');
-Route::get('/getMenuUserById/{id}', [MenuController::class, 'getMenuUserById'])->middleware('auth:api');
+Route::get('/getMenuUserById', [MenuController::class, 'getMenuUserById'])->middleware('auth:api');
 Route::post('/createMenuUser', [MenuController::class, 'createMenuUser'])->middleware('auth:api');
 Route::put('/updateMenuUser', [MenuController::class, 'updateMenuUser'])->middleware('auth:api');
+Route::put('/deleteMenuUser', [MenuController::class, 'deleteMenuUser'])->middleware('auth:api');
 
 //master permission
 Route::get('/getPermissions', [PermissionController::class, 'getPermissions'])->middleware('auth:api');
@@ -183,6 +184,7 @@ Route::post('/createRoute', [RuteController::class, 'createRoute'])->middleware(
 Route::put('/updateRoute', [RuteController::class, 'updateRoute'])->middleware('auth:api');
 Route::put('/deleteRoute', [RuteController::class, 'deleteRoute'])->middleware('auth:api');
 Route::put('/restoreRoute', [RuteController::class, 'restoreRoute'])->middleware('auth:api');
+Route::get('/autoRoute', [RuteController::class, 'autoRoute'])->middleware('auth:api');
 
 
 //master vendors

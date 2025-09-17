@@ -41,11 +41,21 @@ class RuteController extends Controller
             ->leftJoin('airports as pod', 'routes.pod', '=', 'pod.id_airport')
             ->leftJoin('users as created_by', 'routes.created_by', '=', 'created_by.id_user')
             ->when($search, function ($query) use ($search) {
-                $query->
-                    where('airlines.name', 'like', '%' . $search . '%')
-                    ->orWhere('pol.name_airport', 'like', '%' . $search . '%')
-                    ->orWhere('pod.name_airport', 'like', '%' . $search . '%');
-                return $query;
+                // Split the search string into individual terms
+                $searchTerms = preg_split('/\s+/', trim($search));
+                
+                return $query->where(function ($query) use ($searchTerms) {
+                    foreach ($searchTerms as $term) {
+                        $query->where(function ($query) use ($term) {
+                            $query->where('airlines.name', 'like', '%' . $term . '%')
+                                ->orWhere('pol.name_airport', 'like', '%' . $term . '%')
+                                ->orWhere('pod.name_airport', 'like', '%' . $term . '%')
+                                ->orWhere('pol.code_airport', 'like', '%' . $term . '%')
+                                ->orWhere('pod.code_airport', 'like', '%' . $term . '%')
+                                ->orWhere('created_by.name', 'like', '%' . $term . '%');
+                        });
+                    }
+                });
             })
             ->orderBy('routes.id_route', 'asc')
             ->paginate($limit);
@@ -258,6 +268,46 @@ class RuteController extends Controller
             } else {
                 throw new Exception('Failed to restore route.');
             }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function autoRoute()
+    {
+        DB::beginTransaction();
+        try {
+            $airlines = DB::table('airlines')->pluck('id_airline')->toArray();
+            $pol = DB::table('airports')->pluck('id_airport')->toArray();
+            $pod = DB::table('airports')->pluck('id_airport')->toArray();
+            $count = 0;
+            foreach ($airlines as $airline) {
+                foreach ($pol as $origin) {
+                    foreach ($pod as $destination) {
+                        if ($origin != $destination) {
+                            $checkRoute = DB::table('routes')
+                                ->where('airline', $airline)
+                                ->where('pol', $origin)
+                                ->where('pod', $destination)
+                                ->first();
+                            if (!$checkRoute) {
+                                DB::table('routes')->insert([
+                                    'airline' => $airline,
+                                    'pol' => $origin,
+                                    'pod' => $destination,
+                                    'created_by' => 1,
+                                    'created_at' => now(),
+                                    'status' => 'active'
+                                ]);
+                                $count++;
+                            }
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return ResponseHelper::success("Auto route completed. $count routes added.", null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

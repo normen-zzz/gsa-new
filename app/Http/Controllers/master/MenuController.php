@@ -341,4 +341,42 @@ class MenuController extends Controller
             return ResponseHelper::error($e);
         }
     }
+
+    public function deleteMenuUser(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_menu_user');
+            $menuUser = DB::table('menu_user')->where('id_menu_user', $id)->first();
+            if (!$menuUser) {
+                return ResponseHelper::success('Menu user not found.', NULL, 404);
+            }
+
+            DB::table('menu_user')
+                ->where('id_menu_user', $id)
+                ->delete();
+            $changes = [
+                'type' => 'delete',
+                'old' => [
+                    'status' => $menuUser->status,
+                ],
+                'new' => [
+                    'status' => false,
+                ],
+            ];
+            DB::table('log_menu_user')->insert([
+                'id_menu_user' => $id,
+                'action' => json_encode($changes),
+                'id_user' => $request->user()->id_user,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Menu user deleted successfully.', NULL, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
 }
