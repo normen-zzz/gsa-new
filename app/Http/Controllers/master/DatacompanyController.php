@@ -56,10 +56,15 @@ class DatacompanyController extends Controller
             'datacompany.branch',
             'datacompany.swift',
             'datacompany.created_by',
-            'users.name as created_by_name'
+            'users.name as created_by_name',
+            'datacompany.status',
+            'datacompany.deleted_at',   
+            'datacompany.deleted_by',
+            'u2.name as deleted_by_name'
+
         ])
         ->join('users', 'datacompany.created_by', '=', 'users.id_user')
-            ->where('datacompany.deleted_at', null)
+        ->join('users as u2', 'datacompany.deleted_by', '=', 'u2.id_user', 'left')
             ->where('datacompany.name', 'like', '%' . $searchKey . '%')
             ->orWhere('datacompany.bank', 'like', '%' . $searchKey . '%')
             ->orWhere('datacompany.branch', 'like', '%' . $searchKey . '%')
@@ -81,11 +86,15 @@ class DatacompanyController extends Controller
                 'datacompany.branch',
                 'datacompany.swift',
                 'datacompany.created_by',
-                'users.name as created_by_name'
+                'users.name as created_by_name',
+                'datacompany.status',
+                'datacompany.deleted_at',   
+                'datacompany.deleted_by',
+                'u2.name as deleted_by_name'
             ])
             ->join('users', 'datacompany.created_by', '=', 'users.id_user')
+            ->join('users as u2', 'datacompany.deleted_by', '=', 'u2.id_user', 'left')
                 ->where('datacompany.id_datacompany', $id)
-                ->where('datacompany.deleted_at', null)
                 ->first();
 
             if (!$dataCompany) {
