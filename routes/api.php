@@ -331,5 +331,6 @@ Route::get('/getAccountpayable', [AccountpayableController::class, 'getAccountpa
 Route::get('/getAccountpayableById', [AccountpayableController::class, 'getAccountpayableById'])->middleware('auth:api');
 Route::put('/updateAccountpayable', [AccountpayableController::class, 'updateAccountpayable'])->middleware('auth:api');
 Route::put('/deleteAccountpayable', [AccountpayableController::class, 'deleteAccountpayable'])->middleware('auth:api');
+Route::put('/deleteDetailAccountpayable', [AccountpayableController::class, 'deleteDetailAccountpayable'])->middleware('auth:api');
 Route::put('/activateAccountpayable', [AccountpayableController::class, 'activateAccountpayable'])->middleware('auth:api');
 Route::put('/actionAccountpayable', [AccountpayableController::class, 'actionAccountpayable'])->middleware('auth:api');
