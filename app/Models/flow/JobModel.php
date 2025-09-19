@@ -42,6 +42,7 @@ class JobModel extends Model
         // Optimasi query untuk kinerja yang lebih baik
         $select = [
             'job.id_job',
+            'job.no_job',
             'job.id_shippinginstruction',
             'job.agent',
             'agent.name_customer as agent_name',
