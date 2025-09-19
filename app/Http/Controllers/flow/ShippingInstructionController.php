@@ -915,7 +915,7 @@ class ShippingInstructionController extends Controller
                 'dimensions.*.width' => 'required|numeric|min:0',
                 'dimensions.*.height' => 'required|numeric|min:0',
                 'dimensions.*.weight' => 'required|numeric|min:0',
-                'dimensions.*.type_weight' => 'required|string|in:per_piece,per_kg',
+                'dimensions.*.type_weight' => 'required|string|in:per_piece,total',
                 'data_flight' => 'nullable|array',
                 'data_flight.*.flight_number' => 'required|string|max:255',
                 'data_flight.*.departure' => 'required',
