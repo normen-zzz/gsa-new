@@ -135,9 +135,9 @@ class JobController extends Controller
                                 ->where('id_flightjob', $flight['id_flightjob'])
                                 ->update([
                                     'flight_number' => $flight['flight_number'],
-                                    'departure' =>  DateHelper::formatDate($flight['departure']),
+                                    'departure' =>  date('Y-m-d H:i:s', strtotime($flight['departure'])),
                                     'departure_timezone' => $flight['departure_timezone'] ?? null,
-                                    'arrival' => DateHelper::formatDate($flight['arrival']),
+                                    'arrival' => date('Y-m-d H:i:s', strtotime($flight['arrival'])),
                                     'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                                     'updated_at' => now(),
                                     'updated_by' => $request->user()->id_user,
