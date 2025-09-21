@@ -60,8 +60,10 @@ class JobsheetController extends Controller
             $insertJobsheet = DB::table('jobsheet')->insertGetId($dataJobsheet);
             if ($insertJobsheet) {
                 if (isset($request->attachments) && is_array($request->attachments)) {
+                    $no = 1;
                     foreach ($request->attachments as $attachment) {
-                        $file_name = time() . '_' . $insertJobsheet;
+                        $file_name = time() . '/' . $no . '_' . $insertJobsheet;
+                        $no++;
                         // Decode the base64 image
                         $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
                         $extension = explode('/', mime_content_type($attachment['image']))[1];
@@ -257,53 +259,53 @@ class JobsheetController extends Controller
                 ->where('id_jobsheet', $item->id_jobsheet)
                 ->get();
 
-                $selectAwb = [
-            'awb.id_awb',
-            'awb.id_job',
-            'awb.awb',
-            'awb.agent',
-            'agent.name_customer as agent_name',
-            'awb.data_agent as id_data_agent',
-            'data_agent.pic as data_agent_pic',
-            'data_agent.email as data_agent_email',
-            'data_agent.phone as data_agent_phone',
-            'data_agent.tax_id as data_agent_tax_id',
-            'data_agent.address as data_agent_address',
-            'awb.consignee',
-            'awb.airline',
-            'airline.name as airline_name',
-            'awb.etd',
-            'awb.eta',
-            'awb.pol',
-            'pol.name_airport as pol_name',
-            'pol.code_airport as pol_code',
-            'awb.pod',
-            'pod.name_airport as pod_name',
-            'pod.code_airport as pod_code',
-            'awb.commodity',
-            'awb.gross_weight',
-            'awb.chargeable_weight',
-            'awb.pieces',
-            'awb.special_instructions',
-            'awb.created_by',
-            'created_by.name as created_by_name',
-            'awb.updated_by',
-            'updated_by.name as updated_by_name',
-            'awb.created_at',
-            'awb.updated_at',
-            'awb.status'
-        ];
-        $awb = DB::table('awb')
-            ->select($selectAwb)
-            ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
-            ->leftJoin('data_customer AS data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
-            ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
-            ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
-            ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
-            ->leftJoin('users AS updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
-            ->leftJoin('airlines AS airline', 'awb.airline', '=', 'airline.id_airline')
-            ->where('id_awb', $item->id_awb)
-            ->first();
+            $selectAwb = [
+                'awb.id_awb',
+                'awb.id_job',
+                'awb.awb',
+                'awb.agent',
+                'agent.name_customer as agent_name',
+                'awb.data_agent as id_data_agent',
+                'data_agent.pic as data_agent_pic',
+                'data_agent.email as data_agent_email',
+                'data_agent.phone as data_agent_phone',
+                'data_agent.tax_id as data_agent_tax_id',
+                'data_agent.address as data_agent_address',
+                'awb.consignee',
+                'awb.airline',
+                'airline.name as airline_name',
+                'awb.etd',
+                'awb.eta',
+                'awb.pol',
+                'pol.name_airport as pol_name',
+                'pol.code_airport as pol_code',
+                'awb.pod',
+                'pod.name_airport as pod_name',
+                'pod.code_airport as pod_code',
+                'awb.commodity',
+                'awb.gross_weight',
+                'awb.chargeable_weight',
+                'awb.pieces',
+                'awb.special_instructions',
+                'awb.created_by',
+                'created_by.name as created_by_name',
+                'awb.updated_by',
+                'updated_by.name as updated_by_name',
+                'awb.created_at',
+                'awb.updated_at',
+                'awb.status'
+            ];
+            $awb = DB::table('awb')
+                ->select($selectAwb)
+                ->leftJoin('customers AS agent', 'awb.agent', '=', 'agent.id_customer')
+                ->leftJoin('data_customer AS data_agent', 'awb.data_agent', '=', 'data_agent.id_datacustomer')
+                ->leftJoin('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
+                ->leftJoin('airports AS pod', 'awb.pod', '=', 'pod.id_airport')
+                ->leftJoin('users AS created_by', 'awb.created_by', '=', 'created_by.id_user')
+                ->leftJoin('users AS updated_by', 'awb.updated_by', '=', 'updated_by.id_user')
+                ->leftJoin('airlines AS airline', 'awb.airline', '=', 'airline.id_airline')
+                ->where('id_awb', $item->id_awb)
+                ->first();
 
             $item->data_awb = $awb;
             $item->attachments_jobsheet = $attachments;
@@ -556,7 +558,7 @@ class JobsheetController extends Controller
             ->where('id_jobsheet', $jobsheet->id_jobsheet)
             ->get();
 
-            $selectAwb = [
+        $selectAwb = [
             'awb.id_awb',
             'awb.id_job',
             'awb.awb',
@@ -725,8 +727,11 @@ class JobsheetController extends Controller
                 }
             }
             if ($request->has('attachments') && is_array($request->attachments) && count($request->attachments) > 0) {
+                $no = 1;
+
                 foreach ($request->attachments as $attachment) {
-                    $file_name = time() . '_' . $request->id_jobsheet;
+                    $file_name = time().'/'.$no.'_' . $request->id_jobsheet;
+                    $no++;
                     // Decode the base64 image
                     $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
 

@@ -740,9 +740,11 @@ class SalesorderController extends Controller
             }
 
             if ($request->has('attachments')) {
+                $no = 1;
                 foreach ($request->attachments as $attachment) {
                     //    upload ke local
-                    $file_name = time() . '_' . $request->id_salesorder . '.jpg';
+                    $file_name = time() . '/' . $no . '_' . $request->id_salesorder . '.jpg';
+                    $no++;
 
                     // Decode the base64 image
                     $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));

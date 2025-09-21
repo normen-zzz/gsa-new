@@ -483,6 +483,17 @@ class JobController extends Controller
                 }
             }
             if (isset($request->flight) && is_array($request->flight)) {
+                $flight_awb = DB::table('flight_awb')->where('id_awb', $request->id_awb)->get();
+                // ambil semua id_flightawb dari DB
+                $dbIds = $flight_awb->pluck('id_flightawb')->toArray();
+                $requestIds = array_filter(array_column($request->flight, 'id_flightawb'));
+                // cari id_flightawb yang ada di DB tapi tidak ada di request
+                $idsToDelete = array_diff($dbIds, $requestIds);
+                // hapus data yang tidak ada di request
+                if (count($idsToDelete) > 0) {
+                    DB::table('flight_awb')->whereIn('id_flightawb', $idsToDelete)->delete();
+                }
+
                 foreach ($request->flight as $flight) {
                     if (isset($flight['id_flightawb']) && $flight['id_flightawb']) {
                         DB::table('flight_awb')

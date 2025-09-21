@@ -98,7 +98,9 @@ class AccountpayableController extends Controller
 
             $attachments = [];
             foreach ($request->input('detail') as $detail) {
-                $file_name = time() . '_' . $insertAccountpayable;
+                $no = 1;
+                $file_name = time() . '/' . $no . '_' . $insertAccountpayable;
+                $no++;
 
                 // Decode the base64 image
                 $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $detail['attachment']));
@@ -147,9 +149,6 @@ class AccountpayableController extends Controller
                     }
                 }
             }
-
-
-
             DB::commit();
             return ResponseHelper::success('Account payable created successfully', NULL, 201);
         } catch (Exception $e) {
@@ -204,7 +203,7 @@ class AccountpayableController extends Controller
                 ->where('d.id_accountpayable', $item->id_accountpayable)
                 ->get();
 
-                $approval_accountpayable = DB::table('approval_accountpayable as a')
+            $approval_accountpayable = DB::table('approval_accountpayable as a')
                 ->select(
                     'a.id_approval_accountpayable',
                     'a.id_accountpayable',
@@ -330,6 +329,8 @@ class AccountpayableController extends Controller
                 ->where('id_accountpayable', $id_accountpayable)
                 ->update($accountPayable);
 
+            $no = 1;
+
             foreach ($request->input('detail') as $key => $value) {
                 if ($value['id_detailaccountpayable']) {
                     $detail = [
@@ -349,6 +350,7 @@ class AccountpayableController extends Controller
                             ->first();
                         // delete from storage
                         if ($attachment) {
+
                             $file_path = 'accountpayable/' . $attachment->file_name;
                             if (Storage::disk('public')->exists($file_path)) {
                                 Storage::disk('public')->delete($file_path);
@@ -357,7 +359,8 @@ class AccountpayableController extends Controller
                                 ->where('id_detailaccountpayable', $value['id_detailaccountpayable'])
                                 ->delete();
 
-                            $file_name = time() . '_' . $id_accountpayable;
+                            $file_name = time().'/'.$no.'_' . $id_accountpayable;
+                            $no++;
                             // Decode the base64 image
                             $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $value['attachment']));
                             $extension = explode('/', mime_content_type($value['attachment']))[1];
