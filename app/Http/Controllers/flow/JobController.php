@@ -494,7 +494,7 @@ class JobController extends Controller
                                 'arrival' => DateHelper::formatDate($flight['arrival']),
                                 'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                                 'updated_at' => now(),
-                                'updated_by' => $request->user()->id_user,
+                                // 'updated_by' => $request->user()->id_user,
                             ]);
                     } else {
                         DB::table('flight_awb')->insert([

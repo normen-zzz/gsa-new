@@ -39,6 +39,13 @@ return new class extends Migration
                 'si_rejected_by_cs',
                 'si_deleted'
             ])->default('si_created_by_sales');
+            $table->enum('status_so', [
+                'so_not_created',
+                'so_created',
+                'so_approved',
+                'so_rejected',
+                'so_deleted'
+            ])->default('so_not_created');
             $table->softDeletes();
             $table->integer('deleted_by')->unsigned()->nullable();
             $table->timestamps();
