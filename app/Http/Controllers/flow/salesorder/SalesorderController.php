@@ -321,9 +321,14 @@ class SalesorderController extends Controller
                     ->leftJoin('airlines', 'shippinginstruction.airline', '=', 'airlines.id_airline')
                     ->where('id_shippinginstruction', $item->id_shippinginstruction)
                     ->first();
-                // decode 
 
-                $shippingInstruction->dimensions = json_decode($shippingInstruction->dimensions);
+                    $dimension_shippinginstruction = DB::table('dimension_shippinginstruction')
+                        ->where('id_shippinginstruction', $item->id_shippinginstruction)
+                        ->get();
+
+                // decode
+
+                $shippingInstruction->dimensions = $dimension_shippinginstruction;
 
                 $item->shippinginstruction = $shippingInstruction;
                 $item->attachments_salesorder = $attachments;
