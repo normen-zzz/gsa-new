@@ -48,10 +48,11 @@ class SalesorderController extends Controller
             $insertSalesorder = DB::table('salesorder')->insertGetId($dataSalesorder);
             if ($insertSalesorder) {
                 if (isset($request->attachments) && is_array($request->attachments) && count($request->attachments) > 0) {
+                    $no = 1;
                     foreach ($request->attachments as $attachment) {
                         // Generate a unique filename with timestamp
-                        $file_name = time() . '_' . $insertSalesorder;
-
+                        $file_name = time().'/'.$no . '_' . $insertSalesorder;
+                        $no++;
                         // Decode the base64 image
                         $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
                         $extension = explode('/', mime_content_type($attachment['image']))[1];
