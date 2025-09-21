@@ -135,9 +135,9 @@ class JobController extends Controller
                                 ->where('id_flightjob', $flight['id_flightjob'])
                                 ->update([
                                     'flight_number' => $flight['flight_number'],
-                                    'departure' =>  date('Y-m-d H:i:s', strtotime($flight['departure'])),
+                                    'departure' =>  DateHelper::formatDate($flight['departure']),
                                     'departure_timezone' => $flight['departure_timezone'] ?? null,
-                                    'arrival' => date('Y-m-d H:i:s', strtotime($flight['arrival'])),
+                                    'arrival' => DateHelper::formatDate($flight['arrival']),
                                     'arrival_timezone' => $flight['arrival_timezone'] ?? null,
                                     'updated_at' => now(),
                                     'updated_by' => $request->user()->id_user,
@@ -410,7 +410,7 @@ class JobController extends Controller
                 'special_instructions' => 'nullable|string|max:500',
                 'dimensions' => 'nullable|array',
                 'dimensions.*.id_dimensionawb' => 'nullable|integer|exists:dimension_awb,id_dimensionawb',
-                'dimensions.*.pieces' => 'nullable|integer|min:1',
+                'dimensions.*.pieces' => 'nullable|numeric|min:1',
                 'dimensions.*.length' => 'nullable|numeric|min:0',
                 'dimensions.*.width' => 'nullable|numeric|min:0',
                 'dimensions.*.height' => 'nullable|numeric|min:0',
