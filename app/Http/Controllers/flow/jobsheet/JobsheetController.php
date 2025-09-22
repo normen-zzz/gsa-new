@@ -55,7 +55,7 @@ class JobsheetController extends Controller
                 'no_jobsheet' => $no_jobsheet,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
-                'status' => 'js_created_by_cs'
+               
             ];
             $insertJobsheet = DB::table('jobsheet')->insertGetId($dataJobsheet);
             if ($insertJobsheet) {

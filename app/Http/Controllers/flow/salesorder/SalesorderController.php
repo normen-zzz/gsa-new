@@ -43,7 +43,6 @@ class SalesorderController extends Controller
                 'no_salesorder' => $shippinginstruction->no_shippinginstruction,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
-                'status' => 'so_created_by_sales'
             ];
             $insertSalesorder = DB::table('salesorder')->insertGetId($dataSalesorder);
             if ($insertSalesorder) {
