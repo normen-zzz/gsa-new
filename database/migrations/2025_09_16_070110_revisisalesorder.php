@@ -93,6 +93,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('revisisalesorder');
+        Schema::dropIfExists('detailfrom_revisisalesorder');
+        Schema::dropIfExists('detailto_revisisalesorder');
+        Schema::dropIfExists('approval_revisisalesorder');
+        Schema::dropIfExists('flowapproval_salesorder');
+        Schema::dropIfExists('detailflowapproval_salesorder');
+        Schema::dropIfExists('log_revisisalesorder');
     }
 };
