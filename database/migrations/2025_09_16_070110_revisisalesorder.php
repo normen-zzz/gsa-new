@@ -59,8 +59,8 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
         });
 
-        Schema::create('flowapproval_salesorder', function (Blueprint $table) {
-            $table->id('id_flowapproval_salesorder');
+        Schema::create('flowapproval_revisisalesorder', function (Blueprint $table) {
+            $table->id('id_flowapproval_revisisalesorder');
             $table->unsignedBigInteger('request_position');
             $table->unsignedBigInteger('request_division');
             $table->enum('status', ['active', 'inactive'])->default('active');
@@ -68,9 +68,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('detailflowapproval_salesorder', function (Blueprint $table) {
-            $table->id('id_detailflowapproval_salesorder');
-            $table->unsignedBigInteger('id_flowapproval_salesorder');
+        Schema::create('detailflowapproval_revisisalesorder', function (Blueprint $table) {
+            $table->id('id_detailflowapproval_revisisalesorder');
+            $table->unsignedBigInteger('id_flowapproval_revisisalesorder');
             $table->unsignedBigInteger('approval_position');
             $table->unsignedBigInteger('approval_division');
             $table->enum('status', ['active', 'inactive'])->default('active');
