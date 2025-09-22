@@ -169,7 +169,8 @@ class JobsheetController extends Controller
             'a.deleted_at',
             'a.deleted_by',
             'd.name AS deleted_by_name',
-            'a.status'
+            'a.status_jobsheet',
+            'a.status_approval',
         ];
 
 
@@ -307,6 +308,21 @@ class JobsheetController extends Controller
                 ->where('id_awb', $item->id_awb)
                 ->first();
 
+            $pendingApproval = DB::table('approval_jobsheet')
+                ->where('id_jobsheet', $item->id_jobsheet)
+                ->where('status', 'pending')
+                ->orderBy('step_no', 'ASC')
+                ->first();
+
+            $position = Auth::user()->id_position;
+            $division = Auth::user()->id_division;
+            if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+                $item->is_approver = true;
+            } else {
+                $item->is_approver = false;
+            }
+
+
             $item->data_awb = $awb;
             $item->attachments_jobsheet = $attachments;
             $item->cost_jobsheet = $cost;
@@ -346,7 +362,8 @@ class JobsheetController extends Controller
                 'a.deleted_at',
                 'a.deleted_by',
                 'd.name AS deleted_by_name',
-                'a.status'
+                'a.status_jobsheet',
+                'a.status_approval',
             ];
 
 
@@ -368,6 +385,33 @@ class JobsheetController extends Controller
                 ->get();
 
             $jobsheets->transform(function ($item) {
+                $selectApproval = [
+                    'approval_jobsheet.id_approval_jobsheet',
+                    'approval_jobsheet.id_jobsheet',
+                    'approval_jobsheet.approval_position',
+                    'approval_position.name AS approval_position_name',
+                    'approval_jobsheet.approval_division',
+                    'approval_division.name AS approval_division_name',
+                    'approval_jobsheet.step_no',
+
+                    'approval_jobsheet.created_by',
+                    'created_by.name AS created_by_name',
+                    'approval_jobsheet.approved_by',
+                    'approved_by.name AS approved_by_name',
+                    'approval_jobsheet.status',
+
+                ];
+
+                $approval_jobsheet = DB::table('approval_jobsheet')
+                    ->select($selectApproval)
+                    ->leftJoin('users AS approval_position', 'approval_jobsheet.approval_position', '=', 'approval_position.id_user')
+                    ->leftJoin('users AS approval_division', 'approval_jobsheet.approval_division', '=', 'approval_division.id_user')
+                    ->leftJoin('users AS approved_by', 'approval_jobsheet.approved_by', '=', 'approved_by.id_user')
+                    ->leftJoin('users AS created_by', 'approval_jobsheet.created_by', '=', 'created_by.id_user')
+                    ->where('id_jobsheet', $item->id_jobsheet)
+                    ->get();
+                // deteksi apakah masih ada status approval yang pending 
+                $item->is_approvable = $approval_jobsheet->contains('status', 'pending') ? false : true;
 
                 $selectAttachments = [
                     'attachments_jobsheet.id_attachment_jobsheet',
@@ -415,37 +459,14 @@ class JobsheetController extends Controller
                     ->select($selectCost)
                     ->get();
 
-                $selectApproval = [
-                    'approval_jobsheet.id_approval_jobsheet',
-                    'approval_jobsheet.id_jobsheet',
-                    'approval_jobsheet.approval_position',
-                    'approval_position.name AS approval_position_name',
-                    'approval_jobsheet.approval_division',
-                    'approval_division.name AS approval_division_name',
-                    'approval_jobsheet.step_no',
 
-                    'approval_jobsheet.created_by',
-                    'created_by.name AS created_by_name',
-                    'approval_jobsheet.approved_by',
-                    'approved_by.name AS approved_by_name',
-                    'approval_jobsheet.status',
-
-                ];
-
-                $approval_jobsheet = DB::table('approval_jobsheet')
-                    ->select($selectApproval)
-                    ->leftJoin('users AS approval_position', 'approval_jobsheet.approval_position', '=', 'approval_position.id_user')
-                    ->leftJoin('users AS approval_division', 'approval_jobsheet.approval_division', '=', 'approval_division.id_user')
-                    ->leftJoin('users AS approved_by', 'approval_jobsheet.approved_by', '=', 'approved_by.id_user')
-                    ->leftJoin('users AS created_by', 'approval_jobsheet.created_by', '=', 'created_by.id_user')
-                    ->where('id_jobsheet', $item->id_jobsheet)
-                    ->get();
 
                 $item->attachments_jobsheet = $attachments;
                 $item->cost_jobsheet = $cost;
                 $item->approval_jobsheet = $approval_jobsheet;
                 return $item;
             });
+
             return ResponseHelper::success('Jobsheets retrieved successfully', $jobsheets);
         }
     }
@@ -469,7 +490,8 @@ class JobsheetController extends Controller
             'a.deleted_at',
             'a.deleted_by',
             'd.name AS deleted_by_name',
-            'a.status'
+            'a.status_jobsheet',
+            'a.status_approval',
         ];
 
 
@@ -606,6 +628,21 @@ class JobsheetController extends Controller
             ->where('id_awb', $jobsheet->id_awb)
             ->first();
 
+        $pendingApproval = DB::table('approval_jobsheet')
+            ->where('id_jobsheet', $jobsheet->id_jobsheet)
+            ->where('status', 'pending')
+            ->orderBy('step_no', 'ASC')
+            ->first();
+
+        $position = Auth::user()->id_position;
+        $division = Auth::user()->id_division;
+        if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+            $jobsheet->is_approver = true;
+        } else {
+            $jobsheet->is_approver = false;
+        }
+
+
         $jobsheet->data_awb = $awb;
         $jobsheet->attachments_jobsheet = $attachments;
         $jobsheet->cost_jobsheet = $cost;
@@ -730,7 +767,7 @@ class JobsheetController extends Controller
                 $no = 1;
 
                 foreach ($request->attachments as $attachment) {
-                    $file_name = time().'/'.$no.'_' . $request->id_jobsheet;
+                    $file_name = time() . '/' . $no . '_' . $request->id_jobsheet;
                     $no++;
                     // Decode the base64 image
                     $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));

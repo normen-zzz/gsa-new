@@ -23,18 +23,17 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
-            $table->enum('status', [
-                'js_created_by_cs',
-                'js_approved_by_manager_cs',
-                'js_rejected_by_manager_cs',
-                'js_approved_by_finance',
-                'js_rejected_by_finance',
-                'js_approved_by_manager_finance',
-                'js_rejected_by_manager_finance',
-                'js_approved_by_director',
-                'js_rejected_by_director',
-                'js_deleted'
-            ])->default('js_created_by_cs');
+            $table->enum('status_jobsheet', [
+               'js_created',
+               'js_received',
+               'js_invoiced',
+            ])->default('js_created');
+            $table->enum('status_approval', [
+                'js_pending',
+                'js_approved',
+                'js_rejected',
+                'js_cancelled',
+            ])->default('js_pending');
         });
 
         

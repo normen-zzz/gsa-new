@@ -51,7 +51,7 @@ class SalesorderController extends Controller
                     $no = 1;
                     foreach ($request->attachments as $attachment) {
                         // Generate a unique filename with timestamp
-                        $file_name = time().'/'.$no . '_' . $insertSalesorder;
+                        $file_name = time() . '/' . $no . '_' . $insertSalesorder;
                         $no++;
                         // Decode the base64 image
                         $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
@@ -172,7 +172,8 @@ class SalesorderController extends Controller
             'a.deleted_at',
             'a.deleted_by',
             'd.name AS deleted_by_name',
-            'a.status'
+            'a.status_so',
+            'a.status_approval'
         ];
 
 
@@ -191,7 +192,7 @@ class SalesorderController extends Controller
         $salesorders = $salesorders->paginate($limit);
 
         if ($salesorders->isEmpty()) {
-            return ResponseHelper::success('No sales orders found', null, 204);
+            return ResponseHelper::success('No sales orders found', null, 200);
         } else {
 
 
@@ -263,6 +264,7 @@ class SalesorderController extends Controller
                     ->leftJoin('users AS approved_by', 'approval_salesorder.approved_by', '=', 'approved_by.id_user')
                     ->leftJoin('users AS created_by', 'approval_salesorder.created_by', '=', 'created_by.id_user')
                     ->where('id_salesorder', $item->id_salesorder)
+                    ->orderBy('approval_salesorder.step_no', 'ASC')
                     ->get();
 
                 $select = [
@@ -307,6 +309,9 @@ class SalesorderController extends Controller
                     'shippinginstruction.deleted_at'
                 ];
 
+                //get pending approval yang paling atas
+
+
                 $shippingInstruction = DB::table('shippinginstruction')
                     ->select(
                         $select
@@ -323,18 +328,34 @@ class SalesorderController extends Controller
                     ->where('id_shippinginstruction', $item->id_shippinginstruction)
                     ->first();
 
-                    $dimension_shippinginstruction = DB::table('dimension_shippinginstruction')
-                        ->where('id_shippinginstruction', $item->id_shippinginstruction)
-                        ->get();
+                $dimension_shippinginstruction = DB::table('dimension_shippinginstruction')
+                    ->where('id_shippinginstruction', $item->id_shippinginstruction)
+                    ->get();
+
+                $pendingApproval = DB::table('approval_salesorder')
+                    ->where('id_salesorder', $item->id_salesorder)
+                    ->where('status', 'pending')
+                    ->orderBy('step_no', 'ASC')
+                    ->first();
+
+                $position = Auth::user()->id_position;
+                $division = Auth::user()->id_division;
+                if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+                    $item->is_approver = true;
+                } else {
+                    $item->is_approver = false;
+                }
 
                 // decode
 
                 $shippingInstruction->dimensions = $dimension_shippinginstruction;
-
                 $item->shippinginstruction = $shippingInstruction;
                 $item->attachments_salesorder = $attachments;
                 $item->selling_salesorder = $selling;
                 $item->approval_salesorder = $approval_salesorder;
+
+
+
                 return $item;
             });
             return ResponseHelper::success('Sales orders retrieved successfully', $salesorders);
@@ -365,7 +386,8 @@ class SalesorderController extends Controller
             'a.deleted_at',
             'a.deleted_by',
             'd.name AS deleted_by_name',
-            'a.status'
+            'a.status_so',
+            'a.status_approval'
         ];
 
         $salesorder = DB::table('salesorder AS a')
@@ -420,6 +442,34 @@ class SalesorderController extends Controller
             ->leftJoin('users AS created_by', 'selling_salesorder.created_by', '=', 'created_by.id_user')
             ->select($selectSelling)
             ->get();
+
+        // Get shipping instruction data first
+        $shippingInstruction = DB::table('shippinginstruction')
+            ->where('id_shippinginstruction', DB::table('salesorder')->where('id_salesorder', $id)->value('id_shippinginstruction'))
+            ->first();
+
+        // Transform each item in the collection to add the total field
+        $selling->transform(function ($item) use ($shippingInstruction) {
+            $item->total = 0;
+
+            if ($shippingInstruction) {
+                switch ($item->charge_by) {
+                    case 'chargeable_weight':
+                        $item->total = $item->selling_value * $shippingInstruction->chargeable_weight;
+                        break;
+                    case 'gross_weight':
+                        $item->total = $item->selling_value * $shippingInstruction->gross_weight;
+                        break;
+                    case 'awb':
+                        $item->total = $item->selling_value;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return $item;
+        });
 
         $selectApproval = [
             'approval_salesorder.id_approval_salesorder',
@@ -614,6 +664,21 @@ class SalesorderController extends Controller
         } else {
             $salesorder->data_shippinginstruction = null;
         }
+
+        $pendingApproval = DB::table('approval_salesorder')
+            ->where('id_salesorder', $salesorder->id_salesorder)
+            ->where('status', 'pending')
+            ->orderBy('step_no', 'ASC')
+            ->first();
+
+        $position = Auth::user()->id_position;
+        $division = Auth::user()->id_division;
+        if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+            $salesorder->is_approver = true;
+        } else {
+            $salesorder->is_approver = false;
+        }
+
 
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;

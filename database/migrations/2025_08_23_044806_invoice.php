@@ -25,29 +25,31 @@ return new class extends Migration
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
-            $table->enum('status', [
-                'invoice_created',
-                'invoice_sent',
+            $table->enum('status_invoice', [
+                'invoice_pending',
                 'invoice_paid',
-                'invoice_cancelled'
-            ])->default('invoice_created');
+            ])->default('invoice_pending');
+            $table->enum('status_approval', [
+                'invoice_pending',
+                'invoice_approved',
+                'invoice_rejected',
+                'invoice_cancelled',
+            ])->default('invoice_pending');
         });
 
         Schema::create('detail_invoice', function (Blueprint $table) {
             $table->id('id_detail_invoice');
             $table->unsignedBigInteger('id_invoice');
-             $table->unsignedBigInteger('id_salesorder');
+            $table->unsignedBigInteger('id_salesorder');
             $table->unsignedBigInteger('id_jobsheet');
             $table->unsignedBigInteger('id_awb');
             $table->timestamps();
-            
-
         });
 
-          Schema::create('listothercharge_invoice', function (Blueprint $table) {
+        Schema::create('listothercharge_invoice', function (Blueprint $table) {
             $table->id('id_listothercharge_invoice');
             $table->string('name');
-            $table->enum('type', ['percentage_subtotal','multiple_chargeableweight','multiple_grossweight','nominal']);
+            $table->enum('type', ['percentage_subtotal', 'multiple_chargeableweight', 'multiple_grossweight', 'nominal']);
             $table->timestamps();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
@@ -63,7 +65,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-         Schema::create('approval_invoice', function (Blueprint $table) {
+        Schema::create('approval_invoice', function (Blueprint $table) {
             $table->id('id_approval_invoice');
             $table->unsignedBigInteger('id_invoice');
             $table->unsignedBigInteger('approval_position');
@@ -112,7 +114,6 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
             $table->timestamps();
         });
-        
     }
 
     /**

@@ -23,22 +23,16 @@ return new class extends Migration
             $table->integer('deleted_by')->nullable();
             $table->timestamps();
             $table->integer('updated_by')->nullable();
-            $table->enum('status', [
-                'so_created_by_sales',
-                'so_approved_by_manager',
-                'so_rejected_by_manager',
-                'so_approved_by_cs',
-                'so_rejected_by_cs',
-                'so_approved_by_manager_cs',
-                'so_rejected_by_manager_cs',
-                'so_approved_by_finance',
-                'so_rejected_by_finance',
-                'so_approved_by_manager_finance',
-                'so_rejected_by_manager_finance',
-                'so_approved_by_director',
-                'so_rejected_by_director',
-                'so_deleted'
-            ])->default('so_created_by_sales');
+            $table->enum('status_so', [
+                'so_created',
+                'so_jobsheeted',
+            ])->default('so_created');
+            $table->enum('status_approval', [
+                'so_pending',
+                'so_approved',
+                'so_rejected',
+                'so_cancelled',
+            ])->default('so_pending');
         });
 
         Schema::create('attachments_salesorder', function (Blueprint $table) {

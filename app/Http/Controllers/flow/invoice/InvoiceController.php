@@ -140,7 +140,8 @@ class InvoiceController extends Controller
             'd.bank AS datacompany_bank',
             'd.branch AS datacompany_branch',
             'd.swift AS datacompany_swift',
-            'a.status'
+            'a.status_invoice',
+            'a.status_approval'
         ];
 
         $invoices = DB::table('invoice AS a')
@@ -177,6 +178,19 @@ class InvoiceController extends Controller
                 ->get();
 
             $invoices[$key]->others_charge = $othersCharge;
+            $pendingApproval = DB::table('approval_invoice')
+                ->where('id_invoice', $value->id_invoice)
+                ->where('status', 'pending')
+                ->orderBy('step_no', 'ASC')
+                ->first();
+
+            $position = Auth::user()->id_position;
+            $division = Auth::user()->id_division;
+            if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+                $invoices[$key]->is_approver = true;
+            } else {
+                $invoices[$key]->is_approver = false;
+            }
         }
 
         return ResponseHelper::success('Invoices retrieved successfully', $invoices);
@@ -214,7 +228,8 @@ class InvoiceController extends Controller
             'd.bank AS datacompany_bank',
             'd.branch AS datacompany_branch',
             'd.swift AS datacompany_swift',
-            'a.status'
+            'a.status_invoice',
+            'a.status_approval'
         ];
 
         $invoice = DB::table('invoice AS a')
@@ -313,6 +328,7 @@ class InvoiceController extends Controller
             }
             $detailInvoice[$key]->selling_salesorder = $data_selling_salesorder;
         }
+
         $invoice->detail_invoice = $detailInvoice;
         $subtotal = $total_selling;
         $invoice->subtotal = $subtotal;
@@ -381,6 +397,20 @@ class InvoiceController extends Controller
             ->get();
 
         $invoice->approval_invoice = $approval;
+        $pendingApproval = DB::table('approval_invoice')
+            ->where('id_invoice', $invoice->id_invoice)
+            ->where('status', 'pending')
+            ->orderBy('step_no', 'ASC')
+            ->first();
+
+        $position = Auth::user()->id_position;
+        $division = Auth::user()->id_division;
+        if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+            $invoice->is_approver = true;
+        } else {
+            $invoice->is_approver = false;
+        }
+
 
 
 
@@ -418,7 +448,7 @@ class InvoiceController extends Controller
                     'remarks' => $request->input('remarks'),
                     'updated_at' => now(),
                     'updated_by' => Auth::id(),
-                    
+
                 ]);
             if ($invoice) {
                 if ($request->input('jobsheet')) {
