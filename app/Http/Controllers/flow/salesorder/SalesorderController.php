@@ -342,6 +342,7 @@ class SalesorderController extends Controller
                 $division = Auth::user()->id_division;
                 if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
                     $item->is_approver = true;
+                    $item->id_approval_salesorder = $pendingApproval->id_approval_salesorder;
                 } else {
                     $item->is_approver = false;
                 }
@@ -675,6 +676,7 @@ class SalesorderController extends Controller
         $division = Auth::user()->id_division;
         if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
             $salesorder->is_approver = true;
+            $salesorder->id_approval_salesorder = $pendingApproval->id_approval_salesorder;
         } else {
             $salesorder->is_approver = false;
         }

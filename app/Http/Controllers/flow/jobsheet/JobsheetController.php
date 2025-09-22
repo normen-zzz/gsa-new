@@ -318,6 +318,7 @@ class JobsheetController extends Controller
             $division = Auth::user()->id_division;
             if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
                 $item->is_approver = true;
+                $item->id_approval_jobsheet = $pendingApproval->id_approval_jobsheet;
             } else {
                 $item->is_approver = false;
             }
@@ -634,6 +635,7 @@ class JobsheetController extends Controller
         $division = Auth::user()->id_division;
         if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
             $jobsheet->is_approver = true;
+            $jobsheet->id_approval_jobsheet = $pendingApproval->id_approval_jobsheet;
         } else {
             $jobsheet->is_approver = false;
         }

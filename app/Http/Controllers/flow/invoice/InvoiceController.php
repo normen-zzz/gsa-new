@@ -188,6 +188,7 @@ class InvoiceController extends Controller
             $division = Auth::user()->id_division;
             if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
                 $invoices[$key]->is_approver = true;
+                $invoices[$key]->id_approval_invoice = $pendingApproval->id_approval_invoice;
             } else {
                 $invoices[$key]->is_approver = false;
             }
@@ -407,6 +408,7 @@ class InvoiceController extends Controller
         $division = Auth::user()->id_division;
         if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
             $invoice->is_approver = true;
+            $invoice->id_approval_invoice = $pendingApproval->id_approval_invoice;
         } else {
             $invoice->is_approver = false;
         }
