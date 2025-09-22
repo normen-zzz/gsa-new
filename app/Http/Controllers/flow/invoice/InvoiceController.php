@@ -538,4 +538,76 @@ class InvoiceController extends Controller
             return ResponseHelper::error($e);
         }
     }
+
+    public function approveInvoice(Request $request)
+    {
+
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_approval_invoice' => 'required|exists:approval_invoice,id_approval_invoice',
+                'remarks' => 'nullable|string|max:255',
+                'id_invoice' => 'required|exists:invoice,id_invoice',
+                'status' => 'required|in:approved,rejected',
+            ]);
+            $approval = DB::table('approval_invoice')
+                ->where('id_approval_invoice', $request->input('id_approval_invoice'))
+                ->where('id_invoice', $request->input('id_invoice'))
+                ->where('status', 'pending')
+                ->first();
+            if (!$approval) {
+                throw new Exception('No pending approval found for this invoice');
+            } else {
+                if ($approval->approval_position == Auth::user()->id_position && $approval->approval_division == Auth::user()->id_division) {
+                    $update = DB::table('approval_invoice')
+                        ->where('id_approval_invoice', $request->input('id_approval_invoice'))
+                        ->update([
+                            'status' => $request->input('status'),
+                            'remarks' => $request->input('remarks'),
+                            'approved_at' => now(),
+                            'approved_by' => Auth::id(),
+                            'updated_at' => now(),
+                            'updated_by' => Auth::id(),
+                        ]);
+                    if (!$update) {
+                        throw new Exception('Failed to update approval status');
+                    } else {
+                        if ($request->status == 'rejected') {
+                            $updateInvoice = DB::table('invoice')
+                                ->where('id_invoice', $request->id_invoice)
+                                ->update([
+                                    'status_approval' => 'invoice_rejected',
+                                ]);
+                            if (!$updateInvoice) {
+                                throw new Exception('Failed to update invoice status');
+                            }
+                        } else {
+                            $pendingApproval = DB::table('approval_invoice')
+                                ->where('id_invoice', $request->id_invoice)
+                                ->where('status', 'pending')
+                                ->orderBy('step_no', 'ASC')
+                                ->first();
+                            if (!$pendingApproval) {
+                                $updateInvoice = DB::table('invoice')
+                                    ->where('id_invoice', $request->id_invoice)
+                                    ->update([
+                                        'status_approval' => 'invoice_approved',
+                                    ]);
+                                if (!$updateInvoice) {
+                                    throw new Exception('Failed to update invoice status');
+                                }
+                            }
+                        }
+                    }
+                } else{
+                    throw new Exception('You are not authorized to approve this invoice');
+                }
+            }
+            DB::commit();
+            return ResponseHelper::success('Invoice approval updated successfully',null,200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
 }

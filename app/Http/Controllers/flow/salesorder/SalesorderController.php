@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -953,13 +954,14 @@ class SalesorderController extends Controller
         }
     }
 
-    public function actionSalesorder(Request $request)
+    public function approveSalesorder(Request $request)
     {
         DB::beginTransaction();
         try {
             $request->validate([
                 'id_approval_salesorder' => 'required|integer|exists:approval_salesorder,id_approval_salesorder',
                 'id_salesorder' => 'required|integer|exists:salesorder,id_salesorder',
+                'remarks' => 'nullable|string|max:255',
                 'status' => 'required|in:approved,rejected'
             ]);
 
@@ -976,6 +978,7 @@ class SalesorderController extends Controller
                         ->where('approval_division', Auth::user()->id_division)
                         ->update([
                             'status' => $request->status,
+                            'remarks' => $request->remarks ?? null,
                             'approved_by' => Auth::id(),
                             'updated_at' => now(),
                         ]);
@@ -983,6 +986,37 @@ class SalesorderController extends Controller
                     if (!$update) {
                         throw new Exception('Failed to update approval status because');
                     } else {
+                        if ($request->status == 'rejected') {
+                            // update status sales order to rejected
+                            $updateSalesorder = DB::table('salesorder')
+                                ->where('id_salesorder', $request->id_salesorder)
+                                ->update([
+                                    'status_approval' => 'so_rejected',
+                                    'updated_at' => now(),
+                                ]);
+                            if (!$updateSalesorder) {
+                                throw new Exception('Failed to update sales order status to rejected');
+                            }
+                        } else {
+                            // Cek apakah ada pending approval lagi
+                            $pendingApproval = DB::table('approval_salesorder')
+                                ->where('id_salesorder', $request->id_salesorder)
+                                ->where('status', 'pending')
+                                ->orderBy('step_no', 'ASC')
+                                ->first();
+                            if (!$pendingApproval) {
+                                // update status sales order to approved
+                                $updateSalesorder = DB::table('salesorder')
+                                    ->where('id_salesorder', $request->id_salesorder)
+                                    ->update([
+                                        'status_approval' => 'so_approved',
+                                        'updated_at' => now(),
+                                    ]);
+                                if (!$updateSalesorder) {
+                                    throw new Exception('Failed to update sales order status to approved');
+                                }
+                            }
+                        }
                         $log = [
                             'id_salesorder' => $request->id_salesorder,
                             'action' => [
@@ -994,17 +1028,167 @@ class SalesorderController extends Controller
                                 ]
                             ]
                         ];
-                        DB::table('log_salesorder')->insert($log);
+                        $insertLog = DB::table('log_salesorder')->insert($log);
+                        if (!$insertLog) {
+                            throw new Exception('Failed to insert log_salesorder');
+                        }
                     }
                 } else {
                     throw new Exception('You are not authorized to update this approval status');
                 }
+            } else {
+                throw new Exception('Approval record not found');
             }
-
-
-
             DB::commit();
             return ResponseHelper::success('Sales order approved successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function  resubmitSalesorder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_salesorder' => 'required|integer|exists:salesorder,id_salesorder',
+                'remarks' => 'nullable|string|max:255',
+                'attachments' => 'required|array',
+                'attachments.*.image' => 'nullable|string',
+                'selling' => 'required|array',
+                'selling.*.id_typeselling' => 'required|integer|exists:typeselling,id_typeselling',
+                'selling.*.selling_value' => 'required|numeric|min:0',
+                'selling.*.charge_by' => 'nullable|in:chargeable_weight,gross_weight,awb',
+                'selling.*.description' => 'nullable|string|max:255'
+            ]);
+
+            $salesorder = DB::table('salesorder')->where('id_salesorder', $request->id_salesorder)->first();
+            $attachments_salesorder = DB::table('attachments_salesorder')->where('id_salesorder', $request->id_salesorder)->whereNull('deleted_at')->get();
+            $selling_salesorder = DB::table('selling_salesorder')->where('id_salesorder', $request->id_salesorder)->get();
+            $approval_salesorder = DB::table('approval_salesorder')->where('id_salesorder', $request->id_salesorder)->get();
+
+            // Validate if there is at least one attachment
+
+            if (!$salesorder) {
+                throw new Exception('Sales order not found');
+            } else {
+                if ($salesorder->status_approval != 'so_rejected') {
+                    throw new Exception('Only rejected sales order can be resubmitted');
+                }
+                $deleteSelling = DB::table('selling_salesorder')->where('id_salesorder', $request->id_salesorder)->delete();
+                if (!$deleteSelling) {
+                    throw new Exception('Failed to delete selling sales order');
+                }
+                if (!$attachments_salesorder->isEmpty()) {
+                    foreach ($attachments_salesorder as $attachment) {
+                        // Delete file from storage using public_id (which is the path in this case)
+                        if (Storage::disk('public')->exists($attachment->public_id)) {
+                            Storage::disk('public')->delete($attachment->public_id);
+                        }
+                    }
+                    $deleteAttachments = DB::table('attachments_salesorder')->where('id_salesorder', $request->id_salesorder)->delete();
+                    if (!$deleteAttachments) {
+                        throw new Exception('Failed to delete attachments sales order');
+                    }
+                }
+
+                $deleteApproval = DB::table('approval_salesorder')->where('id_salesorder', $request->id_salesorder)->delete();
+                if (!$deleteApproval) {
+                    throw new Exception('Failed to delete approval sales order');
+                }
+
+                $dataSalesorder = [
+                    'remarks' => $request->remarks ?? null,
+                    'status_so' => 'so_resubmitted',
+                    'status_approval' => 'pending',
+                    'updated_at' => now(),
+                ];
+                $updateSalesorder = DB::table('salesorder')->where('id_salesorder', $request->id_salesorder)->update($dataSalesorder);
+                if (!$updateSalesorder) {
+                    throw new Exception('Failed to update sales order');
+                } else {
+                    if ($request->has('attachments')) {
+                        $no = 1;
+                        foreach ($request->attachments as $attachment) {
+                            if (!isset($attachment['image']) || $attachment['image'] == null) {
+                                throw new Exception('Attachment image is required');
+                            } else {
+                                //    upload ke local
+                                $file_name = time() . '/' . $no . '_' . $request->id_salesorder . '.jpg';
+                                $no++;
+
+                                // Decode the base64 image
+                                $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+
+                                // Save file to public storage
+                                $path = 'salesorders/' . $file_name;
+                                Storage::disk('public')->put($path, $image);
+                                $attachment['image'] = $file_name;
+                                $attachment['url'] = url('storage/' . $path);
+                                $attachment['public_id'] = $path;
+                            }
+                            $dataAttachment = [
+                                'id_salesorder' => $request->id_salesorder,
+                                'file_name' => $attachment['image'],
+                                'url' => $attachment['url'],
+                                'public_id' => $attachment['public_id'],
+                                'created_by' => Auth::id(),
+                            ];
+                            $insertAttachment = DB::table('attachments_salesorder')->insert($dataAttachment);
+                            if (!$insertAttachment) {
+                                throw new Exception('Failed to insert attachment');
+                            }
+                        }
+                    }
+
+                    if ($request->has('selling')) {
+                        $dataSelling = [
+                            'id_salesorder' => $request->id_salesorder,
+                            'id_typeselling' => $request->selling['id_typeselling'],
+                            'selling_value' => $request->selling['selling_value'],
+                            'charge_by' => $request->selling['charge_by'],
+                            'description' => $request->selling['description'],
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ];
+                        $insertSelling = DB::table('selling_salesorder')->insert($dataSelling);
+                        if (!$insertSelling) {
+                            throw new Exception('Failed to insert selling data');
+                        }
+                    }
+
+                    $id_position = Auth::user()->id_position;
+                    $id_division = Auth::user()->id_division;
+                    if (!$id_position || !$id_division) {
+                        throw new Exception('Invalid user position or division');
+                    }
+                    $flow_approval = DB::table('flowapproval_salesorder')
+                        ->where(['request_position' => $id_position, 'request_division' => $id_division])
+                        ->first();
+                    if (!$flow_approval) {
+                        throw new Exception('No flow approval found for the user position and division');
+                    } else {
+
+                        $detail_flowapproval = DB::table('detailflowapproval_salesorder')
+                            ->where('id_flowapproval_salesorder', $flow_approval->id_flowapproval_salesorder)
+                            ->get();
+                        foreach ($detail_flowapproval as $approval) {
+                            $approval = [
+                                'id_salesorder' => $request->id_salesorder,
+                                'approval_position' => $approval->approval_position,
+                                'approval_division' => $approval->approval_division,
+                                'step_no' => $approval->step_no,
+                                'status' => 'pending',
+                                'created_by' => Auth::id(),
+                            ];
+                            DB::table('approval_salesorder')->insert($approval);
+                        }
+                    }
+                }
+            }
+            DB::commit();
+            return ResponseHelper::success('Sales order resubmitted successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

@@ -55,7 +55,7 @@ class JobsheetController extends Controller
                 'no_jobsheet' => $no_jobsheet,
                 'remarks' => $request->remarks,
                 'created_by' => Auth::id(),
-               
+
             ];
             $insertJobsheet = DB::table('jobsheet')->insertGetId($dataJobsheet);
             if ($insertJobsheet) {
@@ -377,11 +377,7 @@ class JobsheetController extends Controller
                 ->leftJoin('airports AS pol', 'c.pol', '=', 'pol.id_airport')
                 ->leftJoin('airports AS pod', 'c.pod', '=', 'pod.id_airport')
                 ->where('c.agent', $id_agent)
-                ->whereNotExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('detail_invoice')
-                        ->whereColumn('detail_invoice.id_jobsheet', 'a.id_jobsheet');
-                })
+                ->where('a.status_jobsheet', 'js_received')
                 ->get();
 
             $jobsheets->transform(function ($item) {
@@ -911,12 +907,13 @@ class JobsheetController extends Controller
         }
     }
 
-    public function actionJobsheet(Request $request)
+    public function approveJobsheet(Request $request)
     {
         DB::beginTransaction();
         try {
             $request->validate([
                 'id_approval_jobsheet' => 'required|integer|exists:approval_jobsheet,id_approval_jobsheet',
+                'remarks' => 'nullable|string|max:255',
                 'id_jobsheet' => 'required|integer|exists:jobsheet,id_jobsheet',
                 'status' => 'required|in:approved,rejected'
             ]);
@@ -934,6 +931,7 @@ class JobsheetController extends Controller
                         ->where('approval_division', Auth::user()->id_division)
                         ->update([
                             'status' => $request->status,
+                            'remarks' => $request->remarks ?? null,
                             'approved_by' => Auth::id(),
                             'updated_at' => now(),
                         ]);
@@ -941,6 +939,32 @@ class JobsheetController extends Controller
                     if (!$update) {
                         throw new Exception('Failed to update approval status because');
                     } else {
+                        if ($request->status == 'rejected') {
+                            $updateJobsheet = DB::table('jobsheet')
+                                ->where('id_jobsheet', $request->id_jobsheet)
+                                ->update([
+                                    'status_approval' => 'js_rejected',
+                                ]);
+                            if (!$updateJobsheet) {
+                                throw new Exception('Failed to update jobsheet status');
+                            }
+                        } else {
+                            $pendingApproval = DB::table('approval_jobsheet')
+                                ->where('id_jobsheet', $request->id_jobsheet)
+                                ->where('status', 'pending')
+                                ->orderBy('step_no', 'ASC')
+                                ->first();
+                            if (!$pendingApproval) {
+                                $updateJobsheet = DB::table('jobsheet')
+                                    ->where('id_jobsheet', $request->id_jobsheet)
+                                    ->update([
+                                        'status_approval' => 'js_approved',
+                                    ]);
+                                if (!$updateJobsheet) {
+                                    throw new Exception('Failed to update jobsheet status');
+                                }
+                            }
+                        }
                         $log = [
                             'id_jobsheet' => $request->id_jobsheet,
                             'action' => [
@@ -960,6 +984,171 @@ class JobsheetController extends Controller
             }
             DB::commit();
             return ResponseHelper::success('Jobsheet approved successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function receiveJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_jobsheet' => 'required|integer|exists:jobsheet,id_jobsheet',
+            ]);
+            $update = DB::table('jobsheet')
+                ->where('id_jobsheet', $request->id_jobsheet)
+                ->update([
+                    'status_jobsheet' => 'js_received',
+                    'received_at' => now(),
+                    'received_by' => Auth::id(),
+                ]);
+            return ResponseHelper::success('Jobsheet received successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function resubmitJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_jobsheet' => 'required|integer|exists:jobsheet,id_jobsheet',
+                'remarks' => 'nullable|string|max:255',
+                'attachments' => 'required|array',
+                'attachments.*.image' => 'nullable|string',
+                'cost' => 'required|array',
+                'cost.*.id_typecost' => 'required|integer|exists:typecost,id_typecost',
+                'cost.*.cost_value' => 'required|numeric|min:0',
+                'cost.*.charge_by' => 'nullable|in:chargeable_weight,gross_weight,awb',
+                'cost.*.description' => 'nullable|string|max:255',
+                'cost.*.id_vendor' => 'required|integer|exists:vendors,id_vendor'
+            ]);
+            $jobsheet = DB::table('jobsheet')->where('id_jobsheet', $request->id_jobsheet)->first();
+            $attachments = DB::table('attachments_jobsheet')->where('id_jobsheet', $request->id_jobsheet)->get();
+            $costs = DB::table('cost_jobsheet')->where('id_jobsheet', $request->id_jobsheet)->get();
+            if (!$jobsheet) {
+                throw new Exception('Jobsheet not found');
+            }
+            if (count($attachments) > 0) {
+                foreach ($attachments as $attachment) {
+                    if (Storage::disk('public')->exists($attachment->public_id)) {
+                        Storage::disk('public')->delete($attachment->public_id);
+                    }
+                }
+            }
+            $deleteAttachments = DB::table('attachments_jobsheet')->where('id_jobsheet', $request->id_jobsheet)->delete();
+            if ($deleteAttachments === false) {
+                throw new Exception('Failed to delete existing attachments');
+            }
+            $deleteCosts = DB::table('cost_jobsheet')->where('id_jobsheet', $request->id_jobsheet)->delete();
+            if ($deleteCosts === false) {
+                throw new Exception('Failed to delete existing costs');
+            }
+            if ($request->has('attachments') && is_array($request->attachments) && count($request->attachments) > 0) {
+                $no = 1;
+                foreach ($request->attachments as $attachment) {
+                    if (isset($attachment['image']) && $attachment['image'] != null) {
+                        // Generate a unique filename with timestamp
+                        $file_name = time() . '/' . $no . '_' . $request->id_jobsheet;
+                        $no++;
+                        // Decode the base64 image
+                        $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $attachment['image']));
+                        $extension = explode('/', mime_content_type($attachment['image']))[1];
+
+                        // Save file to public storage
+                        $path = 'jobsheets/' . $file_name . '.' . $extension;
+                        Storage::disk('public')->put($path, $image);
+
+                        // Ensure storage link exists
+                        if (!file_exists(public_path('storage'))) {
+                            throw new Exception('Storage link not found. Please run "php artisan storage:link" command');
+                        }
+
+                        // Generate public URL that can be accessed directly
+                        $url = url('storage/' . $path);
+
+                        // Verify file was saved successfully
+                        if (!Storage::disk('public')->exists($path)) {
+                            throw new Exception('Failed to save attachment to storage');
+                        }
+                        $attachments = [
+                            'id_jobsheet' => $request->id_jobsheet,
+                            'file_name' => $file_name,
+                            'url' => $url,
+                            'public_id' => $path, // Store the path as public_id for future reference
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ];
+                        DB::table('attachments_jobsheet')->insert($attachments);
+                    }
+                }
+            }
+            if ($request->has('cost') && is_array($request->cost) && count($request->cost) > 0) {
+                foreach ($request->cost as $cost) {
+                    $dataCost = [
+                        'id_jobsheet' => $request->id_jobsheet,
+                        'id_typecost' => $cost['id_typecost'],
+                        'cost_value' => $cost['cost_value'],
+                        'charge_by' => $cost['charge_by'] ?? null,
+                        'description' => $cost['description'] ?? null,
+                        'id_vendor' => $cost['id_vendor'],
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ];
+                    DB::table('cost_jobsheet')->insert($dataCost);
+                }
+            }
+            $updateJobsheet = DB::table('jobsheet')
+                ->where('id_jobsheet', $request->id_jobsheet)
+                ->update([
+                    'remarks' => $request->remarks ?? null,
+                    'status_jobsheet' => 'js_resubmitted',
+                    'status_approval' => 'js_pending',
+                    'updated_by' => Auth::id(),
+                    'updated_at' => now(),
+                ]);
+            if (!$updateJobsheet) {
+                throw new Exception('Failed to update jobsheet');
+            }
+
+            $deleteApproval = DB::table('approval_jobsheet')->where('id_jobsheet', $request->id_jobsheet)->delete();
+            if ($deleteApproval === false) {
+                throw new Exception('Failed to delete existing approvals');
+            }
+
+            $id_position = Auth::user()->id_position;
+            $id_division = Auth::user()->id_division;
+            if (!$id_position || !$id_division) {
+                throw new Exception('Invalid user position or division');
+            }
+            $flow_approval = DB::table('flowapproval_jobsheet')
+                ->where(['request_position' => $id_position, 'request_division' => $id_division])
+                ->first();
+            if (!$flow_approval) {
+                throw new Exception('No flow approval found for the user position and division');
+            } else {
+                $detailApproval = DB::table('detailflowapproval_jobsheet')
+                    ->where('id_flowapproval_jobsheet', $flow_approval->id_flowapproval_jobsheet)
+                    ->get();
+                foreach ($detailApproval as $approval) {
+                    $approval = [
+                        'id_jobsheet' => $request->id_jobsheet,
+                        'approval_position' => $approval->approval_position,
+                        'approval_division' => $approval->approval_division,
+                        'step_no' => $approval->step_no,
+                        'status' => 'pending',
+                        'created_by' => Auth::id(),
+                    ];
+                    DB::table('approval_jobsheet')->insert($approval);
+                }
+            }
+
+
+            return ResponseHelper::success('Jobsheet resubmitted successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

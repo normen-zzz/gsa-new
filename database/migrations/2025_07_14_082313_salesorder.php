@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('status_so', [
                 'so_created',
                 'so_jobsheeted',
+                'so_resubmitted',
             ])->default('so_created');
             $table->enum('status_approval', [
                 'so_pending',

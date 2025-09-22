@@ -46,11 +46,19 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|string|email',
+            'login' => 'required|string',
             'password' => 'required|string|min:5',
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        // Determine if login is email or username
+        $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $authCredentials = [
+            $field => $credentials['login'],
+            'password' => $credentials['password']
+        ];
+
+        if (!Auth::attempt($authCredentials)) {
             return response()->json([
             'status' => 'error',
             'code' => 401,
@@ -58,7 +66,7 @@ class AuthController extends Controller
                 'code' => 401,
                 'message' => 'Invalid credentials.',
             ],
-        ], 401);
+            ], 401);
         }
 
         $user = Auth::user();

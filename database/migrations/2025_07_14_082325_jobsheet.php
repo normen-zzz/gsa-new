@@ -27,6 +27,7 @@ return new class extends Migration
                'js_created',
                'js_received',
                'js_invoiced',
+               'js_resubmitted',
             ])->default('js_created');
             $table->enum('status_approval', [
                 'js_pending',
@@ -34,6 +35,8 @@ return new class extends Migration
                 'js_rejected',
                 'js_cancelled',
             ])->default('js_pending');
+            $table->integer('received_by')->nullable();
+            $table->timestamp('received_at')->nullable();
         });
 
         
