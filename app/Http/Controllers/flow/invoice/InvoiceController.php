@@ -539,7 +539,7 @@ class InvoiceController extends Controller
         }
     }
 
-    public function approveInvoice(Request $request)
+    public function actionInvoice(Request $request)
     {
 
         DB::beginTransaction();

@@ -954,7 +954,7 @@ class SalesorderController extends Controller
         }
     }
 
-    public function approveSalesorder(Request $request)
+    public function actionSalesorder(Request $request)
     {
         DB::beginTransaction();
         try {

@@ -301,7 +301,7 @@ Route::put('/deleteAttachmentSalesorder', [SalesorderController::class, 'deleteA
 Route::put('/updateSalesorder', [SalesorderController::class, 'updateSalesorder'])->middleware('auth:api');
 Route::put('/deleteSalesorder', [SalesorderController::class, 'deleteSalesorder'])->middleware('auth:api');
 Route::put('/activateSalesorder', [SalesorderController::class, 'activateSalesorder'])->middleware('auth:api');
-Route::put('/approveSalesorder', [SalesorderController::class, 'approveSalesorder'])->middleware('auth:api');
+Route::put('/actionSalesorder', [SalesorderController::class, 'actionSalesorder'])->middleware('auth:api');
 Route::put('/resubmitSalesorder', [SalesorderController::class, 'resubmitSalesorder'])->middleware('auth:api');
 
 //jobsheet
@@ -312,7 +312,7 @@ Route::put('/deleteAttachmentJobsheet', [JobsheetController::class, 'deleteAttac
 Route::put('/updateJobsheet', [JobsheetController::class, 'updateJobsheet'])->middleware('auth:api');
 Route::put('/deleteJobsheet', [JobsheetController::class, 'deleteJobsheet'])->middleware('auth:api');
 Route::put('/activateJobsheet', [JobsheetController::class, 'activateJobsheet'])->middleware('auth:api');
-Route::put('/approveJobsheet', [JobsheetController::class, 'approveJobsheet'])->middleware('auth:api');
+Route::put('/actionJobsheet', [JobsheetController::class, 'actionJobsheet'])->middleware('auth:api');
 Route::get('/getUninvoicedJobsheet', [JobsheetController::class, 'getUninvoicedJobsheet'])->middleware('auth:api');
 Route::put('/resubmitJobsheet', [JobsheetController::class, 'resubmitJobsheet'])->middleware('auth:api');
 Route::put('/receiveJobsheet', [JobsheetController::class, 'receiveJobsheet'])->middleware('auth:api');
@@ -325,7 +325,7 @@ Route::put('/updateInvoice', [InvoiceController::class, 'updateInvoice'])->middl
 Route::put('/deleteInvoice', [InvoiceController::class, 'deleteInvoice'])->middleware('auth:api');
 Route::put('/deleteDetailInvoice', [InvoiceController::class, 'deleteDetailInvoice'])->middleware('auth:api');
 Route::put('/activateInvoice', [InvoiceController::class, 'activateInvoice'])->middleware('auth:api');
-Route::put('/approveInvoice', [InvoiceController::class, 'approveInvoice'])->middleware('auth:api');
+Route::put('/actionInvoice', [InvoiceController::class, 'actionInvoice'])->middleware('auth:api');
 Route::put('/deleteOthersChargeInvoice', [InvoiceController::class, 'deleteOthersChargeInvoice'])->middleware('auth:api');
 
 //Account payable

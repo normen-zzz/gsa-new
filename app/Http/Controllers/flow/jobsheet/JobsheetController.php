@@ -907,7 +907,7 @@ class JobsheetController extends Controller
         }
     }
 
-    public function approveJobsheet(Request $request)
+    public function actionJobsheet(Request $request)
     {
         DB::beginTransaction();
         try {
