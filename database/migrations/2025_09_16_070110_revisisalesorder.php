@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('revisisalesorder', function (Blueprint $table) {
+        Schema::create('revisisalesorder', function (Blueprint $table) {
             $table->id('id_revisisalesorder');
             $table->unsignedBigInteger('id_salesorder');
             $table->text('revision_notes')->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
             ])->default('revision_created');
         });
 
-        Schema::table('detailfrom_revisisalesorder', function (Blueprint $table) {
+        Schema::create('detailfrom_revisisalesorder', function (Blueprint $table) {
             $table->id('id_detail_revisisalesorder');
             $table->unsignedBigInteger('id_revisisalesorder');
             $table->unsignedBigInteger('id_typeselling');
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->string('description')->nullable();
         });
 
-        Schema::table('detailto_revisisalesorder', function (Blueprint $table) {
+        Schema::create('detailto_revisisalesorder', function (Blueprint $table) {
             $table->id('id_detail_revisisalesorder');
             $table->unsignedBigInteger('id_revisisalesorder');
             $table->unsignedBigInteger('id_typeselling');
@@ -79,7 +79,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::table('log_revisisalesorder', function (Blueprint $table) {
+        Schema::create('log_revisisalesorder', function (Blueprint $table) {
             $table->id('id_log_revisisalesorder');
             $table->unsignedBigInteger('id_revisisalesorder');
             $table->json('action');
