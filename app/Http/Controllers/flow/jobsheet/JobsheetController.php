@@ -321,6 +321,7 @@ class JobsheetController extends Controller
                 $item->id_approval_jobsheet = $pendingApproval->id_approval_jobsheet;
             } else {
                 $item->is_approver = false;
+                $item->id_approval_jobsheet = null;
             }
 
 
@@ -638,6 +639,7 @@ class JobsheetController extends Controller
             $jobsheet->id_approval_jobsheet = $pendingApproval->id_approval_jobsheet;
         } else {
             $jobsheet->is_approver = false;
+            $jobsheet->id_approval_jobsheet = null;
         }
 
 

@@ -191,6 +191,7 @@ class InvoiceController extends Controller
                 $invoices[$key]->id_approval_invoice = $pendingApproval->id_approval_invoice;
             } else {
                 $invoices[$key]->is_approver = false;
+                $invoices[$key]->id_approval_invoice = null;
             }
         }
 
@@ -411,7 +412,9 @@ class InvoiceController extends Controller
             $invoice->id_approval_invoice = $pendingApproval->id_approval_invoice;
         } else {
             $invoice->is_approver = false;
+            $invoice->id_approval_invoice = null;
         }
+
 
 
 

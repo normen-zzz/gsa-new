@@ -345,6 +345,7 @@ class SalesorderController extends Controller
                     $item->id_approval_salesorder = $pendingApproval->id_approval_salesorder;
                 } else {
                     $item->is_approver = false;
+                    $item->id_approval_salesorder = null;
                 }
 
                 // decode
@@ -678,6 +679,7 @@ class SalesorderController extends Controller
             $salesorder->is_approver = true;
             $salesorder->id_approval_salesorder = $pendingApproval->id_approval_salesorder;
         } else {
+            $salesorder->id_approval_salesorder = null;
             $salesorder->is_approver = false;
         }
 
