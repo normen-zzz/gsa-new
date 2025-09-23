@@ -1047,7 +1047,6 @@ class SalesorderController extends Controller
                                 'created_at' => now(),
                             ];
                         }
-                       
                     }
                 } else {
                     throw new Exception('You are not authorized to update this approval status');
@@ -1159,18 +1158,21 @@ class SalesorderController extends Controller
                     }
 
                     if ($request->has('selling')) {
-                        $dataSelling = [
-                            'id_salesorder' => $request->id_salesorder,
-                            'id_typeselling' => $request->selling['id_typeselling'],
-                            'selling_value' => $request->selling['selling_value'],
-                            'charge_by' => $request->selling['charge_by'],
-                            'description' => $request->selling['description'],
-                            'created_by' => Auth::id(),
-                            'created_at' => now(),
-                        ];
-                        $insertSelling = DB::table('selling_salesorder')->insert($dataSelling);
-                        if (!$insertSelling) {
-                            throw new Exception('Failed to insert selling data');
+
+                        foreach ($request->selling as $selling1) {
+                            $dataSelling = [
+                                'id_salesorder' => $request->id_salesorder,
+                                'id_typeselling' => $selling1['id_typeselling'],
+                                'selling_value' => $selling1['selling_value'],
+                                'charge_by' => $selling1['charge_by'],
+                                'description' => $selling1['description'],
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
+                            $insertSelling = DB::table('selling_salesorder')->insert($dataSelling);
+                            if (!$insertSelling) {
+                                throw new Exception('Failed to insert selling data');
+                            }
                         }
                     }
 
