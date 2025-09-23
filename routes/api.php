@@ -29,8 +29,10 @@ use App\Http\Controllers\master\WeightbracketController;
 use App\Http\Controllers\flow\jobsheet\JobsheetController;
 use App\Http\Controllers\master\TypepengeluaranController;
 use App\Http\Controllers\flow\ShippingInstructionController;
+use App\Http\Controllers\flow\revisi\RevisijobsheetController;
 use App\Http\Controllers\flow\salesorder\SalesorderController;
 use App\Http\Controllers\master\OtherchargesinvoiceController;
+use App\Http\Controllers\flow\revisi\RevisisalesorderController;
 use App\Http\Controllers\flow\accountpayable\AccountpayableController;
 
 
@@ -250,6 +252,19 @@ Route::put('/updateFlowApprovalAccountpayable', [FlowApprovalController::class, 
 Route::put('/deleteFlowApprovalAccountpayable', [FlowApprovalController::class, 'deleteFlowApprovalAccountpayable'])->middleware('auth:api');
 Route::put('/activateFlowApprovalAccountpayable', [FlowApprovalController::class, 'activateFlowApprovalAccountpayable'])->middleware('auth:api');
 
+//revisi salesorder flow approval
+Route::get('/getFlowApprovalRevisiSalesOrder', [FlowApprovalController::class, 'getFlowApprovalRevisiSalesOrder'])->middleware('auth:api');
+Route::post('/createFlowApprovalRevisiSalesOrder', [FlowApprovalController::class, 'createFlowApprovalRevisiSalesOrder'])->middleware('auth:api');
+Route::put('/updateFlowApprovalRevisiSalesOrder', [FlowApprovalController::class, 'updateFlowApprovalRevisiSalesOrder'])->middleware('auth:api');
+Route::put('/deleteFlowApprovalRevisiSalesOrder', [FlowApprovalController::class, 'deleteFlowApprovalRevisiSalesOrder'])->middleware('auth:api');
+Route::put('/activateFlowApprovalRevisiSalesOrder', [FlowApprovalController::class, 'activateFlowApprovalRevisiSalesOrder'])->middleware('auth:api');
+
+//revisi jobsheet flow approval
+Route::get('/getFlowApprovalRevisiJobsheet', [FlowApprovalController::class, 'getFlowApprovalRevisiJobsheet'])->middleware('auth:api');
+Route::post('/createFlowApprovalRevisiJobsheet', [FlowApprovalController::class, 'createFlowApprovalRevisiJobsheet'])->middleware('auth:api');
+Route::put('/updateFlowApprovalRevisiJobsheet   ', [FlowApprovalController::class, 'updateFlowApprovalRevisiJobsheet'])->middleware('auth:api');
+Route::put('/deleteFlowApprovalRevisiJobsheet', [FlowApprovalController::class, 'deleteFlowApprovalRevisiJobsheet'])->middleware('auth:api');
+Route::put('/activateFlowApprovalRevisiJobsheet', [FlowApprovalController::class, 'activateFlowApprovalRevisiJobsheet'])->middleware('auth:api');
 
 //Master City
 Route::get('/getCity', [CityController::class, 'getCity'])->middleware('auth:api');
@@ -337,3 +352,19 @@ Route::put('/deleteAccountpayable', [AccountpayableController::class, 'deleteAcc
 Route::put('/deleteDetailAccountpayable', [AccountpayableController::class, 'deleteDetailAccountpayable'])->middleware('auth:api');
 Route::put('/activateAccountpayable', [AccountpayableController::class, 'activateAccountpayable'])->middleware('auth:api');
 Route::put('/actionAccountpayable', [AccountpayableController::class, 'actionAccountpayable'])->middleware('auth:api');
+
+
+//Revisi sales order 
+Route::post('/createRevisiSalesOrder', [RevisisalesorderController::class, 'createRevisiSalesOrder'])->middleware('auth:api');
+Route::get('/getRevisiSalesOrder', [RevisisalesorderController::class, 'getRevisiSalesOrder'])->middleware('auth:api');
+Route::get('/getRevisiSalesOrderById', [RevisisalesorderController::class, 'getRevisiSalesOrderById'])->middleware('auth:api');
+Route::put('/updateRevisiSalesOrder', [RevisisalesorderController::class, 'updateRevisiSalesOrder'])->middleware('auth:api');
+Route::put('/deleteRevisiSalesOrder', [RevisisalesorderController::class, 'deleteRevisiSalesOrder'])->middleware('auth:api');
+
+
+//revisi jobsheet
+Route::post('/createRevisiJobsheet', [RevisijobsheetController::class, 'createRevisiJobsheet'])->middleware('auth:api');
+Route::get('/getRevisiJobsheet', [RevisijobsheetController::class, 'getRevisiJobsheet'])->middleware('auth:api');
+Route::get('/getRevisiJobsheetById', [RevisijobsheetController::class, 'getRevisiJobsheetById'])->middleware('auth:api');
+Route::put('/updateRevisiJobsheet', [RevisijobsheetController::class, 'updateRevisiJobsheet'])->middleware('auth:api');
+Route::put('/deleteRevisiJobsheet', [RevisijobsheetController::class, 'deleteRevisiJobsheet'])->middleware('auth:api');

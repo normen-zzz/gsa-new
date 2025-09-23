@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('revisisalesorder', function (Blueprint $table) {
-            $table->id('id_revisisalesorder');
-            $table->unsignedBigInteger('id_salesorder');
+        Schema::create('revisijobsheet', function (Blueprint $table) {
+            $table->id('id_revisijobsheet');
+            $table->unsignedBigInteger('id_jobsheet');
             $table->text('revision_notes')->nullable();
             $table->timestamps();
             $table->integer('created_by')->unsigned();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
-            $table->enum('status_revisisalesorder', [
+            $table->enum('status_revisijobsheet', [
                 'revision_created',
                 'revision_approved',
                 'revision_rejected',
@@ -27,27 +27,27 @@ return new class extends Migration
             ])->default('revision_created');
         });
 
-        Schema::create('detailfrom_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_detail_revisisalesorder');
-            $table->unsignedBigInteger('id_revisisalesorder');
-            $table->unsignedBigInteger('id_typeselling');
-            $table->decimal('selling_value', 10, 2)->comment('Selling value in the sales order revision in rupiah');
+        Schema::create('detailfrom_revisijobsheet', function (Blueprint $table) {
+            $table->id('id_detail_revisijobsheet');
+            $table->unsignedBigInteger('id_revisijobsheet');
+            $table->unsignedBigInteger('id_typecost');
+            $table->decimal('cost_value', 10, 2)->comment('Selling value in the sales order revision in rupiah');
             $table->enum('charge_by', ['chargeable_weight','gross_weight','awb'])->comment('Charge by in the sales order revision');
             $table->string('description')->nullable();
         });
 
-        Schema::create('detailto_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_detail_revisisalesorder');
-            $table->unsignedBigInteger('id_revisisalesorder');
-            $table->unsignedBigInteger('id_typeselling');
-            $table->decimal('selling_value', 10, 2)->comment('Selling value in the sales order revision in rupiah');
+        Schema::create('detailto_revisijobsheet', function (Blueprint $table) {
+            $table->id('id_detail_revisijobsheet');
+            $table->unsignedBigInteger('id_revisijobsheet');
+            $table->unsignedBigInteger('id_typecost');
+            $table->decimal('cost_value', 10, 2)->comment('Cost value in the sales order revision in rupiah');
             $table->enum('charge_by', ['chargeable_weight','gross_weight','awb'])->comment('Charge by in the sales order revision');
             $table->string('description')->nullable();
         });
 
-        Schema::create('approval_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_approval_revisisalesorder');
-            $table->unsignedBigInteger('id_revisisalesorder');
+        Schema::create('approval_revisijobsheet', function (Blueprint $table) {
+            $table->id('id_approval_revisijobsheet');
+            $table->unsignedBigInteger('id_revisijobsheet');
             $table->unsignedBigInteger('approval_position');
             $table->unsignedBigInteger('approval_division');
             $table->integer('step_no');
@@ -59,8 +59,8 @@ return new class extends Migration
             $table->integer('created_by')->unsigned();
         });
 
-        Schema::create('flowapproval_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_flowapproval_revisisalesorder');
+        Schema::create('flowapproval_revisijobsheet', function (Blueprint $table) {
+            $table->id('id_flowapproval_revisijobsheet');
             $table->unsignedBigInteger('request_position');
             $table->unsignedBigInteger('request_division');
             $table->enum('status', ['active', 'inactive'])->default('active');
@@ -68,9 +68,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('detailflowapproval_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_detailflowapproval_revisisalesorder');
-            $table->unsignedBigInteger('id_flowapproval_revisisalesorder');
+        Schema::create('detailflowapproval_revisijobsheet', function (Blueprint $table) {
+            $table->id('id_detailflowapproval_revisijobsheet');
+            $table->unsignedBigInteger('id_flowapproval_revisijobsheet');
             $table->unsignedBigInteger('approval_position');
             $table->unsignedBigInteger('approval_division');
             $table->enum('status', ['active', 'inactive'])->default('active');
@@ -79,9 +79,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('log_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_log_revisisalesorder');
-            $table->unsignedBigInteger('id_revisisalesorder');
+        Schema::create('log_revisijobsheet', function (Blueprint $table) {
+            $table->id('id_log_revisijobsheet');
+            $table->unsignedBigInteger('id_revisijobsheet');
             $table->json('action');
             $table->timestamps();
             $table->integer('created_by')->nullable();
@@ -93,12 +93,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('revisisalesorder');
-        Schema::dropIfExists('detailfrom_revisisalesorder');
-        Schema::dropIfExists('detailto_revisisalesorder');
-        Schema::dropIfExists('approval_revisisalesorder');
-        Schema::dropIfExists('flowapproval_salesorder');
-        Schema::dropIfExists('detailflowapproval_salesorder');
-        Schema::dropIfExists('log_revisisalesorder');
+        //
     }
 };

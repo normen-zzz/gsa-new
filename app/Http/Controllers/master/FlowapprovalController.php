@@ -1195,5 +1195,587 @@ class FlowapprovalController extends Controller
     }
 
 
+    //revisi salesorder
+
+    public function createFlowApprovalRevisiSalesOrder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Validate the request data
+            $request->validate([
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'data' => 'nullable|array',
+                'data.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'data.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'data.*.step_no' => 'required|integer|min:1',
+                'data.*.status' => 'required|in:active,inactive',
+            ]);
+
+            
+
+            $flowApproval = [
+                'request_position' => $request->request_position,
+                'request_division' => $request->request_division,
+                'status' => 'active',
+                'created_by' => Auth::id(),
+                'created_at' => now()
+            ];
+            $insertFlowapproval = DB::table('flowapproval_revisisalesorder')->insertGetId($flowApproval);
+            if ($insertFlowapproval) {
+                foreach ($request->data as $data) {
+                    
+
+                    $dataDetailflowapproval = [
+                        'id_flowapproval_accountpayable' => $insertFlowapproval,
+                        'approval_position' => $data['approval_position'],
+                        'approval_division' => $data['approval_division'],
+                        'step_no' => $data['step_no'],
+                        'status' => $data['status'],
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ];
+                    $insertDetailflowapproval =  DB::table('detailflowapproval_revisisalesorder')->insert($dataDetailflowapproval);
+                    if (!$insertDetailflowapproval) {
+                        throw new Exception('Failed to insert detail flow approval revisi sales order');
+                    }
+                }
+            } else {
+                throw new Exception('Failed to insert flow approval revisi sales order');
+            }
+
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi sales order created successfully', null, 200);
+        } catch (Exception $e) {
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function getFlowApprovalRevisiSalesOrder(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $search = $request->input('searchKey', '');
+
+        $select = [
+            'a.id_flowapproval_revisisalesorder',
+            'a.request_position',
+            'c.name AS request_position_name',
+            'a.request_division',
+            'd.name AS request_division_name',
+
+            'a.status',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name'
+        ];
+
+        $flowApprovals = DB::table('flowapproval_revisisalesorder AS a')
+            ->select($select)
+            ->join('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->join('positions AS c', 'a.request_position', '=', 'c.id_position')
+            ->join('divisions AS d', 'a.request_division', '=', 'd.id_division')
+            ->where(function ($q) use ($search) {
+                $q->where('c.name', 'like', '%' . $search . '%')
+                    ->orWhere('d.name', 'like', '%' . $search . '%');
+            })
+            ->paginate($limit);
+
+        $flowApprovals->transform(function ($item) {
+            $selectDetailflowapproval = [
+                'a.id_detailflowapproval_revisisalesorder',
+                'a.id_flowapproval_revisisalesorder',
+                'a.approval_position',
+                'b.name AS approval_position_name',
+                'a.approval_division',
+                'c.name AS approval_division_name',
+                'a.step_no',
+                'a.status',
+                'a.created_at',
+                'd.name AS created_by_name',
+                'a.created_by'
+            ];
+            $detailFlowapproval = DB::table('detailflowapproval_revisisalesorder AS a')
+                ->select($selectDetailflowapproval)
+                ->join('positions AS b', 'a.approval_position', '=', 'b.id_position')
+                ->join('divisions AS c', 'a.approval_division', '=', 'c.id_division')
+                ->join('users AS d', 'a.created_by', '=', 'd.id_user')
+                ->where('id_flowapproval_revisisalesorder', $item->id_flowapproval_revisisalesorder)
+                ->get();
+            $item->detail_flowapproval = $detailFlowapproval;
+            return $item;
+        });
+
+        return ResponseHelper::success('Flow approvals for revisi sales order retrieved successfully.', $flowApprovals, 200);
+    }
+
+    public function updateFlowApprovalRevisiSalesOrder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_revisisalesorder');
+            $flowapproval_revisisalesorder = DB::table('flowapproval_revisisalesorder')->where('id_flowapproval_revisisalesorder', $id)->first();
+            $request->validate([
+                'id_flowapproval_revisisalesorder' => 'required|integer|exists:flowapproval_revisisalesorder,id_flowapproval_revisisalesorder',
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'status' => 'required|in:active,inactive',
+                'detail_flowapproval' => 'required|array',
+                'detail_flowapproval.*.id_detailflowapproval_revisisalesorder' => 'nullable|integer|exists:detailflowapproval_revisisalesorder,id_detailflowapproval_revisisalesorder',
+                'detail_flowapproval.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'detail_flowapproval.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'detail_flowapproval.*.step_no' => 'required|integer|min:1|distinct',
+                'detail_flowapproval.*.status' => 'required|in:active,inactive',
+            ]);
+
+            $changesFlowapproval = [];
+            $changesDetailFlowapproval = [];
+
+            $checkRequestPosition = DB::table('positions')
+                ->where('id_position', $request->request_position)
+                ->exists();
+                if (!$checkRequestPosition) {
+                    throw new Exception('Invalid request position');
+                }
+
+            $checkRequestDivision = DB::table('divisions')
+                ->where('id_division', $request->request_division)
+                ->exists();
+                if (!$checkRequestDivision) {
+                    throw new Exception('Invalid request division');
+                }
+
+            $updateFlowapproval = DB::table('flowapproval_revisisalesorder')
+                ->where('id_flowapproval_revisisalesorder', $id)
+                ->update([
+                    'request_position' => $request->input('request_position'),
+                    'request_division' => $request->input('request_division'),
+                    'status' => $request->input('status'),
+                    'updated_at' => now(),
+                ]);
+            
+
+
+            if ($request->has('detail_flowapproval')) {
+                foreach ($request->input('detail_flowapproval') as $detail) {
+                    if (isset($detail['id_detailflowapproval_revisisalesorder']) || $detail['id_detailflowapproval_revisisalesorder'] != NULL) {
+                        // Update existing detail
+                        $insertDetailflowapproval =  DB::table('detailflowapproval_revisisalesorder')
+                            ->where('id_detailflowapproval_revisisalesorder', $detail['id_detailflowapproval_revisisalesorder'])
+                            ->update([
+                                'approval_position' => $detail['approval_position'],
+                                'approval_division' => $detail['approval_division'],
+                                'step_no' => $detail['step_no'],
+                                'status' => $detail['status'],
+                                'updated_at' => now(),
+                            ]);
+                        if ($insertDetailflowapproval) {
+                            // Log the update action
+                            DB::table('log_flowapproval_revisisalesorder')->insert([
+                                'id_flowapproval_revisisalesorder' => $id,
+                                'action' => json_encode([
+                                    'id_detailflowapproval_revisisalesorder' => $detail['id_detailflowapproval_revisisalesorder'],
+                                    'type' => 'updated',
+                                    'data' => $detail
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ]);
+                        }
+                    } else {
+                        // Insert new detail
+                        $insert= DB::table('detailflowapproval_revisisalesorder')->insert([
+                            'id_flowapproval_revisisalesorder' => $id,
+                            'approval_position' => $detail['approval_position'],
+                            'approval_division' => $detail['approval_division'],
+                            'step_no' => $detail['step_no'],
+                            'status' => $detail['status'],
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                        $log = [
+                            'id_detailflowapproval_revisisalesorder' => DB::getPdo()->lastInsertId(),
+                            'type' => 'insert',
+                            'old' => null,
+                            'new' => $insert
+                        ];
+                        DB::table('log_flowapproval_revisisalesorder')->insert([
+                            'id_flowapproval_revisisalesorder' => $id,
+                            'action' => json_encode($log),
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi sales order updated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteFlowApprovalRevisiSalesOrder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_revisisalesorder');
+            $request->validate([
+                'id_flowapproval_revisisalesorder' => 'required|integer|exists:flowapproval_revisisalesorder,id_flowapproval_revisisalesorder',
+            ]);
+
+            DB::table('flowapproval_revisisalesorder')
+                ->where('id_flowapproval_revisisalesorder', $id)
+                ->update([
+                    'status' => 'inactive',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'deactivated',
+            ];
+            DB::table('log_flowapproval_revisisalesorder')->insert([
+                'id_flowapproval_revisisalesorder' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi sales order deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function activateFlowApprovalRevisiSalesOrder(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_revisisalesorder');
+            $request->validate([
+                'id_flowapproval_revisisalesorder' => 'required|integer|exists:flowapproval_revisisalesorder,id_flowapproval_revisisalesorder',
+            ]);
+
+            DB::table('flowapproval_revisisalesorder')
+                ->where('id_flowapproval_revisisalesorder', $id)
+                ->update([
+                    'status' => 'active',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'activated',
+            ];
+
+            DB::table('log_flowapproval_revisisalesorder')->insert([
+                'id_flowapproval_revisisalesorder' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi sales order activated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    //revisi jobsheet
+    public function createFlowApprovalRevisiJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Validate the request data
+            $request->validate([
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'data' => 'nullable|array',
+                'data.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'data.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'data.*.step_no' => 'required|integer|min:1',
+                'data.*.status' => 'required|in:active,inactive',
+            ]);
+
+            
+
+            $flowApproval = [
+                'request_position' => $request->request_position,
+                'request_division' => $request->request_division,
+                'status' => 'active',
+                'created_by' => Auth::id(),
+                'created_at' => now()
+            ];
+            $insertFlowapproval = DB::table('flowapproval_revisijobsheet')->insertGetId($flowApproval);
+            if ($insertFlowapproval) {
+                foreach ($request->data as $data) {
+                    
+
+                    $dataDetailflowapproval = [
+                        'id_flowapproval_revisijobsheet' => $insertFlowapproval,
+                        'approval_position' => $data['approval_position'],
+                        'approval_division' => $data['approval_division'],
+                        'step_no' => $data['step_no'],
+                        'status' => $data['status'],
+                        'created_by' => Auth::id(),
+                        'created_at' => now(),
+                    ];
+                    $insertDetailflowapproval =  DB::table('detailflowapproval_revisijobsheet')->insert($dataDetailflowapproval);
+                    if (!$insertDetailflowapproval) {
+                        throw new Exception('Failed to insert detail flow approval revisi jobsheet');
+                    }
+                }
+            } else {
+                throw new Exception('Failed to insert flow approval revisi jobsheet');
+            }
+
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi jobsheet created successfully', null, 200);
+        } catch (Exception $e) {
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function getFlowApprovalRevisiJobsheet(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $search = $request->input('searchKey', '');
+
+        $select = [
+            'a.id_flowapproval_revisijobsheet',
+            'a.request_position',
+            'c.name AS request_position_name',
+            'a.request_division',
+            'd.name AS request_division_name',
+
+            'a.status',
+            'a.created_at',
+            'a.created_by',
+            'b.name AS created_by_name'
+        ];
+
+        $flowApprovals = DB::table('flowapproval_revisijobsheet AS a')
+            ->select($select)
+            ->join('users AS b', 'a.created_by', '=', 'b.id_user')
+            ->join('positions AS c', 'a.request_position', '=', 'c.id_position')
+            ->join('divisions AS d', 'a.request_division', '=', 'd.id_division')
+            ->where(function ($q) use ($search) {
+                $q->where('c.name', 'like', '%' . $search . '%')
+                    ->orWhere('d.name', 'like', '%' . $search . '%');
+            })
+            ->paginate($limit);
+
+        $flowApprovals->transform(function ($item) {
+            $selectDetailflowapproval = [
+                'a.id_detailflowapproval_revisijobsheet',
+                'a.id_flowapproval_revisijobsheet',
+                'a.approval_position',
+                'b.name AS approval_position_name',
+                'a.approval_division',
+                'c.name AS approval_division_name',
+                'a.step_no',
+                'a.status',
+                'a.created_at',
+                'd.name AS created_by_name',
+                'a.created_by'
+            ];
+            $detailFlowapproval = DB::table('detailflowapproval_revisijobsheet AS a')
+                ->select($selectDetailflowapproval)
+                ->join('positions AS b', 'a.approval_position', '=', 'b.id_position')
+                ->join('divisions AS c', 'a.approval_division', '=', 'c.id_division')
+                ->join('users AS d', 'a.created_by', '=', 'd.id_user')
+                ->where('id_flowapproval_revisijobsheet', $item->id_flowapproval_revisijobsheet)
+                ->get();
+            $item->detail_flowapproval = $detailFlowapproval;
+            return $item;
+        });
+
+        return ResponseHelper::success('Flow approvals for revisi jobsheet retrieved successfully.', $flowApprovals, 200);
+    }
+
+    public function updateFlowApprovalRevisiJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_revisijobsheet');
+            $flowapproval_revisijobsheet = DB::table('flowapproval_revisijobsheet')->where('id_flowapproval_revisijobsheet', $id)->first();
+            $request->validate([
+                'id_flowapproval_revisijobsheet' => 'required|integer|exists:flowapproval_revisijobsheet,id_flowapproval_revisijobsheet',
+                'request_position' => 'required|integer|exists:positions,id_position',
+                'request_division' => 'required|integer|exists:divisions,id_division',
+                'status' => 'required|in:active,inactive',
+                'detail_flowapproval' => 'required|array',
+                'detail_flowapproval.*.id_detailflowapproval_revisijobsheet' => 'nullable|integer|exists:detailflowapproval_revisijobsheet,id_detailflowapproval_revisijobsheet',
+                'detail_flowapproval.*.approval_position' => 'required|integer|exists:positions,id_position',
+                'detail_flowapproval.*.approval_division' => 'required|integer|exists:divisions,id_division',
+                'detail_flowapproval.*.step_no' => 'required|integer|min:1|distinct',
+                'detail_flowapproval.*.status' => 'required|in:active,inactive',
+            ]);
+
+            $changesFlowapproval = [];
+            $changesDetailFlowapproval = [];
+
+            $checkRequestPosition = DB::table('positions')
+                ->where('id_position', $request->request_position)
+                ->exists();
+                if (!$checkRequestPosition) {
+                    throw new Exception('Invalid request position');
+                }
+
+            $checkRequestDivision = DB::table('divisions')
+                ->where('id_division', $request->request_division)
+                ->exists();
+                if (!$checkRequestDivision) {
+                    throw new Exception('Invalid request division');
+                }
+
+            $updateFlowapproval = DB::table('flowapproval_revisijobsheet')
+                ->where('id_flowapproval_revisijobsheet', $id)
+                ->update([
+                    'request_position' => $request->input('request_position'),
+                    'request_division' => $request->input('request_division'),
+                    'status' => $request->input('status'),
+                    'updated_at' => now(),
+                ]);
+            
+
+
+            if ($request->has('detail_flowapproval')) {
+                foreach ($request->input('detail_flowapproval') as $detail) {
+                    if (isset($detail['id_detailflowapproval_revisijobsheet']) || $detail['id_detailflowapproval_revisijobsheet'] != NULL) {
+                        // Update existing detail
+                        $insertDetailflowapproval =  DB::table('detailflowapproval_revisijobsheet')
+                            ->where('id_detailflowapproval_revisijobsheet', $detail['id_detailflowapproval_revisijobsheet'])
+                            ->update([
+                                'approval_position' => $detail['approval_position'],
+                                'approval_division' => $detail['approval_division'],
+                                'step_no' => $detail['step_no'],
+                                'status' => $detail['status'],
+                                'updated_at' => now(),
+                            ]);
+                        if ($insertDetailflowapproval) {
+                            // Log the update action
+                            DB::table('log_flowapproval_revisijobsheet')->insert([
+                                'id_flowapproval_revisijobsheet' => $id,
+                                'action' => json_encode([
+                                    'id_detailflowapproval_revisijobsheet' => $detail['id_detailflowapproval_revisijobsheet'],
+                                    'type' => 'updated',
+                                    'data' => $detail
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ]);
+                        }
+                    } else {
+                        // Insert new detail
+                        $insert= DB::table('detailflowapproval_revisijobsheet')->insert([
+                            'id_flowapproval_revisijobsheet' => $id,
+                            'approval_position' => $detail['approval_position'],
+                            'approval_division' => $detail['approval_division'],
+                            'step_no' => $detail['step_no'],
+                            'status' => $detail['status'],
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                        $log = [
+                            'id_detailflowapproval_revisijobsheet' => DB::getPdo()->lastInsertId(),
+                            'type' => 'insert',
+                            'old' => null,
+                            'new' => $insert
+                        ];
+                        DB::table('log_flowapproval_revisijobsheet')->insert([
+                            'id_flowapproval_revisijobsheet' => $id,
+                            'action' => json_encode($log),
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi jobsheet updated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function deleteFlowApprovalRevisiJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_revisijobsheet');
+            $request->validate([
+                'id_flowapproval_revisijobsheet' => 'required|integer|exists:flowapproval_revisijobsheet,id_flowapproval_revisijobsheet',
+            ]);
+
+            DB::table('flowapproval_revisijobsheet')
+                ->where('id_flowapproval_revisijobsheet', $id)
+                ->update([
+                    'status' => 'inactive',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'deactivated',
+            ];
+            DB::table('log_flowapproval_revisijobsheet')->insert([
+                'id_flowapproval_revisijobsheet' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi jobsheet deleted successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function activateFlowApprovalRevisiJobsheet(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $id = $request->input('id_flowapproval_revisijobsheet');
+            $request->validate([
+                'id_flowapproval_revisijobsheet' => 'required|integer|exists:flowapproval_revisijobsheet,id_flowapproval_revisijobsheet',
+            ]);
+
+            DB::table('flowapproval_revisijobsheet')
+                ->where('id_flowapproval_revisijobsheet', $id)
+                ->update([
+                    'status' => 'active',
+                    'updated_at' => now(),
+                ]);
+
+            $changes = [
+                'type' => 'activated',
+            ];
+
+            DB::table('log_flowapproval_revisijobsheet')->insert([
+                'id_flowapproval_revisijobsheet' => $id,
+                'action' => json_encode($changes),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+            return ResponseHelper::success('Flow approval for revisi jobsheet activated successfully', null, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+
 
 }
