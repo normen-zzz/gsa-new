@@ -360,6 +360,7 @@ Route::get('/getRevisiSalesOrder', [RevisisalesorderController::class, 'getRevis
 Route::get('/getRevisiSalesOrderById', [RevisisalesorderController::class, 'getRevisiSalesOrderById'])->middleware('auth:api');
 Route::put('/updateRevisiSalesOrder', [RevisisalesorderController::class, 'updateRevisiSalesOrder'])->middleware('auth:api');
 Route::put('/deleteRevisiSalesOrder', [RevisisalesorderController::class, 'deleteRevisiSalesOrder'])->middleware('auth:api');
+Route::put('/actionRevisiSalesOrder', [RevisisalesorderController::class, 'actionRevisiSalesOrder'])->middleware('auth:api');
 
 
 //revisi jobsheet

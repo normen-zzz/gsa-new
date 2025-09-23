@@ -43,7 +43,7 @@ class RevisisalesorderController extends Controller
                 'revision_notes' => $request->input('revision_notes'),
                 'created_at' => now(),
                 'created_by' => Auth::id(),
-                'status' => 'revision_created',
+                'status_revisisalesorder' => 'revision_created',
             ]);
 
 
@@ -142,11 +142,15 @@ class RevisisalesorderController extends Controller
             'r.id_salesorder',
             's.no_salesorder',
             'r.revision_notes',
-            'r.status',
+            'r.status_revisisalesorder',
             'r.created_at',
             'r.created_by',
             'u.name AS created_by_name',
             'r.updated_at',
+            'r.deleted_at',
+            'r.deleted_by',
+            'ud.name AS deleted_by_name'
+
            
         ];
 
@@ -154,6 +158,7 @@ class RevisisalesorderController extends Controller
             ->select($select)
             ->join('salesorder AS s', 'r.id_salesorder', '=', 's.id_salesorder')
             ->join('users AS u', 'r.created_by', '=', 'u.id_user')
+            ->join('users AS ud', 'r.deleted_by', '=', 'ud.id_user', 'left')
            
             ->where(function ($query) use ($searchKey) {
                 $query->where('s.no_salesorder', 'LIKE', "%{$searchKey}%")
@@ -174,22 +179,21 @@ class RevisisalesorderController extends Controller
             $select = [
                 'r.id_revisisalesorder',
                 'r.id_salesorder',
-                's.salesorder_number',
+                's.no_salesorder',
                 'r.revision_notes',
-                'r.status',
+                'r.status_revisisalesorder',
                 'r.created_at',
                 'r.created_by',
                 'u.name AS created_by_name',
                 'r.updated_at',
-                'r.updated_by',
-                'u2.name AS updated_by_name',
+                
             ];
 
             $revisiSalesOrder = DB::table('revisisalesorder AS r')
                 ->select($select)
                 ->join('salesorder AS s', 'r.id_salesorder', '=', 's.id_salesorder')
                 ->join('users AS u', 'r.created_by', '=', 'u.id_user')
-                ->leftJoin('users AS u2', 'r.updated_by', '=', 'u2.id_user')
+               
                 ->where('r.id_revisisalesorder', $id)
                 ->first();
 
@@ -235,6 +239,31 @@ class RevisisalesorderController extends Controller
                 ->where('lr.id_revisisalesorder', $id)
                 ->orderBy('lr.created_at', 'desc')
                 ->get();
+                $logs->transform(function ($log) {
+                    $log->action = json_decode($log->action, true);
+                    return $log;
+                });
+
+                $approval_revisisalesorder = DB::table('approval_revisisalesorder AS ar')
+                ->select(
+                    'ar.id_approval_revisisalesorder',
+                    'ar.id_revisisalesorder',
+                    'ar.approval_position',
+                    'p.name AS approval_position_name',
+                    'ar.approval_division',
+                    'd.name AS approval_division_name',
+                    'ar.status',
+                    'ar.created_at',
+                    'ar.created_by',
+                    'u.name AS created_by_name'
+                )
+                ->join('users AS u', 'ar.created_by', '=', 'u.id_user')
+                ->join('positions AS p', 'ar.approval_position', '=', 'p.id_position')
+                ->join('divisions AS d', 'ar.approval_division', '=', 'd.id_division')
+                ->where('ar.id_revisisalesorder', $id)
+                ->orderBy('ar.created_at', 'desc')
+                ->get();
+                $revisiSalesOrder->approval_revisisalesorder = $approval_revisisalesorder;
             $revisiSalesOrder->details_from = $detailsFrom;
             $revisiSalesOrder->details_to = $detailsTo;
             $revisiSalesOrder->logs = $logs;
@@ -263,9 +292,8 @@ class RevisisalesorderController extends Controller
                 ->where('id_revisisalesorder', $idRevisi)
                 ->update([
                     'revision_notes' => $request->input('revision_notes'),
-                    'status' => 'revision_updated',
                     'updated_at' => now(),
-                    'updated_by' => Auth::id(),
+                   
                 ]);
 
             if ($updateRevisi === false) {
@@ -365,7 +393,7 @@ class RevisisalesorderController extends Controller
                 ->update([
                     'deleted_at' => now(),
                     'deleted_by' => Auth::id(),
-                    'status' => 'revision_deleted',
+                    'status_revisisalesorder' => 'revision_deleted',
                 ]);
 
             if ($deleteRevisi === false) {
@@ -440,7 +468,7 @@ class RevisisalesorderController extends Controller
                             // Cek apakah ada pending approval lagi
                             $pendingApproval = DB::table('approval_revisisalesorder')
                                 ->where('id_revisisalesorder', $request->id_revisisalesorder)
-                                ->where('status_revisisalesorder', 'pending')
+                                ->where('status', 'pending')
                                 ->orderBy('step_no', 'ASC')
                                 ->first();
                             if (!$pendingApproval) {

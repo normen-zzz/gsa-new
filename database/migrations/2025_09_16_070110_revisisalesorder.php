@@ -28,7 +28,7 @@ return new class extends Migration
         });
 
         Schema::create('detailfrom_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_detail_revisisalesorder');
+            $table->id('id_detailfrom_revisisalesorder');
             $table->unsignedBigInteger('id_revisisalesorder');
             $table->unsignedBigInteger('id_typeselling');
             $table->decimal('selling_value', 10, 2)->comment('Selling value in the sales order revision in rupiah');
@@ -37,7 +37,7 @@ return new class extends Migration
         });
 
         Schema::create('detailto_revisisalesorder', function (Blueprint $table) {
-            $table->id('id_detail_revisisalesorder');
+            $table->id('id_detailto_revisisalesorder');
             $table->unsignedBigInteger('id_revisisalesorder');
             $table->unsignedBigInteger('id_typeselling');
             $table->decimal('selling_value', 10, 2)->comment('Selling value in the sales order revision in rupiah');

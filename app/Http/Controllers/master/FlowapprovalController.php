@@ -1227,7 +1227,7 @@ class FlowapprovalController extends Controller
                     
 
                     $dataDetailflowapproval = [
-                        'id_flowapproval_accountpayable' => $insertFlowapproval,
+                        'id_flowapproval_revisisalesorder' => $insertFlowapproval,
                         'approval_position' => $data['approval_position'],
                         'approval_division' => $data['approval_division'],
                         'step_no' => $data['step_no'],
