@@ -952,6 +952,20 @@ class JobsheetController extends Controller
                             if (!$updateJobsheet) {
                                 throw new Exception('Failed to update jobsheet status');
                             }
+                            $log = [
+                                'id_jobsheet' => $request->id_jobsheet,
+                                'action' => json_encode([
+                                    'type' => 'rejected',
+                                    'data' => json_encode([
+                                        'remarks' => $request->remarks,
+                                        'approved_by' => Auth::id(),
+                                        'updated_at' => now(),
+                                    ])
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
+                            DB::table('log_jobsheet')->insert($log);
                         } else {
                             $pendingApproval = DB::table('approval_jobsheet')
                                 ->where('id_jobsheet', $request->id_jobsheet)
@@ -968,19 +982,21 @@ class JobsheetController extends Controller
                                     throw new Exception('Failed to update jobsheet status');
                                 }
                             }
+                            $log = [
+                                'id_jobsheet' => $request->id_jobsheet,
+                                'action' => json_encode([
+                                    'type' => 'approved',
+                                    'data' => json_encode([
+                                        'remarks' => $request->remarks,
+                                        'approved_by' => Auth::id(),
+                                        'updated_at' => now(),
+                                    ])
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
                         }
-                        $log = [
-                            'id_jobsheet' => $request->id_jobsheet,
-                            'action' => [
-                                'type' => 'approve',
-                                'data' => [
-                                    'id_approval_jobsheet' => $request->id_approval_jobsheet,
-                                    'approved_by' => Auth::id(),
-                                    'approved_at' => now()
-                                ]
-                            ]
-                        ];
-                        DB::table('log_jobsheet')->insert($log);
+                        
                     }
                 } else {
                     throw new Exception('You are not authorized to update this approval status');
