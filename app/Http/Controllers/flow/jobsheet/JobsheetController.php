@@ -1128,7 +1128,6 @@ class JobsheetController extends Controller
                     'remarks' => $request->remarks ?? null,
                     'status_jobsheet' => 'js_resubmitted',
                     'status_approval' => 'js_pending',
-                    'updated_by' => Auth::id(),
                     'updated_at' => now(),
                 ]);
             if (!$updateJobsheet) {
@@ -1166,6 +1165,19 @@ class JobsheetController extends Controller
                     DB::table('approval_jobsheet')->insert($approval);
                 }
             }
+            $log = [
+                'id_jobsheet' => $request->id_jobsheet,
+                'action' => json_encode([
+                    'type' => 'resubmit',
+                    'data' => [
+                        'remarks' => $request->remarks ?? null,
+                        'attachments' => $request->attachments,
+                        'cost' => $request->cost,
+                    ]
+                ]),
+                'created_by' => Auth::id(),
+                'created_at' => now(),
+            ];
 
 
             return ResponseHelper::success('Jobsheet resubmitted successfully', null, 200);
