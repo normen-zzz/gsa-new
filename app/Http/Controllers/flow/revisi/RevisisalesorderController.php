@@ -140,27 +140,26 @@ class RevisisalesorderController extends Controller
         $select = [
             'r.id_revisisalesorder',
             'r.id_salesorder',
-            's.salesorder_number',
+            's.no_salesorder',
             'r.revision_notes',
             'r.status',
             'r.created_at',
             'r.created_by',
             'u.name AS created_by_name',
             'r.updated_at',
-            'r.updated_by',
-            'u2.name AS updated_by_name',
+           
         ];
 
         $revisiSalesOrders = DB::table('revisisalesorder AS r')
             ->select($select)
             ->join('salesorder AS s', 'r.id_salesorder', '=', 's.id_salesorder')
             ->join('users AS u', 'r.created_by', '=', 'u.id_user')
-            ->leftJoin('users AS u2', 'r.updated_by', '=', 'u2.id_user')
+           
             ->where(function ($query) use ($searchKey) {
-                $query->where('s.salesorder_number', 'LIKE', "%{$searchKey}%")
+                $query->where('s.no_salesorder', 'LIKE', "%{$searchKey}%")
                     ->orWhere('r.revision_notes', 'LIKE', "%{$searchKey}%")
-                    ->orWhere('u.name', 'LIKE', "%{$searchKey}%")
-                    ->orWhere('u2.name', 'LIKE', "%{$searchKey}%");
+                    ->orWhere('u.name', 'LIKE', "%{$searchKey}%");
+                  
             })
             ->orderBy('r.created_at', 'desc')
             ->paginate($limit);
