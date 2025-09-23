@@ -43,7 +43,7 @@ class RevisijobsheetController extends Controller
                 'revision_notes' => $request->input('revision_notes'),
                 'created_at' => now(),
                 'created_by' => Auth::id(),
-                'status' => 'revision_created',
+                'status_revisijobsheet' => 'revision_created',
             ]);
 
 
@@ -140,27 +140,29 @@ class RevisijobsheetController extends Controller
         $select = [
             'r.id_revisijobsheet',
             'r.id_jobsheet',
-            's.jobsheet_number',
+            's.no_jobsheet',
             'r.revision_notes',
-            'r.status',
+            'r.status_revisijobsheet',
             'r.created_at',
             'r.created_by',
             'u.name AS created_by_name',
             'r.updated_at',
-            'r.updated_by',
-            'u2.name AS updated_by_name',
+            'r.deleted_at',
+            'ud.name AS deleted_by_name',
+            
+
         ];
 
         $revisiJobsheets = DB::table('revisijobsheet AS r')
             ->select($select)
             ->join('jobsheet AS s', 'r.id_jobsheet', '=', 's.id_jobsheet')
             ->join('users AS u', 'r.created_by', '=', 'u.id_user')
-            ->leftJoin('users AS u2', 'r.updated_by', '=', 'u2.id_user')
+            ->leftJoin('users AS ud', 'r.deleted_by', '=', 'ud.id_user')
             ->where(function ($query) use ($searchKey) {
-                $query->where('s.jobsheet_number', 'LIKE', "%{$searchKey}%")
+                $query->where('s.no_jobsheet', 'LIKE', "%{$searchKey}%")
                     ->orWhere('r.revision_notes', 'LIKE', "%{$searchKey}%")
-                    ->orWhere('u.name', 'LIKE', "%{$searchKey}%")
-                    ->orWhere('u2.name', 'LIKE', "%{$searchKey}%");
+                    ->orWhere('u.name', 'LIKE', "%{$searchKey}%");
+                   
             })
             ->orderBy('r.created_at', 'desc')
             ->paginate($limit);
@@ -175,22 +177,21 @@ class RevisijobsheetController extends Controller
             $select = [
                 'r.id_revisijobsheet',
                 'r.id_jobsheet',
-                's.jobsheet_number',
+                's.no_jobsheet',
                 'r.revision_notes',
-                'r.status',
+                'r.status_revisijobsheet',
                 'r.created_at',
                 'r.created_by',
                 'u.name AS created_by_name',
                 'r.updated_at',
-                'r.updated_by',
-                'u2.name AS updated_by_name',
+               
             ];
 
             $revisiJobsheet = DB::table('revisijobsheet AS r')
                 ->select($select)
                 ->join('jobsheet AS s', 'r.id_jobsheet', '=', 's.id_jobsheet')
                 ->join('users AS u', 'r.created_by', '=', 'u.id_user')
-                ->leftJoin('users AS u2', 'r.updated_by', '=', 'u2.id_user')
+               
                 ->where('r.id_revisijobsheet', $id)
                 ->first();
 
@@ -264,9 +265,9 @@ class RevisijobsheetController extends Controller
                 ->where('id_revisijobsheet', $idRevisi)
                 ->update([
                     'revision_notes' => $request->input('revision_notes'),
-                    'status' => 'revision_updated',
+                    'status_revisijobsheet' => 'revision_updated',
                     'updated_at' => now(),
-                    'updated_by' => Auth::id(),
+                    
                 ]);
 
             if ($updateRevisi === false) {
@@ -366,7 +367,7 @@ class RevisijobsheetController extends Controller
                 ->update([
                     'deleted_at' => now(),
                     'deleted_by' => Auth::id(),
-                    'status' => 'revision_deleted',
+                    'status_revisijobsheet' => 'revision_deleted',
                 ]);
 
             if ($deleteRevisi === false) {
