@@ -1001,6 +1001,19 @@ class SalesorderController extends Controller
                             if (!$updateSalesorder) {
                                 throw new Exception('Failed to update sales order status to rejected');
                             }
+                            $log = [
+                                'id_salesorder' => $request->id_salesorder,
+                                'action' => json_encode([
+                                    'type' => 'rejected',
+                                    'data' => [
+                                        'remarks' => $request->remarks ?? null,
+                                        'rejected_by' => Auth::id(),
+                                        'rejected_at' => now(),
+                                    ]
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
                         } else {
                             // Cek apakah ada pending approval lagi
                             $pendingApproval = DB::table('approval_salesorder')
@@ -1020,22 +1033,21 @@ class SalesorderController extends Controller
                                     throw new Exception('Failed to update sales order status to approved');
                                 }
                             }
+                            $log = [
+                                'id_salesorder' => $request->id_salesorder,
+                                'action' => json_encode([
+                                    'type' => 'approved',
+                                    'data' => [
+                                        'remarks' => $request->remarks ?? null,
+                                        'approved_by' => Auth::id(),
+                                        'approved_at' => now(),
+                                    ]
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
                         }
-                        $log = [
-                            'id_salesorder' => $request->id_salesorder,
-                            'action' => [
-                                'type' => 'approve',
-                                'data' => [
-                                    'id_approval_salesorder' => $request->id_approval_salesorder,
-                                    'approved_by' => Auth::id(),
-                                    'approved_at' => now()
-                                ]
-                            ]
-                        ];
-                        $insertLog = DB::table('log_salesorder')->insert($log);
-                        if (!$insertLog) {
-                            throw new Exception('Failed to insert log_salesorder');
-                        }
+                       
                     }
                 } else {
                     throw new Exception('You are not authorized to update this approval status');
