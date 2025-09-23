@@ -1117,7 +1117,7 @@ class SalesorderController extends Controller
                 $dataSalesorder = [
                     'remarks' => $request->remarks ?? null,
                     'status_so' => 'so_resubmitted',
-                    'status_approval' => 'pending',
+                    'status_approval' => 'so_pending',
                     'updated_at' => now(),
                 ];
                 $updateSalesorder = DB::table('salesorder')->where('id_salesorder', $request->id_salesorder)->update($dataSalesorder);
