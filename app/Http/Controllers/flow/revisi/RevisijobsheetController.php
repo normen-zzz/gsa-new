@@ -204,6 +204,7 @@ class RevisijobsheetController extends Controller
                     'dfr.id_detailfrom_revisijobsheet',
                     'dfr.id_typecost',
                     'ts.name AS typecost_name',
+                    'ts.initials AS typecost_initial',
                     'dfr.cost_value',
                     'dfr.charge_by',
                     'dfr.description'
@@ -217,6 +218,7 @@ class RevisijobsheetController extends Controller
                     'dtr.id_detailto_revisijobsheet',
                     'dtr.id_typecost',
                     'ts.name AS typecost_name',
+                    'ts.initials AS typecost_initial',
                     'dtr.cost_value',
                     'dtr.charge_by',
                     'dtr.description'
