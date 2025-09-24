@@ -278,7 +278,6 @@ class RevisijobsheetController extends Controller
                 ->where('id_revisijobsheet', $idRevisi)
                 ->update([
                     'revision_notes' => $request->input('revision_notes'),
-                    'status_revisijobsheet' => 'revision_updated',
                     'updated_at' => now(),
                     
                 ]);
