@@ -4,6 +4,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\dashboard\DashboardController;
 use App\Http\Controllers\flow\JobController;
 use App\Http\Controllers\master\CityController;
 use App\Http\Controllers\master\CostController;
@@ -34,10 +35,7 @@ use App\Http\Controllers\flow\salesorder\SalesorderController;
 use App\Http\Controllers\master\OtherchargesinvoiceController;
 use App\Http\Controllers\flow\revisi\RevisisalesorderController;
 use App\Http\Controllers\flow\accountpayable\AccountpayableController;
-
-
-
-
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 // routes/api.php - paling atas, tanpa middleware
 Route::get('/debug-cors', function() {
@@ -369,3 +367,13 @@ Route::get('/getRevisiJobsheet', [RevisijobsheetController::class, 'getRevisiJob
 Route::get('/getRevisiJobsheetById', [RevisijobsheetController::class, 'getRevisiJobsheetById'])->middleware('auth:api');
 Route::put('/updateRevisiJobsheet', [RevisijobsheetController::class, 'updateRevisiJobsheet'])->middleware('auth:api');
 Route::put('/deleteRevisiJobsheet', [RevisijobsheetController::class, 'deleteRevisiJobsheet'])->middleware('auth:api');
+
+
+
+//Dashboard
+Route::get('/dashboard/getDataAgents', [DashboardController::class, 'getDataAgents'])->middleware('auth:api');
+Route::get('/dashboard/getDataVendors', [DashboardController::class, 'getDataVendors'])->middleware('auth:api');
+Route::get('/dashboard/getDataAirlines', [DashboardController::class, 'getDataAirlines'])->middleware('auth:api');
+Route::get('/dashboard/getDataUsers', [DashboardController::class, 'getDataUsers'])->middleware('auth:api');
+Route::get('/dashboard/getDataAirports', [DashboardController::class, 'getDataAirports'])->middleware('auth:api');
+

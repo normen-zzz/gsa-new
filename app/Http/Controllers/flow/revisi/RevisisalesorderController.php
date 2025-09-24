@@ -206,7 +206,9 @@ class RevisisalesorderController extends Controller
                 ->select(
                     'dfr.id_detailfrom_revisisalesorder',
                     'dfr.id_typeselling',
+                    
                     'ts.name AS typeselling_name',
+                    'ts.initials AS typeselling_initial',
                     'dfr.selling_value',
                     'dfr.charge_by',
                     'dfr.description'
@@ -220,6 +222,7 @@ class RevisisalesorderController extends Controller
                     'dtr.id_detailto_revisisalesorder',
                     'dtr.id_typeselling',
                     'ts.name AS typeselling_name',
+                    'ts.initials AS typeselling_initial',
                     'dtr.selling_value',
                     'dtr.charge_by',
                     'dtr.description'

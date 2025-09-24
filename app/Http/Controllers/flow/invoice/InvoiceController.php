@@ -415,6 +415,12 @@ class InvoiceController extends Controller
             $invoice->id_approval_invoice = null;
         }
 
+        if (!$pendingApproval) {
+            $invoice->is_approvefinish = true;
+        } else{
+            $invoice->is_approvefinish = false;
+        }
+
 
 
 
