@@ -521,7 +521,7 @@
             {
                 "id_listmenu": "40",
                 "name": "Revisi Sales Order",
-                "icon": "Coffee",
+                "icon": "WalletCards",
                 "path": "/dashboard/revisi-sales-order",
                 "parent_id": null,
                 "status": "1",

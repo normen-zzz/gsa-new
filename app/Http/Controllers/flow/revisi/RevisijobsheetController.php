@@ -31,7 +31,7 @@ class RevisijobsheetController extends Controller
                 ->where('id_jobsheet', $request->input('id_jobsheet'))
                 ->where('status', 'pending')
                 ->first();
-            if ($jobsheet->status_approval != 'so_approved') {
+            if ($jobsheet->status_approval != 'js_approved') {
                 throw new Exception('Jobsheet must be in approved status and have a pending approval to create a revision');
             }
 
@@ -280,13 +280,13 @@ class RevisijobsheetController extends Controller
             DB::table('detailfrom_revisijobsheet')->where('id_revisijobsheet', $idRevisi)->delete();
             DB::table('detailto_revisijobsheet')->where('id_revisijobsheet', $idRevisi)->delete();
 
-            // Re-insert details from the original sales order
+            // Re-insert details from the original jobsheet
             $costfrom = DB::table('cost_jobsheet')
                 ->where('id_jobsheet', $revisiJobsheet->id_jobsheet)
                 ->get();
 
             if ($costfrom->isEmpty()) {
-                throw new Exception('No cost data found for the given sales order');
+                throw new Exception('No cost data found for the given jobsheet');
             } else {
                 foreach ($costfrom as $item) {
                     $insertDetailFrom = DB::table('detailfrom_revisijobsheet')->insert([
@@ -298,7 +298,7 @@ class RevisijobsheetController extends Controller
                     ]);
 
                     if (!$insertDetailFrom) {
-                        throw new Exception('Failed to insert detail from cost sales order');
+                        throw new Exception('Failed to insert detail from cost jobsheet');
                     }
                 }
             }
@@ -417,7 +417,7 @@ class RevisijobsheetController extends Controller
                         throw new Exception('Failed to update approval status because');
                     } else {
                         if ($request->status == 'rejected') {
-                            // update status sales order to rejected
+                            // update status jobsheet to rejected
                             $updateJobsheet = DB::table('revisijobsheet')
                                 ->where('id_revisijobsheet', $request->id_revisijobsheet)
                                 ->update([
@@ -425,7 +425,7 @@ class RevisijobsheetController extends Controller
                                     'updated_at' => now(),
                                 ]);
                             if (!$updateJobsheet) {
-                                throw new Exception('Failed to update revisi sales order status to rejected');
+                                throw new Exception('Failed to update revisi jobsheet status to rejected');
                             }
                             $log = [
                                 'id_revisijobsheet' => $request->id_revisijobsheet,
@@ -448,7 +448,7 @@ class RevisijobsheetController extends Controller
                                 ->orderBy('step_no', 'ASC')
                                 ->first();
                             if (!$pendingApproval) {
-                                // update status revisi sales order to approved
+                                // update status revisi jobsheet to approved
                                 $updateJobsheet = DB::table('revisijobsheet')
                                     ->where('id_revisijobsheet', $request->id_revisijobsheet)
                                     ->update([
@@ -456,7 +456,7 @@ class RevisijobsheetController extends Controller
                                         'updated_at' => now(),
                                     ]);
                                 if (!$updateJobsheet) {
-                                    throw new Exception('Failed to update revisi sales order status to approved');
+                                    throw new Exception('Failed to update revisi jobsheet status to approved');
                                 }
                             }
                             $log = [
@@ -482,7 +482,7 @@ class RevisijobsheetController extends Controller
             }
             $insertLog = DB::table('log_revisijobsheet')->insert($log);
             if (!$insertLog) {
-                throw new Exception('Failed to create log for revisi sales order action');
+                throw new Exception('Failed to create log for revisi jobsheet action');
             }
             DB::commit();
             return ResponseHelper::success('jobsheet approved successfully', null, 200);
