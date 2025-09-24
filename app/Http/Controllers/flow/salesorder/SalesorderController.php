@@ -683,6 +683,12 @@ class SalesorderController extends Controller
             $salesorder->is_approver = false;
         }
 
+        if (!$pendingApproval) {
+            $salesorder->is_approvefinish = true;
+        } else{
+            $salesorder->is_approvefinish = false;
+        }
+
 
         $salesorder->attachments_salesorder = $attachments;
         $salesorder->selling_salesorder = $selling;

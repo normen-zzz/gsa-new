@@ -642,6 +642,13 @@ class JobsheetController extends Controller
             $jobsheet->id_approval_jobsheet = null;
         }
 
+        
+        if (!$pendingApproval) {
+            $jobsheet->is_approvefinish = true;
+        } else{
+            $jobsheet->is_approvefinish = false;
+        }
+
 
         $jobsheet->data_awb = $awb;
         $jobsheet->attachments_jobsheet = $attachments;
