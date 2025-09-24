@@ -508,7 +508,7 @@
             {
                 "id_listmenu": "39",
                 "name": "Revisi Jobsheet",
-                "icon": "Siren",
+                "icon": "Coffee",
                 "path": "/dashboard/revisi-jobsheet",
                 "parent_id": null,
                 "status": "1",
@@ -521,7 +521,7 @@
             {
                 "id_listmenu": "40",
                 "name": "Revisi Sales Order",
-                "icon": "Siren",
+                "icon": "Coffee",
                 "path": "/dashboard/revisi-sales-order",
                 "parent_id": null,
                 "status": "1",
