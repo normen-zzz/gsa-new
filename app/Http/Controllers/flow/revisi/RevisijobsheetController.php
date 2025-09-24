@@ -88,7 +88,7 @@ class RevisijobsheetController extends Controller
                 if (!$id_position || !$id_division) {
                     throw new Exception('Invalid user position or division');
                 }
-                $flow_approval = DB::table('flowapproval_jobsheet')
+                $flow_approval = DB::table('flowapproval_revisijobsheet')
                     ->where(['request_position' => $id_position, 'request_division' => $id_division])
                     ->first();
                 if (!$flow_approval) {
