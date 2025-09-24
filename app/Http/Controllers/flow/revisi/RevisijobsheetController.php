@@ -24,6 +24,7 @@ class RevisijobsheetController extends Controller
                 'data_cost.*.cost_value' => 'required|numeric|min:0',
                 'data_cost.*.charge_by' => 'required|in:chargeable_weight,gross_weight,awb',
                 'data_cost.*.description' => 'nullable|string|max:255',
+                'data_cost.*.id_vendor' => 'required|integer|exists:vendors,id_vendor',
             ]);
 
             $jobsheet = DB::table('jobsheet')->where('id_jobsheet', $request->input('id_jobsheet'))->first();
@@ -63,6 +64,7 @@ class RevisijobsheetController extends Controller
                             'id_typecost' => $item->id_typecost,
                             'cost_value' => $item->cost_value,
                             'charge_by' => $item->charge_by,
+                            'id_vendor' => $item->id_vendor,
                             'description' => $item->description,
                         ]);
 
@@ -79,6 +81,7 @@ class RevisijobsheetController extends Controller
                         'id_typecost' => $item['id_typecost'],
                         'cost_value' => $item['cost_value'],
                         'charge_by' => $item['charge_by'],
+                        'id_vendor' => $item['id_vendor'],
                         'description' => $item['description'] ?? null,
                     ]);
                 }
@@ -207,9 +210,12 @@ class RevisijobsheetController extends Controller
                     'ts.initials AS typecost_initial',
                     'dfr.cost_value',
                     'dfr.charge_by',
+                    'dfr.id_vendor',
+                    'v.name_vendor AS vendor_name',
                     'dfr.description'
                 )
                 ->join('typecost AS ts', 'dfr.id_typecost', '=', 'ts.id_typecost')
+                ->join('vendors AS v', 'dfr.id_vendor', '=', 'v.id_vendor')
                 ->where('dfr.id_revisijobsheet', $id)
                 ->get();
 
@@ -221,9 +227,12 @@ class RevisijobsheetController extends Controller
                     'ts.initials AS typecost_initial',
                     'dtr.cost_value',
                     'dtr.charge_by',
+                    'dtr.id_vendor',
+                    'v.name_vendor AS vendor_name',
                     'dtr.description'
                 )
                 ->join('typecost AS ts', 'dtr.id_typecost', '=', 'ts.id_typecost')
+                ->join('vendors AS v', 'dtr.id_vendor', '=', 'v.id_vendor')
                 ->where('dtr.id_revisijobsheet', $id)
                 ->get();
 
@@ -258,6 +267,8 @@ class RevisijobsheetController extends Controller
             'data_cost.*.cost_value' => 'required|numeric|min:0',
             'data_cost.*.charge_by' => 'required|in:chargeable_weight,gross_weight,awb',
             'data_cost.*.description' => 'nullable|string|max:255',
+            'data_cost.*.id_vendor' => 'required|integer|exists:vendors,id_vendor',
+
         ]);
         DB::beginTransaction();
         try {
@@ -295,6 +306,7 @@ class RevisijobsheetController extends Controller
                         'cost_value' => $item->cost_value,
                         'charge_by' => $item->charge_by,
                         'description' => $item->description,
+                        'id_vendor' => $item->id_vendor,
                     ]);
 
                     if (!$insertDetailFrom) {
@@ -312,6 +324,7 @@ class RevisijobsheetController extends Controller
                     'cost_value' => $item['cost_value'],
                     'charge_by' => $item['charge_by'],
                     'description' => $item['description'],
+                    'id_vendor' => $item['id_vendor'],
                 ]);
             }
 

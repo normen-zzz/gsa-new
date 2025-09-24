@@ -33,6 +33,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_typecost');
             $table->decimal('cost_value', 10, 2)->comment('Selling value in the sales order revision in rupiah');
             $table->enum('charge_by', ['chargeable_weight','gross_weight','awb'])->comment('Charge by in the sales order revision');
+            $table->unsignedBigInteger('id_vendor');
             $table->string('description')->nullable();
         });
 
@@ -42,6 +43,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_typecost');
             $table->decimal('cost_value', 10, 2)->comment('Cost value in the sales order revision in rupiah');
             $table->enum('charge_by', ['chargeable_weight','gross_weight','awb'])->comment('Charge by in the sales order revision');
+            $table->unsignedBigInteger('id_vendor');
             $table->string('description')->nullable();
         });
 
