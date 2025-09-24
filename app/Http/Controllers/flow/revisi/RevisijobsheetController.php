@@ -248,6 +248,10 @@ class RevisijobsheetController extends Controller
                 ->where('lr.id_revisijobsheet', $id)
                 ->orderBy('lr.created_at', 'desc')
                 ->get();
+                $logs->transform(function ($log) {
+                    $log->action = json_decode($log->action, true);
+                    return $log;
+                });
             $revisiJobsheet->details_from = $detailsFrom;
             $revisiJobsheet->details_to = $detailsTo;
             $revisiJobsheet->logs = $logs;
