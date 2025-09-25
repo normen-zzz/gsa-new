@@ -642,10 +642,10 @@ class JobsheetController extends Controller
             $jobsheet->id_approval_jobsheet = null;
         }
 
-        
+
         if (!$pendingApproval) {
             $jobsheet->is_approvefinish = true;
-        } else{
+        } else {
             $jobsheet->is_approvefinish = false;
         }
 
@@ -1003,7 +1003,6 @@ class JobsheetController extends Controller
                                 'created_at' => now(),
                             ];
                         }
-                        
                     }
                 } else {
                     throw new Exception('You are not authorized to update this approval status');
@@ -1031,6 +1030,10 @@ class JobsheetController extends Controller
                     'received_at' => now(),
                     'received_by' => Auth::id(),
                 ]);
+            if (!$update) {
+                throw new Exception('Failed to update jobsheet status');
+            }
+            DB::commit();
             return ResponseHelper::success('Jobsheet received successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();

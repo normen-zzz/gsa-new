@@ -25,7 +25,7 @@ class InvoiceController extends Controller
                 'due_date' => 'required|date',
                 'remarks' => 'nullable|string|max:255',
                 'id_datacompany' => 'required|exists:datacompany,id_datacompany',
-                'jobsheet' => 'nullable|array',
+                'jobsheet' => 'required|array',
                 'jobsheet.*.id_jobsheet' => 'required|exists:jobsheet,id_jobsheet',
                 'others' => 'nullable|array',
                 'others.*.id_listothercharge_invoice' => 'required|exists:listothercharge_invoice,id_listothercharge_invoice',

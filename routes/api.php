@@ -376,4 +376,5 @@ Route::get('/dashboard/getDataVendors', [DashboardController::class, 'getDataVen
 Route::get('/dashboard/getDataAirlines', [DashboardController::class, 'getDataAirlines'])->middleware('auth:api');
 Route::get('/dashboard/getDataUsers', [DashboardController::class, 'getDataUsers'])->middleware('auth:api');
 Route::get('/dashboard/getDataAirports', [DashboardController::class, 'getDataAirports'])->middleware('auth:api');
+Route::get('/dashboard/getTopDest', [DashboardController::class, 'getTopDest'])->middleware('auth:api');
 

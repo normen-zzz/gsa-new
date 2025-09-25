@@ -90,12 +90,12 @@ class DashboardController extends Controller
 
 
         $topDest = DB::table('awb')
-            ->join('airport', 'awb.pol', '=', 'airport.id_airport')
-            ->select('airport.name_airport as destination_name', DB::raw('COUNT(awb.id_awb) as total_orders'))
+            ->join('airports', 'awb.pod', '=', 'airports.id_airport')
+            ->select('airports.name_airport as destination_name','airports.code_airport', DB::raw('COUNT(awb.id_awb) as total_orders'))
             ->when($date_from && $date_to, function ($query) use ($date_from, $date_to) {
                 return $query->whereBetween('awb.created_at', [$date_from, $date_to]);
             })
-            ->groupBy('awb.pol')
+            ->groupBy('awb.pod')
             ->orderByDesc('total_orders')
             ->limit($limit)
             ->get();
