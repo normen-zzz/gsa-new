@@ -342,6 +342,12 @@ class JobController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                $updateStatusJob = DB::table('job')->where('id_job', $request->id_job)->update([
+                    'status' => 'job_handled_by_ops',
+                    'updated_at' => now(),
+                    'updated_by' => $request->user()->id_user,
+                ]);
             } else {
                 throw new Exception('Failed to insert AWB data.');
             }
