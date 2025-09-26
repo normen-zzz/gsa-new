@@ -229,6 +229,108 @@ class AccountpayableController extends Controller
         return ResponseHelper::success('Account payables retrieved successfully', $accountPayables, 200);
     }
 
+     public function getAccountpayableNeedApproval(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+        $searchKey = $request->input('searchKey', '');
+
+        $accountPayables = DB::table('approval_accountpayable as a')
+            ->join('account_payable as ap', 'a.id_accountpayable', '=', 'ap.id_accountpayable')
+            ->leftJoin('users as u', 'ap.created_by', '=', 'u.id_user')
+            ->leftJoin('users as u2', 'ap.deleted_by', '=', 'u2.id_user')
+            ->select(
+                'ap.id_accountpayable',
+                'ap.no_accountpayable',
+                'ap.type',
+                'ap.no_ca',
+                'ap.total',
+                'ap.created_at',
+                'u.name as created_by',
+                'ap.deleted_at',
+                'ap.deleted_by',
+                'u2.name as deleted_by_name'
+            )
+            ->where('a.status', 'pending')
+            ->where('a.approval_position', Auth::user()->id_position)
+            ->where('a.approval_division', Auth::user()->id_division)
+            ->when($searchKey, function ($query, $searchKey) {
+                return $query->where(function ($q) use ($searchKey) {
+                    $q->where('ap.no_accountpayable', 'like', '%' . $searchKey . '%')
+                        ->orWhere('ap.type', 'like', '%' . $searchKey . '%')
+                        ->orWhere('u.name', 'like', '%' . $searchKey . '%');
+                });
+            })
+            ->orderBy('ap.created_at', 'desc')
+            ->paginate($limit);
+
+        // $accountPayables = DB::table('account_payable as ap')
+        //     ->leftJoin('users as u', 'ap.created_by', '=', 'u.id_user')
+        //     ->leftJoin('users as u2', 'ap.deleted_by', '=', 'u2.id_user')
+        //     ->select(
+        //         'ap.id_accountpayable',
+        //         'ap.no_accountpayable',
+        //         'ap.type',
+        //         'ap.no_ca',
+        //         'ap.total',
+        //         'ap.created_at',
+        //         'u.name as created_by',
+        //         'ap.deleted_at',
+        //         'ap.deleted_by',
+        //         'u2.name as deleted_by_name'
+        //     )
+        //     ->when($searchKey, function ($query, $searchKey) {
+        //         return $query->where(function ($q) use ($searchKey) {
+        //             $q->where('ap.no_accountpayable', 'like', '%' . $searchKey . '%')
+        //                 ->orWhere('ap.type', 'like', '%' . $searchKey . '%')
+        //                 ->orWhere('u.name', 'like', '%' . $searchKey . '%');
+        //         });
+        //     })
+        //     ->where('created_by', Auth::id())
+        //     ->orderBy('ap.created_at', 'desc')
+        //     ->paginate($limit);
+
+
+        $accountPayables->getCollection()->transform(function ($item) {
+            $detail_accountpayable = DB::table('detail_accountpayable as d')
+                ->select(
+                    'd.id_detailaccountpayable',
+                    'd.id_accountpayable',
+                    'd.type_pengeluaran',
+                    'tp.name as type_pengeluaran_name',
+                    'd.description',
+                    'd.amount',
+                )
+                ->join('type_pengeluaran as tp', 'd.type_pengeluaran', '=', 'tp.id_typepengeluaran')
+                ->where('d.id_accountpayable', $item->id_accountpayable)
+                ->get();
+
+            $approval_accountpayable = DB::table('approval_accountpayable as a')
+                ->select(
+                    'a.id_approval_accountpayable',
+                    'a.id_accountpayable',
+                    'a.approval_position',
+                    'p.name as approval_position_name',
+                    'a.approval_division',
+                    'd.name as approval_division_name',
+                    'a.step_no',
+                    'a.status',
+                )
+                ->join('positions as p', 'a.approval_position', '=', 'p.id_position')
+                ->join('divisions as d', 'a.approval_division', '=', 'd.id_division')
+                ->where('a.id_accountpayable', $item->id_accountpayable)
+                ->orderBy('a.step_no', 'asc')
+                ->get();
+            $item->approval_accountpayable = $approval_accountpayable->where('id_accountpayable', $item->id_accountpayable)->values();
+
+            $item->detail_accountpayable = $detail_accountpayable->where('id_accountpayable', $item->id_accountpayable)->values();
+            return $item;
+        });
+
+
+        return ResponseHelper::success('Account payables retrieved successfully', $accountPayables, 200);
+    }
+
+
     public function getAccountpayableById(Request $request)
     {
 

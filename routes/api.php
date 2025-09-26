@@ -350,6 +350,8 @@ Route::put('/deleteAccountpayable', [AccountpayableController::class, 'deleteAcc
 Route::put('/deleteDetailAccountpayable', [AccountpayableController::class, 'deleteDetailAccountpayable'])->middleware('auth:api');
 Route::put('/activateAccountpayable', [AccountpayableController::class, 'activateAccountpayable'])->middleware('auth:api');
 Route::put('/actionAccountpayable', [AccountpayableController::class, 'actionAccountpayable'])->middleware('auth:api');
+// getAccountpayableNeedApproval
+Route::get('/getAccountpayableNeedApproval', [AccountpayableController::class, 'getAccountpayableNeedApproval'])->middleware('auth:api');
 
 
 //Revisi sales order 
