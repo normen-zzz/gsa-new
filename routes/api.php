@@ -377,4 +377,9 @@ Route::get('/dashboard/getDataAirlines', [DashboardController::class, 'getDataAi
 Route::get('/dashboard/getDataUsers', [DashboardController::class, 'getDataUsers'])->middleware('auth:api');
 Route::get('/dashboard/getDataAirports', [DashboardController::class, 'getDataAirports'])->middleware('auth:api');
 Route::get('/dashboard/getTopDest', [DashboardController::class, 'getTopDest'])->middleware('auth:api');
+Route::get('/dashboard/getTopAgentsByShipment', [DashboardController::class, 'getTopAgentsByShipment'])->middleware('auth:api');
+Route::get('/dashboard/getTopAgentsByTonnage', [DashboardController::class, 'getTopAgentsByTonnage'])->middleware('auth:api');
+Route::get('/dashboard/getTopAgentsBySales', [DashboardController::class, 'getTopAgentsBySales'])->middleware('auth:api');
+Route::get('/dashboard/getTopAgentsByRevenue', [DashboardController::class, 'getTopAgentsByRevenue'])->middleware('auth:api');
+
 

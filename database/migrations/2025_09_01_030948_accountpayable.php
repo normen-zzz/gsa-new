@@ -14,18 +14,19 @@ return new class extends Migration
         Schema::create('account_payable', function (Blueprint $table) {
             $table->id('id_accountpayable');
             $table->string('no_accountpayable')->unique();
-            $table->enum('type', ['RE', 'PO','CA','CAR']);
+            $table->enum('type', ['RE', 'PO', 'CA', 'CAR']);
             $table->text('description')->nullable();
             $table->decimal('total', 15, 2);
             $table->string('no_ca')->nullable();
             $table->timestamps();
             $table->integer('created_by');
             $table->integer('updated_by');
+            $table->enum('status_approval', ['ap_pending', 'ap_approved', 'ap_rejected'])->default('ap_pending');
+            $table->enum('status', ['pending', 'paid'])->default('pending');
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
-
         });
-        
+
 
         Schema::create('type_pengeluaran', function (Blueprint $table) {
             $table->id('id_typepengeluaran');
@@ -57,7 +58,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-          Schema::create('approval_accountpayable', function (Blueprint $table) {
+        Schema::create('approval_accountpayable', function (Blueprint $table) {
             $table->id('id_approval_accountpayable');
             $table->unsignedBigInteger('id_accountpayable');
             $table->unsignedBigInteger('approval_position');
@@ -76,7 +77,7 @@ return new class extends Migration
             $table->unsignedBigInteger('request_position');
             $table->unsignedBigInteger('request_division');
             $table->enum('status', ['active', 'inactive'])->default('active');
-           
+
             $table->integer('created_by')->unsigned();
             $table->timestamps();
         });
@@ -99,7 +100,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-       Schema::create('attachments_accountpayable', function (Blueprint $table) {
+        Schema::create('attachments_accountpayable', function (Blueprint $table) {
             $table->id('id_attachments_accountpayable');
             $table->unsignedBigInteger('id_detailaccountpayable');
             $table->string('file_name');
@@ -109,7 +110,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->integer('deleted_by')->nullable();
-        });    
+        });
     }
 
     /**

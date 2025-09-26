@@ -44,6 +44,12 @@ class JobsheetController extends Controller
             $awb = DB::table('awb')->where('id_job', $id_job)->first();
 
             $salesorder = DB::table('salesorder')->where('id_salesorder', $request->id_salesorder)->first();
+            $approval_salesorder = DB::table('approval_salesorder')
+                ->where('id_salesorder', $request->id_salesorder)
+                ->get();
+            if ($approval_salesorder->isEmpty() || $approval_salesorder->contains('status', 'pending')) {
+                throw new Exception('Sales order approval is pending');
+            }
             $id_job = $awb->id_job ?? null;
             $id_shippinginstruction = DB::table('job')->where('id_job', $id_job)->value('id_shippinginstruction');
             $no_jobsheet = $salesorder->no_salesorder;
@@ -1023,6 +1029,10 @@ class JobsheetController extends Controller
             $request->validate([
                 'id_jobsheet' => 'required|integer|exists:jobsheet,id_jobsheet',
             ]);
+            $jobsheet = DB::table('jobsheet')->where('id_jobsheet', $request->id_jobsheet)->first();
+            if ($jobsheet->status_jobsheet == 'js_received') {
+                throw new Exception('Jobsheet has already been received');
+            }
             $update = DB::table('jobsheet')
                 ->where('id_jobsheet', $request->id_jobsheet)
                 ->update([

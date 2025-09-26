@@ -296,8 +296,16 @@ class ShippingInstructionController extends Controller
                 $instruction->awb_data = [];
             }
 
-
-
+            $position = DB::table('positions')
+                ->where('id_position', Auth::user()->id_position)
+                ->first();
+            $division = DB::table('divisions')
+                ->where('id_division', Auth::user()->id_division)
+                ->first();
+            $instruction->user_login_id_position = $position->id_position;
+            $instruction->user_login_name_position = $position->name;
+            $instruction->user_login_id_division = $division->id_division;
+            $instruction->user_login_name_division = $division->name;
 
             return $instruction;
         });
@@ -640,6 +648,17 @@ class ShippingInstructionController extends Controller
             $instruction->job_data = [];
             $instruction->awb_data = [];
         }
+
+          $position = DB::table('positions')
+                ->where('id_position', Auth::user()->id_position)
+                ->first();
+            $division = DB::table('divisions')
+                ->where('id_division', Auth::user()->id_division)
+                ->first();
+            $instruction->user_login_id_position = $position->id_position;
+            $instruction->user_login_name_position = $position->name;
+            $instruction->user_login_id_division = $division->id_division;
+            $instruction->user_login_name_division = $division->name;
 
 
         if (!$instruction) {

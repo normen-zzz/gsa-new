@@ -207,15 +207,33 @@ class InvoiceController extends Controller
         // Get invoice data with basic joins
         $invoice = DB::table('invoice AS a')
             ->select([
-            'a.id_invoice', 'a.agent', 'e.name_customer AS agent_name', 'a.data_agent',
-            'f.pic', 'f.email', 'f.phone', 'f.tax_id', 'f.address',
-            'a.no_invoice', 'a.invoice_date', 'a.due_date', 'a.remarks',
-            'a.created_at', 'a.created_by', 'b.name AS created_by_name',
-            'a.deleted_at', 'a.deleted_by', 'c.name AS deleted_by_name',
-            'a.id_datacompany', 'd.name AS datacompany_name',
-            'd.account_number AS datacompany_account_number', 'd.bank AS datacompany_bank',
-            'd.branch AS datacompany_branch', 'd.swift AS datacompany_swift',
-            'a.status_invoice', 'a.status_approval'
+                'a.id_invoice',
+                'a.agent',
+                'e.name_customer AS agent_name',
+                'a.data_agent',
+                'f.pic',
+                'f.email',
+                'f.phone',
+                'f.tax_id',
+                'f.address',
+                'a.no_invoice',
+                'a.invoice_date',
+                'a.due_date',
+                'a.remarks',
+                'a.created_at',
+                'a.created_by',
+                'b.name AS created_by_name',
+                'a.deleted_at',
+                'a.deleted_by',
+                'c.name AS deleted_by_name',
+                'a.id_datacompany',
+                'd.name AS datacompany_name',
+                'd.account_number AS datacompany_account_number',
+                'd.bank AS datacompany_bank',
+                'd.branch AS datacompany_branch',
+                'd.swift AS datacompany_swift',
+                'a.status_invoice',
+                'a.status_approval'
             ])
             ->leftJoin('users AS b', 'a.created_by', '=', 'b.id_user')
             ->leftJoin('users AS c', 'a.deleted_by', '=', 'c.id_user')
@@ -233,12 +251,24 @@ class InvoiceController extends Controller
         // Get all invoice details with joins in a single query
         $detailInvoice = DB::table('detail_invoice')
             ->select([
-            'detail_invoice.id_detail_invoice', 'detail_invoice.id_invoice',
-            'detail_invoice.id_jobsheet', 'detail_invoice.id_salesorder', 'detail_invoice.id_awb',
-            'a.name AS airline_name', 'a.code AS airline_code',
-            'awb.awb', 'awb.pol', 'pol.name_airport AS pol_name', 'pol.code_airport AS pol_code',
-            'awb.pod', 'pod.name_airport AS pod_name', 'pod.code_airport AS pod_code',
-            'awb.etd', 'awb.gross_weight', 'awb.chargeable_weight', 'awb.pieces'
+                'detail_invoice.id_detail_invoice',
+                'detail_invoice.id_invoice',
+                'detail_invoice.id_jobsheet',
+                'detail_invoice.id_salesorder',
+                'detail_invoice.id_awb',
+                'a.name AS airline_name',
+                'a.code AS airline_code',
+                'awb.awb',
+                'awb.pol',
+                'pol.name_airport AS pol_name',
+                'pol.code_airport AS pol_code',
+                'awb.pod',
+                'pod.name_airport AS pod_name',
+                'pod.code_airport AS pod_code',
+                'awb.etd',
+                'awb.gross_weight',
+                'awb.chargeable_weight',
+                'awb.pieces'
             ])
             ->join('awb', 'detail_invoice.id_awb', '=', 'awb.id_awb')
             ->join('airports AS pol', 'awb.pol', '=', 'pol.id_airport')
@@ -269,36 +299,37 @@ class InvoiceController extends Controller
         foreach ($detailInvoice as $key => $value) {
             $awb = $awbData[$value->id_awb];
             $data_selling_salesorder = [];
-            
+
             if (isset($allSelling[$value->id_salesorder])) {
-            foreach ($allSelling[$value->id_salesorder] as $sell) {
-                switch ($sell->charge_by) {
-                case 'chargeable_weight':
-                    $weight = $awb->chargeable_weight;
-                    $total = $sell->selling_value * $weight;
-                    break;
-                case 'gross_weight':
-                    $weight = $awb->gross_weight;
-                    $total = $sell->selling_value * $weight;
-                    break;
-                case 'awb':
-                    $weight = 1;
-                    $total = $sell->selling_value * $weight;
-                    break;
-                default:
-                    $weight = 1;
-                    $total = $sell->selling_value;
-                    break;
+                foreach ($allSelling[$value->id_salesorder] as $sell) {
+                    switch ($sell->charge_by) {
+                        case 'chargeable_weight':
+                            $weight = $awb->chargeable_weight;
+                            $total = $sell->selling_value * $weight;
+                            break;
+                        case 'gross_weight':
+                            $weight = $awb->gross_weight;
+                            $total = $sell->selling_value * $weight;
+                            break;
+                        case 'awb':
+                            $weight = 1;
+                            $total = $sell->selling_value * $weight;
+                            break;
+                        default:
+                            $weight = 1;
+                            $total = $sell->selling_value;
+                            break;
+                    }
+                    $total = round($total, 0); // Round to nearest integer (up if >= 0.5, down if < 0.5)
+                    $total_selling += $total;
+                    $data_selling_salesorder[] = [
+                        'initials' => $sell->typeselling_initials,
+                        'selling_value' => round($sell->selling_value, 0),
+                        'charge_by' => $sell->charge_by,
+                        'weight' => $weight,
+                        'amount' => $total,
+                    ];
                 }
-                $total_selling += $total;
-                $data_selling_salesorder[] = [
-                'initials' => $sell->typeselling_initials,
-                'selling_value' => $sell->selling_value,
-                'charge_by' => $sell->charge_by,
-                'weight' => $weight,
-                'amount' => $total,
-                ];
-            }
             }
             $detailInvoice[$key]->selling_salesorder = $data_selling_salesorder;
         }
@@ -318,49 +349,54 @@ class InvoiceController extends Controller
         foreach ($othersCharge as $charge) {
             $multiplier = 1;
             $awb = isset($awbData) && count($awbData) > 0 ? $awbData->first() : null;
-            
+
             switch ($charge->charge_type) {
-            case 'percentage_subtotal':
-                $multiplier = $total_selling;
-                $total = ($charge->amount / 100) * $multiplier;
-                break;
-            case 'multiple_chargeableweight':
-                $multiplier = $awb ? $awb->chargeable_weight : 1;
-                $total = $charge->amount * $multiplier;
-                break;
-            case 'multiple_grossweight':
-                $multiplier = $awb ? $awb->gross_weight : 1;
-                $total = $charge->amount * $multiplier;
-                break;
-            case 'nominal':
-            default:
-                $total = $charge->amount * $multiplier;
-                break;
+                case 'percentage_subtotal':
+                    $multiplier = $total_selling;
+                    $total = ($charge->amount / 100) * $multiplier;
+                    break;
+                case 'multiple_chargeableweight':
+                    $multiplier = $awb ? $awb->chargeable_weight : 1;
+                    $total = $charge->amount * $multiplier;
+                    break;
+                case 'multiple_grossweight':
+                    $multiplier = $awb ? $awb->gross_weight : 1;
+                    $total = $charge->amount * $multiplier;
+                    break;
+                case 'nominal':
+                default:
+                    $total = $charge->amount * $multiplier;
+                    break;
             }
             $total_selling += $total;
             $dataOtherscharge[] = [
-            'id_otherscharge_invoice' => $charge->id_otherscharge_invoice,
-            'id_listothercharge_invoice' => $charge->id_listothercharge_invoice,
-            'charge_name' => $charge->charge_name,
-            'charge_type' => $charge->charge_type,
-            'amount' => $charge->amount,
-            'total' => $total
+                'id_otherscharge_invoice' => $charge->id_otherscharge_invoice,
+                'id_listothercharge_invoice' => $charge->id_listothercharge_invoice,
+                'charge_name' => $charge->charge_name,
+                'charge_type' => $charge->charge_type,
+                'amount' => $charge->amount,
+                'total' => $total
             ];
         }
 
         $invoice->others_charge = $dataOtherscharge;
         $invoice->grand_total = $total_selling;
-        
+
+        // Set English version
         Config::set('terbilang.locale', 'en');
         $invoice->said = strtoupper(Terbilang::make($invoice->grand_total, ' rupiahs'));
-        
+
+        // Set Indonesian version 
+        Config::set('terbilang.locale', 'id');
+        $invoice->terbilang = strtoupper(Terbilang::make($invoice->grand_total, ' rupiah'));
+
         // Get all approvals in one query
         $allApprovals = DB::table('approval_invoice')
             ->where('id_invoice', $invoice->id_invoice)
             ->get();
-            
+
         $invoice->approval_invoice = $allApprovals;
-        
+
         $pendingApproval = $allApprovals
             ->where('status', 'pending')
             ->sortBy('step_no')
@@ -368,10 +404,10 @@ class InvoiceController extends Controller
 
         $position = Auth::user()->id_position;
         $division = Auth::user()->id_division;
-        
-        $invoice->is_approver = $pendingApproval && 
-                       $pendingApproval->approval_position == $position && 
-                       $pendingApproval->approval_division == $division;
+
+        $invoice->is_approver = $pendingApproval &&
+            $pendingApproval->approval_position == $position &&
+            $pendingApproval->approval_division == $division;
         $invoice->id_approval_invoice = $invoice->is_approver ? $pendingApproval->id_approval_invoice : null;
         $invoice->is_approvefinish = !$pendingApproval;
 
@@ -564,12 +600,12 @@ class InvoiceController extends Controller
                             }
                         }
                     }
-                } else{
+                } else {
                     throw new Exception('You are not authorized to approve this invoice');
                 }
             }
             DB::commit();
-            return ResponseHelper::success('Invoice approval updated successfully',null,200);
+            return ResponseHelper::success('Invoice approval updated successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

@@ -279,6 +279,28 @@ class AccountpayableController extends Controller
                 return $item;
             });
 
+            $pendingApproval = DB::table('approval_accountpayable')
+                ->where('id_accountpayable', $accountPayable->id_accountpayable)
+                ->where('status', 'pending')
+                ->orderBy('step_no', 'ASC')
+                ->first();
+
+            $position = Auth::user()->id_position;
+            $division = Auth::user()->id_division;
+            if ($pendingApproval && $pendingApproval->approval_position == $position && $pendingApproval->approval_division == $division) {
+                $accountPayable->is_approver = true;
+                $accountPayable->id_approval_accountpayable = $pendingApproval->id_approval_accountpayable;
+            } else {
+                $accountPayable->id_approval_accountpayable = null;
+                $accountPayable->is_approver = false;
+            }
+
+            if (!$pendingApproval) {
+                $accountPayable->is_approvefinish = true;
+            } else {
+                $accountPayable->is_approvefinish = false;
+            }
+
             $accountPayable->detail_accountpayable = $detail_accountpayable;
 
             DB::commit();
@@ -359,7 +381,7 @@ class AccountpayableController extends Controller
                                 ->where('id_detailaccountpayable', $value['id_detailaccountpayable'])
                                 ->delete();
 
-                            $file_name = time().'/'.$no.'_' . $id_accountpayable;
+                            $file_name = time() . '/' . $no . '_' . $id_accountpayable;
                             $no++;
                             // Decode the base64 image
                             $image = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $value['attachment']));
@@ -560,6 +582,110 @@ class AccountpayableController extends Controller
 
             DB::commit();
             return ResponseHelper::success('Detail account payable deleted successfully', NULL, 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::error($e);
+        }
+    }
+
+    public function actionAccountpayable(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'id_approval_accountpayable' => 'required|integer|exists:approval_accountpayable,id_approval_accountpayable',
+                'id_accountpayable' => 'required|integer|exists:account_payable,id_accountpayable',
+                'remarks' => 'nullable|string|max:255',
+                'status' => 'required|in:approved,rejected'
+            ]);
+
+            $approval = DB::table('approval_accountpayable')
+                ->where('id_approval_accountpayable', $request->id_approval_accountpayable)
+                ->where('id_accountpayable', $request->id_accountpayable)
+                ->first();
+
+            if ($approval) {
+                if ($approval->approval_position == Auth::user()->id_position && $approval->approval_division == Auth::user()->id_division) {
+                    $update = DB::table('approval_accountpayable')
+                        ->where('id_approval_accountpayable', $request->id_approval_accountpayable)
+                        ->where('approval_position', Auth::user()->id_position)
+                        ->where('approval_division', Auth::user()->id_division)
+                        ->update([
+                            'status' => $request->status,
+                            'remarks' => $request->remarks ?? null,
+                            'approved_by' => Auth::id(),
+                            'updated_at' => now(),
+                        ]);
+
+                    if (!$update) {
+                        throw new Exception('Failed to update approval status because');
+                    } else {
+                        if ($request->status == 'rejected') {
+                            // update status account payable to rejected
+                            $updateAccountPayable = DB::table('account_payable')
+                                ->where('id_accountpayable', $request->id_accountpayable)
+                                ->update([
+                                    'status_approval' => 'ap_rejected',
+                                    'updated_at' => now(),
+                                ]);
+                            if (!$updateAccountPayable) {
+                                throw new Exception('Failed to update account payable status to rejected');
+                            }
+                            $log = [
+                                'id_accountpayable' => $request->id_accountpayable,
+                                'action' => json_encode([
+                                    'type' => 'rejected',
+                                    'data' => [
+                                        'remarks' => $request->remarks ?? null,
+                                        'rejected_by' => Auth::id(),
+                                        'rejected_at' => now(),
+                                    ]
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
+                        } else {
+                            // Cek apakah ada pending approval lagi
+                            $pendingApproval = DB::table('approval_accountpayable')
+                                ->where('id_accountpayable', $request->id_accountpayable)
+                                ->where('status', 'pending')
+                                ->orderBy('step_no', 'ASC')
+                                ->first();
+                            if (!$pendingApproval) {
+                                // update status account payable to approved
+                                $updateAccountPayable = DB::table('account_payable')
+                                    ->where('id_accountpayable', $request->id_accountpayable)
+                                    ->update([
+                                        'status_approval' => 'ap_approved',
+                                        'updated_at' => now(),
+                                    ]);
+                                if (!$updateAccountPayable) {
+                                    throw new Exception('Failed to update account payable status to approved');
+                                }
+                            }
+                            $log = [
+                                'id_accountpayable' => $request->id_accountpayable,
+                                'action' => json_encode([
+                                    'type' => 'approved',
+                                    'data' => [
+                                        'remarks' => $request->remarks ?? null,
+                                        'approved_by' => Auth::id(),
+                                        'approved_at' => now(),
+                                    ]
+                                ]),
+                                'created_by' => Auth::id(),
+                                'created_at' => now(),
+                            ];
+                        }
+                    }
+                } else {
+                    throw new Exception('You are not authorized to update this approval status');
+                }
+            } else {
+                throw new Exception('Approval record not found');
+            }
+            DB::commit();
+            return ResponseHelper::success('Account payable approved successfully', null, 200);
         } catch (Exception $e) {
             DB::rollBack();
             return ResponseHelper::error($e);

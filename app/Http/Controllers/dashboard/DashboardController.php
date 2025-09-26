@@ -122,7 +122,7 @@ class DashboardController extends Controller
             ->orderBy('month')
             ->get();
 
-        return ResponseHelper::success('Monthly tonnage retrieved successfully.', ['monthly_tonnage' => $monthlyTonnage], 200);
+        return ResponseHelper::success('Tonnage retrieved successfully.', ['monthly_tonnage' => $monthlyTonnage], 200);
     }
 
     //top 10 agent berdasarkan total shipment,tonase,sales,revenue
@@ -144,7 +144,7 @@ class DashboardController extends Controller
             ->orderByDesc('total_shipments')
             ->limit($limit)
             ->get();
-        return ResponseHelper::success('Top agents retrieved successfully.', ['top_agents' => $topAgents], 200);
+        return ResponseHelper::success('Top agents by shipments retrieved successfully.', ['top_agents' => $topAgents], 200);
     }
 
     public function getTopAgentsByTonnage(Request $request)
@@ -165,7 +165,7 @@ class DashboardController extends Controller
             ->limit($limit)
             ->get();
 
-        return ResponseHelper::success('Top agents retrieved successfully.', ['top_agents' => $topAgents], 200);
+        return ResponseHelper::success('Top agents by tonnage retrieved successfully.', ['top_agents' => $topAgents], 200);
     }
 
     public function getTopAgentsBySales(Request $request)
@@ -191,7 +191,7 @@ class DashboardController extends Controller
             ->limit($limit)
             ->get();
 
-        return ResponseHelper::success('Top agents retrieved successfully.', ['top_agents' => $topAgents], 200);
+        return ResponseHelper::success('Top agents by sales retrieved successfully.', ['top_agents' => $topAgents], 200);
     }
 
     public function getTopAgentsByRevenue(Request $request)
@@ -205,7 +205,6 @@ class DashboardController extends Controller
             ->join('salesorder', 'selling_salesorder.id_salesorder', '=', 'salesorder.id_salesorder')
             ->join('customers', 'salesorder.id_customer', '=', 'customers.id_customer')
             ->join('awb', 'salesorder.id_awb', '=', 'awb.id_awb')
-
             ->select(
                 'customers.name as agent_name',
                 DB::raw('SUM(CASE WHEN selling_salesorder.charge_by = "chargeable_weight" 
@@ -222,5 +221,6 @@ class DashboardController extends Controller
             ->orderByDesc('total_revenue')
             ->limit($limit)
             ->get();
+        return ResponseHelper::success('Top agents By Revenue retrieved successfully.', ['top_agents' => $topAgents], 200);
     }
 }
